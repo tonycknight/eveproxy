@@ -22,6 +22,7 @@ type ActorMessage =
     | Pull of url: string
     | PullReply of url: string * rc: AsyncReplyChannel<obj>
     | ChildStats of rc: AsyncReplyChannel<ActorStats[]>
+    | LastUpdate of rc: AsyncReplyChannel<DateTime>
 
 type IActor =
     abstract member Post: ActorMessage -> unit

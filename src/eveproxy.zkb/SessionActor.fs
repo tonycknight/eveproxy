@@ -4,7 +4,9 @@ open System
 open eveproxy
 open Microsoft.Extensions.Logging
 
-type private SessionActorState = { kills: IKillmailReferenceQueue; lastPull: DateTime }
+type private SessionActorState =
+    { kills: IKillmailReferenceQueue
+      lastPull: DateTime }
 
 type SessionActor
     (
@@ -33,6 +35,10 @@ type SessionActor
 
     let onPullNext state (rc: AsyncReplyChannel<obj>) =
         async {
+            let state =
+                { state with
+                    lastPull = DateTime.UtcNow }
+
             sprintf "Fetching next kill reference for queue [%s]..." name |> log.LogTrace
             let! killRef = state.kills.PullAsync() |> Async.AwaitTask
 
@@ -57,7 +63,7 @@ type SessionActor
             let package = package |> Option.defaultValue KillPackage.empty
             package :> obj |> ActorMessage.Entity |> rc.Reply
 
-            return { state with lastPull = DateTime.UtcNow }
+            return state
         }
 
     let actor =
@@ -70,12 +76,19 @@ type SessionActor
                         match msg with
                         | Entity e when (e :? KillPackage) -> onPush state e
                         | PullReply(url, rc) -> onPullNext state rc
+                        | LastUpdate rc ->
+                            async {
+                                rc.Reply state.lastPull
+                                return state
+                            }
                         | _ -> async { return state }
 
                     return! loop state
                 }
 
-            { SessionActorState.kills = queueFactory.Create name; lastPull = DateTime.MinValue } |> loop)
+            { SessionActorState.kills = queueFactory.Create name
+              lastPull = DateTime.MinValue }
+            |> loop)
 
     interface ISessionActor with
         member this.GetStats() =
@@ -97,3 +110,6 @@ type SessionActor
                     | Entity p -> p :?> KillPackage
                     | _ -> KillPackage.empty
             }
+
+        member this.GetLastPullTime() =
+            task { return! actor.PostAndAsyncReply(fun rc -> ActorMessage.LastUpdate rc) }
