@@ -66,6 +66,16 @@ type SessionActor
             return state
         }
 
+    let shutdown state =
+        async {
+            $"Shutting down session [{name}]..." |> log.LogTrace
+
+            do! state.kills.ClearAsync() |> Async.AwaitTask
+
+            $"Shut down session [{name}]." |> log.LogTrace
+            return state
+        }
+
     let actor =
         MailboxProcessor<ActorMessage>.Start(fun inbox ->
             let rec loop (state: SessionActorState) =
@@ -76,6 +86,7 @@ type SessionActor
                         match msg with
                         | Entity e when (e :? KillPackage) -> onPush state e
                         | PullReply(url, rc) -> onPullNext state rc
+                        | Destroy n -> shutdown state
                         | LastUpdate rc ->
                             async {
                                 rc.Reply state.lastPull

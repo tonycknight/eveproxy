@@ -28,6 +28,8 @@ module Threading =
     let toTaskResult (value) =
         System.Threading.Tasks.Task.FromResult(value)
 
+    let whenAll<'a> (tasks: System.Threading.Tasks.Task<'a>[]) =
+        System.Threading.Tasks.Task.WhenAll(tasks)
 
 type ITimeProvider =
     abstract member GetUtcNow: unit -> System.DateTime

@@ -3,19 +3,19 @@ GET http://localhost:8080/api/redisq/stats/
 Accept: application/json
 
 ### next kill
-GET http://localhost:8080/api/redisq/v1/kills/?ttw=5
+GET http://localhost:8080/api/redisq/v1/kills/?ttw=1
 Accept: application/json
 
 ### next kill - test1
-GET http://localhost:8080/api/redisq/v1/kills/session/test1/
+GET http://localhost:8080/api/redisq/v1/kills/session/test1/?ttw=1
 Accept: application/json
 
 ### next kill - test2
-GET http://localhost:8080/api/redisq/v1/kills/session/test2/
+GET http://localhost:8080/api/redisq/v1/kills/session/test2/?ttw=1
 Accept: application/json
 
 ### next kill - test3
-GET http://localhost:8080/api/redisq/v1/kills/session/test3/
+GET http://localhost:8080/api/redisq/v1/kills/session/test3/?ttw=1
 Accept: application/json
 
 ### null kill

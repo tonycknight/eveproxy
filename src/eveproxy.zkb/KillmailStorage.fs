@@ -82,6 +82,7 @@ type IKillmailReferenceQueue =
     abstract member Name: string
     abstract member PushAsync: value: KillPackageReference -> Task
     abstract member PullAsync: unit -> Task<KillPackageReference option>
+    abstract member ClearAsync: unit -> Task
 
 type MemoryKillmailReferenceQueue(name: string) =
     let kills = new System.Collections.Generic.Queue<KillPackageReference>()
@@ -90,6 +91,8 @@ type MemoryKillmailReferenceQueue(name: string) =
         member this.Name = name
 
         member this.PushAsync(value: KillPackageReference) = task { do kills.Enqueue value }
+
+        member this.ClearAsync() = task { do kills.Clear() }
 
         member this.PullAsync() =
             task {
