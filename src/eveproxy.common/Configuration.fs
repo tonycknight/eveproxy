@@ -9,24 +9,33 @@ type AppConfiguration =
       zkbRedisqQueueId: string
       zkbRedisqTtwExternal: string
       zkbRedisqTtwClient: string
-      zkbApiUrl: string }
+      zkbApiUrl: string
+      redisqSessionMaxAge: string }
 
-    member this.zkbRedisqUrl() =
+    member this.ZkbRedisqUrl() =
         sprintf "%s?queueID=%s&ttw=%s" this.zkbRedisqBaseUrl this.zkbRedisqQueueId this.zkbRedisqTtwExternal
+
+    member this.ClientRedisqTtw() =
+        this.zkbRedisqTtwClient |> Strings.toInt 10
+
+    member this.RedisqSessionMaxAge() =
+        this.redisqSessionMaxAge |> Strings.toTimeSpan (TimeSpan.FromHours 3)
 
     static member emptyConfig =
         { AppConfiguration.zkbApiUrl = ""
           zkbRedisqBaseUrl = ""
           zkbRedisqQueueId = ""
           zkbRedisqTtwExternal = ""
-          zkbRedisqTtwClient = "" }
+          zkbRedisqTtwClient = ""
+          redisqSessionMaxAge = "" }
 
     static member defaultConfig =
         { AppConfiguration.zkbRedisqBaseUrl = "https://redisq.zkillboard.com/listen.php"
           zkbRedisqQueueId = (System.Guid.NewGuid() |> sprintf "eveProxy%A")
           zkbRedisqTtwExternal = "10"
-          zkbRedisqTtwClient = "10"
-          zkbApiUrl = "https://zkillboard.com/api/" }
+          zkbRedisqTtwClient = ""
+          zkbApiUrl = "https://zkillboard.com/api/"
+          redisqSessionMaxAge = "" }
 
 
 module Configuration =
