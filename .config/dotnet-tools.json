@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "isRoot": true,
+  "tools": {
+    "paket": {
+      "version": "8.0.0",
+      "commands": [
+        "paket"
+      ]
+    },
+    "dotnet-reportgenerator-globaltool": {
+      "version": "5.2.0",
+      "commands": [
+        "reportgenerator"
+      ]
+    },
+    "fantomas": {
+      "version": "6.2.3",
+      "commands": [
+        "fantomas"
+      ]
+    },
+    "pkgchk-cli": {
+      "version": "0.1.152",
+      "commands": [
+        "pkgchk"
+      ]
+    }
+  }
+}

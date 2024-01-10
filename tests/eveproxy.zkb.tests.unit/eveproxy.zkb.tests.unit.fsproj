@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <GenerateProgramFile>false</GenerateProgramFile>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="KillmailStorage\Utils.fs" />
+    <Compile Include="KillmailStorage\MemoryKillmailRepositoryTests.fs" />
+    <Compile Include="KillmailStorage\MemoryKillmailReferenceQueueTests.fs" />
+    <Compile Include="KillmailStorage\KillmailReferenceQueueFactoryTests.fs" />
+    <Compile Include="KillmailStorage\KillmailWriterTests.fs" />
+    <Compile Include="KillmailStorage\KillmailReaderTests.fs" />
+    <None Include="paket.references" />
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\eveproxy.common\eveproxy.common.fsproj" />
+    <ProjectReference Include="..\..\src\eveproxy.zkb\eveproxy.zkb.fsproj" />
+  </ItemGroup>
+  <Import Project="..\..\.paket\Paket.Restore.targets" />
+</Project>

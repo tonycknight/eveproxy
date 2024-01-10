@@ -1,0 +1,112 @@
+name: Build & Release
+
+
+on:
+  push:
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+
+jobs:
+  sca:
+    name: SCA
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup .NET Core SDK
+        uses: actions/setup-dotnet@v3
+              
+      - name: SCA
+        run: |
+            dotnet tool restore
+            dotnet run --project ./build/build.fsproj -t "SCA"
+
+  apply-style-rules:
+    runs-on: ubuntu-latest
+    name: Check Style rules
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup .NET Core SDK
+        uses: actions/setup-dotnet@v3                
+ 
+      - name: Style checks
+        run: |
+            dotnet tool restore    
+            dotnet run --project ./build/build.fsproj -t "Apply Style Rules"
+
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup .NET Core SDK
+        uses: actions/setup-dotnet@v3
+              
+      - name: Run build
+        run: |
+            dotnet tool restore
+            dotnet run --project ./build/build.fsproj -t "Build"            
+
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup .NET Core SDK
+        uses: actions/setup-dotnet@v3
+                      
+      - name: Tests
+        run: |
+            dotnet tool restore
+            dotnet run --project ./build/build.fsproj -t "Tests"
+
+      - name: Archive Test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: Unit_tests_results
+          path: |
+            ./tests/**/TestResults/*
+            
+      - name: Archive Code coverage
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: Full_code_coverage_report
+          path: ./publish/codecoverage/*.*
+                    
+      - name: Unit test results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Unit test results
+          path: ${{ github.workspace }}/tests/*.tests.unit/TestResults/test_results.trx
+          reporter: dotnet-trx
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Code coverage summary
+        uses: 5monkeys/cobertura-action@master
+        if: always()
+        with:
+          path: ${{ github.workspace }}/publish/codecoveragedata/Cobertura.xml
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          minimum_coverage: 10
+          fail_below_threshold: true
+          show_line: true
+          show_branch: true
+          show_missing: true
+          show_class_names: true
+          skip_covered: false
+          link_missing_lines: true
+          report_name: Code coverage summary
+
+            
