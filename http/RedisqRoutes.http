@@ -1,0 +1,30 @@
+### Stats
+GET http://localhost:8080/api/redisq/stats/
+Accept: application/json
+
+### next kill
+GET http://localhost:8080/api/redisq/v1/kills/?ttw=5
+Accept: application/json
+
+### next kill - test1
+GET http://localhost:8080/api/redisq/v1/kills/session/test1/
+Accept: application/json
+
+### next kill - test2
+GET http://localhost:8080/api/redisq/v1/kills/session/test2/
+Accept: application/json
+
+### next kill - test3
+GET http://localhost:8080/api/redisq/v1/kills/session/test3/
+Accept: application/json
+
+### null kill
+GET http://localhost:8080/api/redisq/v1/kills/null/
+Accept: application/json
+
+
+### Get Kill by ID
+@killId = 114636027
+
+GET http://localhost:8080/api/redisq/v1/kills/id/{{killId}}/ HTTP/1.1
+Accept: application/json    
