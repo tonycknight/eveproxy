@@ -87,14 +87,9 @@ let publishProjects = !! "src/**/eveproxy.fsproj" |> List.ofSeq
 let initTargets () =
 
     Target.create "Clean" (fun _ ->
-        !! "src/**/bin" 
-        ++ "src/**/obj" 
-        |> Shell.cleanDirs
+        !! "src/**/bin" ++ "src/**/obj" |> Shell.cleanDirs
 
-        !! "tests/**/bin" 
-        ++ "tests/**/obj" 
-        ++ "tests/**/TestResults" 
-        ++ publishDir
+        !! "tests/**/bin" ++ "tests/**/obj" ++ "tests/**/TestResults" ++ publishDir
         |> Shell.cleanDirs)
 
     Target.create "Restore" (fun _ -> !!mainSolution |> Seq.iter (DotNet.restore restoreOptions))
@@ -120,7 +115,7 @@ let initTargets () =
 
         if not result.OK then
             failwithf "reportgenerator failed!")
-                
+
     Target.create "Consolidate code coverage" (fun _ ->
         let args =
             sprintf
@@ -156,7 +151,7 @@ let initTargets () =
         else
             failwith "Error reformatting!")
 
-    Target.create "Echo variables" (fun _ -> version |> Trace.traceImportantfn  "Build number: %s"  )
+    Target.create "Echo variables" (fun _ -> version |> Trace.traceImportantfn "Build number: %s")
 
     Target.create "Build" ignore
     Target.create "Tests" ignore
@@ -164,9 +159,14 @@ let initTargets () =
 
     "Clean" ?=>! "Restore"
 
-    "Clean" ==> "Restore" ==> "Compile" ==> "Publish" ==> "Echo variables" ==>! "Build"
+    "Clean" ==> "Restore" ==> "Compile" ==> "Publish" ==> "Echo variables"
+    ==>! "Build"
 
-    "Restore" ==> "Unit Tests" ==> "Consolidate code coverage" ==> "Build code coverage report"  ==>! "Tests"
+    "Restore"
+    ==> "Unit Tests"
+    ==> "Consolidate code coverage"
+    ==> "Build code coverage report"
+    ==>! "Tests"
 
     "Restore" ==> "SCA" ==>! "All"
     "Restore" ==> "Check Style Rules" ==>! "All"
