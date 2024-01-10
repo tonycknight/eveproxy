@@ -4,7 +4,7 @@ open System
 open eveproxy
 open Microsoft.Extensions.Logging
 
-type private SessionActorState = { kills: IKillmailReferenceQueue }
+type private SessionActorState = { kills: IKillmailReferenceQueue; lastPull: DateTime }
 
 type SessionActor
     (
@@ -57,7 +57,7 @@ type SessionActor
             let package = package |> Option.defaultValue KillPackage.empty
             package :> obj |> ActorMessage.Entity |> rc.Reply
 
-            return state
+            return { state with lastPull = DateTime.UtcNow }
         }
 
     let actor =
@@ -75,7 +75,7 @@ type SessionActor
                     return! loop state
                 }
 
-            { SessionActorState.kills = queueFactory.Create name } |> loop)
+            { SessionActorState.kills = queueFactory.Create name; lastPull = DateTime.MinValue } |> loop)
 
     interface ISessionActor with
         member this.GetStats() =
