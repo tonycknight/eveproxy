@@ -4,6 +4,7 @@ open System
 open Giraffe
 open Microsoft.AspNetCore.Builder
 open Microsoft.AspNetCore.Hosting
+open Microsoft.Extensions.Configuration
 open Microsoft.Extensions.Hosting
 open Microsoft.Extensions.Logging
 open Microsoft.Extensions.DependencyInjection
@@ -17,17 +18,24 @@ type Startup() =
 
 
 module Program =
+    let hostUrls (config: IConfiguration) =
+        match config[nameof Unchecked.defaultof<AppConfiguration>.hostUrls] with
+        | null -> AppConfiguration.defaultConfig.hostUrls
+        | x -> x
+
+    let config argv = (new ConfigurationBuilder() |> ApiStartup.configSource argv).Build()
 
     [<EntryPoint>]
-    let main _ =
+    let main argv =
+       
         let host =
             Host
                 .CreateDefaultBuilder()
                 .ConfigureWebHostDefaults(fun whb ->
                     whb
                         .UseStartup<Startup>()
-                        .UseUrls($"http://+:{8080}")
-                        .ConfigureAppConfiguration(ApiStartup.configureAppConfig)
+                        .ConfigureAppConfiguration(ApiStartup.configSource argv >> ignore)
+                        .UseUrls(argv |> config |> hostUrls)
                     |> ignore)
 
                 .Build()

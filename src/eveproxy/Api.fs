@@ -28,12 +28,6 @@ module Api =
         let secrets = sp.GetRequiredService<ISecretProvider>()
         requiresValidIp >=> requiresApiKey secrets
 
-    let config (sp: System.IServiceProvider) =
-        sp
-            .GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>()
-            .Get<AppConfiguration>()
-        |> Configuration.mergeDefaults AppConfiguration.defaultConfig
-
 module ApiStartup =
 
     let addCommonInfrastructure (services: IServiceCollection) =
@@ -46,7 +40,7 @@ module ApiStartup =
 
     let addApiConfig (services: IServiceCollection) =
         services
-            .AddSingleton<AppConfiguration>(fun sp -> Api.config sp)
+            .AddSingleton<AppConfiguration>(Configuration.create)
             .AddSingleton<eveproxy.ISecretProvider, eveproxy.StubSecretProvider>()
 
     let addApiHttp (services: IServiceCollection) =
@@ -65,8 +59,10 @@ module ApiStartup =
         >> addWebFramework
         >> addContentNegotiation
 
-    let configureAppConfig (whbc: IConfigurationBuilder) =
+    let configSource (args: string[]) (whbc: IConfigurationBuilder) =
         whbc
-            .AddJsonFile("appsettings.json", true, true)
+            .AddJsonFile("appsettings.json", true, false)
             .AddEnvironmentVariables("eveproxy_")
-        |> ignore
+            .AddCommandLine(args)
+
+    
