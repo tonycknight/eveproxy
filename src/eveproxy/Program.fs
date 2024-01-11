@@ -23,7 +23,7 @@ module Program =
         | null -> AppConfiguration.defaultConfig.hostUrls
         | x -> x
 
-    let config argv = (new ConfigurationBuilder() |> ApiStartup.appConfig argv).Build()
+    let config argv = (new ConfigurationBuilder() |> ApiStartup.configSource argv).Build()
 
     [<EntryPoint>]
     let main argv =
@@ -34,7 +34,7 @@ module Program =
                 .ConfigureWebHostDefaults(fun whb ->
                     whb
                         .UseStartup<Startup>()
-                        .ConfigureAppConfiguration(ApiStartup.appConfig argv >> ignore)
+                        .ConfigureAppConfiguration(ApiStartup.configSource argv >> ignore)
                         .UseUrls(argv |> config |> hostUrls)
                     |> ignore)
 

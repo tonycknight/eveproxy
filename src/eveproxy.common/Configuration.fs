@@ -2,6 +2,8 @@
 
 open System
 open System.Diagnostics.CodeAnalysis
+open Microsoft.Extensions.Configuration
+open Microsoft.Extensions.DependencyInjection
 
 [<CLIMutable>]
 type AppConfiguration =
@@ -80,7 +82,11 @@ module Configuration =
 
         configCtor.Invoke(paramValues) :?> AppConfiguration
 
-
+    let create (sp: System.IServiceProvider) =
+        sp
+            .GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>()
+            .Get<AppConfiguration>()
+        |> mergeDefaults AppConfiguration.defaultConfig
 
 type ISecretProvider =
     abstract member IsSecretValueEqual: string -> string -> bool
