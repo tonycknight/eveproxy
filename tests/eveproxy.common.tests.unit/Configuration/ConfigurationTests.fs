@@ -30,6 +30,7 @@ module ConfigurationTests =
               zkbRedisqQueueId = apply config.zkbRedisqQueueId defaultConfig.zkbRedisqQueueId
               zkbRedisqTtwExternal = apply config.zkbRedisqTtwExternal defaultConfig.zkbRedisqTtwExternal
               zkbRedisqTtwClient = apply config.zkbRedisqTtwClient defaultConfig.zkbRedisqTtwClient
-              zkbApiUrl = apply config.zkbApiUrl defaultConfig.zkbApiUrl }
+              zkbApiUrl = apply config.zkbApiUrl defaultConfig.zkbApiUrl
+              redisqSessionMaxAge = apply config.redisqSessionMaxAge defaultConfig.redisqSessionMaxAge }
 
         result = expected

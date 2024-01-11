@@ -1,5 +1,6 @@
 ﻿namespace eveproxy
 
+open System
 open System.Diagnostics.CodeAnalysis
 
 module Strings =
@@ -10,7 +11,12 @@ module Strings =
             value.Substring(0, len) + "..."
 
     let toInt (defaultValue: int) (value: string) =
-        match System.Int32.TryParse(value) with
+        match Int32.TryParse(value) with
+        | true, x -> x
+        | _ -> defaultValue
+
+    let toTimeSpan (defaultValue: TimeSpan) (value: string) =
+        match TimeSpan.TryParse(value) with
         | true, x -> x
         | _ -> defaultValue
 
@@ -22,6 +28,8 @@ module Threading =
     let toTaskResult (value) =
         System.Threading.Tasks.Task.FromResult(value)
 
+    let whenAll<'a> (tasks: System.Threading.Tasks.Task<'a>[]) =
+        System.Threading.Tasks.Task.WhenAll(tasks)
 
 type ITimeProvider =
     abstract member GetUtcNow: unit -> System.DateTime
