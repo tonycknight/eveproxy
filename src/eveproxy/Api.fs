@@ -65,8 +65,10 @@ module ApiStartup =
         >> addWebFramework
         >> addContentNegotiation
 
-    let configureAppConfig (whbc: IConfigurationBuilder) =
+    let appConfig (args: string[]) (whbc: IConfigurationBuilder) =
         whbc
-            .AddJsonFile("appsettings.json", true, true)
+            .AddJsonFile("appsettings.json", true, false)
             .AddEnvironmentVariables("eveproxy_")
-        |> ignore
+            .AddCommandLine(args)
+
+    

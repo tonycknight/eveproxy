@@ -26,7 +26,8 @@ module ConfigurationTests =
             if String.IsNullOrWhiteSpace left then right else left
 
         let expected =
-            { AppConfiguration.zkbRedisqBaseUrl = apply config.zkbRedisqBaseUrl defaultConfig.zkbRedisqBaseUrl
+            { AppConfiguration.hostUrls = apply config.hostUrls defaultConfig.hostUrls
+              zkbRedisqBaseUrl = apply config.zkbRedisqBaseUrl defaultConfig.zkbRedisqBaseUrl
               zkbRedisqQueueId = apply config.zkbRedisqQueueId defaultConfig.zkbRedisqQueueId
               zkbRedisqTtwExternal = apply config.zkbRedisqTtwExternal defaultConfig.zkbRedisqTtwExternal
               zkbRedisqTtwClient = apply config.zkbRedisqTtwClient defaultConfig.zkbRedisqTtwClient

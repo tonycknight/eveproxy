@@ -5,7 +5,8 @@ open System.Diagnostics.CodeAnalysis
 
 [<CLIMutable>]
 type AppConfiguration =
-    { zkbRedisqBaseUrl: string
+    { hostUrls: string
+      zkbRedisqBaseUrl: string
       zkbRedisqQueueId: string
       zkbRedisqTtwExternal: string
       zkbRedisqTtwClient: string
@@ -22,7 +23,8 @@ type AppConfiguration =
         this.redisqSessionMaxAge |> Strings.toTimeSpan (TimeSpan.FromHours 3)
 
     static member emptyConfig =
-        { AppConfiguration.zkbApiUrl = ""
+        { AppConfiguration.hostUrls = ""
+          zkbApiUrl = ""
           zkbRedisqBaseUrl = ""
           zkbRedisqQueueId = ""
           zkbRedisqTtwExternal = ""
@@ -30,7 +32,8 @@ type AppConfiguration =
           redisqSessionMaxAge = "" }
 
     static member defaultConfig =
-        { AppConfiguration.zkbRedisqBaseUrl = "https://redisq.zkillboard.com/listen.php"
+        { AppConfiguration.hostUrls = "http://+:8080"
+          zkbRedisqBaseUrl = "https://redisq.zkillboard.com/listen.php"
           zkbRedisqQueueId = (System.Guid.NewGuid() |> sprintf "eveProxy%A")
           zkbRedisqTtwExternal = "10"
           zkbRedisqTtwClient = ""
