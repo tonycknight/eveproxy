@@ -1,0 +1,34 @@
+name: "Scheduled SCA"
+
+on:
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      username:
+        required: false
+        type: string
+    secrets:
+      token:
+        required: false
+  schedule:
+    - cron: '1 0 * * 6'
+
+jobs:
+  sca:
+    name: Scheduled SCA
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v3
+        
+      - name: Check SCA
+        run: |
+          dotnet tool restore
+          set +e
+          dotnet pkgchk --transitive true --output ./report
+          exitcode="$?"
+          cat ./report/pkgchk.md >> $GITHUB_STEP_SUMMARY
+          exit "$exitcode"
