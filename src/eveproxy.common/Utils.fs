@@ -20,9 +20,14 @@ module Strings =
         | true, x -> x
         | _ -> defaultValue
 
+    let toLine (values: seq<string>) = String.Join(Environment.NewLine, values)
+
 module Option =
     let nullToOption (value: obj) =
         if value = null then None else Some value
+
+    let reduceMany (values: seq<'a option>) = 
+        values |> Seq.filter Option.isSome |> Seq.map Option.get 
 
 module Threading =
     let toTaskResult (value) =
@@ -30,6 +35,13 @@ module Threading =
 
     let whenAll<'a> (tasks: System.Threading.Tasks.Task<'a>[]) =
         System.Threading.Tasks.Task.WhenAll(tasks)
+
+module Validators =
+    let mustBe (validate: string -> bool) (error: string) (value)=
+        if value |> validate |> not then    
+            Some error
+        else
+            None
 
 type ITimeProvider =
     abstract member GetUtcNow: unit -> System.DateTime
