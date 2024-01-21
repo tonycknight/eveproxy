@@ -36,7 +36,7 @@ jobs:
       - name: Style checks
         run: |
             dotnet tool restore    
-            dotnet run --project ./build/build.fsproj -t "Apply Style Rules"
+            dotnet run --project ./build/build.fsproj -t "Check Style Rules"
 
 
   build:
