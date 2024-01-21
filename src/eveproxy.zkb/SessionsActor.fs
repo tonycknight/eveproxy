@@ -1,5 +1,6 @@
 ﻿namespace eveproxy.zkb
 
+open System
 open System.Threading.Tasks
 open eveproxy
 open Microsoft.Extensions.Logging
@@ -10,11 +11,16 @@ type private SessionsActorState =
 type SessionsActor
     (
         stats: IApiStatsActor,
+        config: AppConfiguration,
         logFactory: ILoggerFactory,
         killReader: IKillmailReader,
+        timeProvider: ITimeProvider,
         queueFactory: IKillmailReferenceQueueFactory
     ) =
+    let defaultSessionName = ""
     let log = logFactory.CreateLogger<SessionsActor>()
+    let maxSessionAge = config.RedisqSessionMaxAge()
+    let scheduledMaint = new System.Timers.Timer(TimeSpan.FromMinutes(1))
 
     let getStateActor (name: string) (state: SessionsActorState) =
         let actor =
@@ -47,17 +53,58 @@ type SessionsActor
         }
 
     let sessionStats (state: SessionsActorState) =
+        state.sessions
+        |> Map.values
+        |> Seq.map (fun a -> a.GetStats())
+        |> Array.ofSeq
+        |> Threading.whenAll
+
+
+    let findSessionsToDestroy (state: SessionsActorState) =
         task {
-            let actors =
-                state.sessions |> Map.values |> Seq.map (fun a -> a.GetStats()) |> Array.ofSeq
+            let! results =
+                state.sessions
+                |> Seq.filter (fun a -> a.Key <> defaultSessionName)
+                |> Seq.map (fun a ->
+                    task {
+                        let! t = a.Value.GetLastPullTime()
+                        return (a.Key, a.Value, t)
+                    })
+                |> Array.ofSeq
+                |> Threading.whenAll
 
-            let! stats = Task.WhenAll(actors)
+            let exp = timeProvider.GetUtcNow().Add(-maxSessionAge)
 
-            return stats
+            return
+                results
+                |> Seq.filter (fun (_, _, t) -> t < exp)
+                |> Seq.map (fun (k, a, _) -> (k, a))
+                |> List.ofSeq
         }
 
+
+    let postSessionsToDestroy (state: SessionsActorState) (sessions: (string * ISessionActor) list) =
+        match sessions with
+        | [] ->
+            "No sessions found to destroy." |> log.LogTrace
+            state
+        | sessions ->
+            "Starting session destruction..." |> log.LogTrace
+
+            let cleanSessions =
+                sessions
+                |> Seq.map fst
+                |> Seq.fold (fun s n -> s |> Map.remove n) state.sessions
+
+            sessions
+            |> Seq.iter (fun (k, a) ->
+                $"Initiating shutdown of session [{k}]" |> log.LogTrace
+                ActorMessage.Destroy k |> a.Post)
+
+            { SessionsActorState.sessions = cleanSessions }
+
     let initActorState () =
-        { SessionsActorState.sessions = Map.empty } |> getStateActor ""
+        { SessionsActorState.sessions = Map.empty } |> getStateActor defaultSessionName
 
     let actor =
         MailboxProcessor<ActorMessage>.Start(fun inbox ->
@@ -69,12 +116,16 @@ type SessionsActor
                         match msg with
                         | Entity e when (e :? KillPackage) -> onPush state e
                         | PullReply(url, rc) -> onPullNext state url rc |> Async.AwaitTask
+                        | ScheduledMaintenance ->
+                            async {
+                                $"Finding inactive sessions to destroy after {maxSessionAge}..." |> log.LogTrace
+                                let! names = findSessionsToDestroy state |> Async.AwaitTask
+                                return names |> postSessionsToDestroy state
+                            }
                         | ChildStats(rc) ->
                             async {
                                 let! stats = sessionStats state |> Async.AwaitTask
-
                                 stats |> rc.Reply
-
                                 return state
                             }
                         | _ -> async { return state }
@@ -84,6 +135,10 @@ type SessionsActor
 
             let state, _ = initActorState ()
             state |> loop)
+
+    do scheduledMaint.Elapsed.Add(fun _ -> ActorMessage.ScheduledMaintenance |> actor.Post)
+    do scheduledMaint.Start()
+
 
     interface ISessionsActor with
         member this.GetStats() =

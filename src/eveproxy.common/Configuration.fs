@@ -2,32 +2,46 @@
 
 open System
 open System.Diagnostics.CodeAnalysis
+open eveproxy.Validators
+open Microsoft.Extensions.Configuration
+open Microsoft.Extensions.DependencyInjection
 
 [<CLIMutable>]
 type AppConfiguration =
-    { zkbRedisqBaseUrl: string
+    { hostUrls: string
+      zkbRedisqBaseUrl: string
       zkbRedisqQueueId: string
       zkbRedisqTtwExternal: string
       zkbRedisqTtwClient: string
-      zkbApiUrl: string }
+      zkbApiUrl: string
+      redisqSessionMaxAge: string }
 
-    member this.zkbRedisqUrl() =
+    member this.ZkbRedisqUrl() =
         sprintf "%s?queueID=%s&ttw=%s" this.zkbRedisqBaseUrl this.zkbRedisqQueueId this.zkbRedisqTtwExternal
 
+    member this.ClientRedisqTtw() =
+        this.zkbRedisqTtwClient |> Strings.toInt 10
+
+    member this.RedisqSessionMaxAge() =
+        this.redisqSessionMaxAge |> Strings.toTimeSpan (TimeSpan.FromHours 3)
+
     static member emptyConfig =
-        { AppConfiguration.zkbApiUrl = ""
+        { AppConfiguration.hostUrls = ""
+          zkbApiUrl = ""
           zkbRedisqBaseUrl = ""
           zkbRedisqQueueId = ""
           zkbRedisqTtwExternal = ""
-          zkbRedisqTtwClient = "" }
+          zkbRedisqTtwClient = ""
+          redisqSessionMaxAge = "" }
 
     static member defaultConfig =
-        { AppConfiguration.zkbRedisqBaseUrl = "https://redisq.zkillboard.com/listen.php"
+        { AppConfiguration.hostUrls = "http://+:8080"
+          zkbRedisqBaseUrl = "https://redisq.zkillboard.com/listen.php"
           zkbRedisqQueueId = (System.Guid.NewGuid() |> sprintf "eveProxy%A")
           zkbRedisqTtwExternal = "10"
           zkbRedisqTtwClient = "10"
-          zkbApiUrl = "https://zkillboard.com/api/" }
-
+          zkbApiUrl = "https://zkillboard.com/api/"
+          redisqSessionMaxAge = "" }
 
 module Configuration =
     open System.Reflection
@@ -68,7 +82,46 @@ module Configuration =
 
         configCtor.Invoke(paramValues) :?> AppConfiguration
 
+    let validate (config: AppConfiguration) =
+        let validUrl value = 
+            try
+                new Uri(value) |> ignore
+                true
+            with ex -> false
 
+        let nonEmptyString = String.IsNullOrWhiteSpace >> not
+            
+        let positiveInteger (value: string) = 
+            match Int32.TryParse value with
+            | true, x when x >= 0 -> true
+            | _ -> false
+            
+        let timeSpan (value: string) =
+            match TimeSpan.TryParse value with
+            | true, _ -> true
+            | _ -> false
+
+        let errors = 
+            seq {
+                config.hostUrls |> mustBe nonEmptyString $"{nameof Unchecked.defaultof<AppConfiguration>.hostUrls} must be a non-empty string." 
+                config.zkbRedisqBaseUrl |> mustBe (nonEmptyString >&&> validUrl) $"{nameof Unchecked.defaultof<AppConfiguration>.zkbRedisqBaseUrl} must be a non-empty string."
+                config.zkbRedisqTtwExternal |> mustBe positiveInteger $"{nameof Unchecked.defaultof<AppConfiguration>.zkbRedisqTtwExternal} must be a positive integer." 
+                config.zkbRedisqTtwClient |> mustBe positiveInteger $"{nameof Unchecked.defaultof<AppConfiguration>.zkbRedisqTtwClient} must be a positive integer." 
+                config.zkbApiUrl |> mustBe (nonEmptyString >&&> validUrl) $"{nameof Unchecked.defaultof<AppConfiguration>.zkbApiUrl} must be a valid URL." 
+                config.redisqSessionMaxAge |> mustBe timeSpan $"{nameof Unchecked.defaultof<AppConfiguration>.redisqSessionMaxAge} must be a valid timespan (HH:mm:ss)."
+            } |> Option.reduceMany |> Strings.toLine
+
+        if errors.Length > 0 then   
+            failwith $"Errors found in configuration:{Environment.NewLine}{errors}"
+            
+        config
+
+    let create (sp: System.IServiceProvider) =
+        sp
+            .GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>()
+            .Get<AppConfiguration>()
+        |> mergeDefaults AppConfiguration.defaultConfig
+        |> validate
 
 type ISecretProvider =
     abstract member IsSecretValueEqual: string -> string -> bool

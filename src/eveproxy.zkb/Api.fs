@@ -23,16 +23,14 @@ module ApiStartup =
         let config = sp.GetRequiredService<AppConfiguration>()
         let ingest = sp.GetRequiredService<IRedisqIngestionActor>()
 
-        config.zkbRedisqUrl () |> ActorMessage.Pull |> ingest.Post
+        config.ZkbRedisqUrl() |> ActorMessage.Pull |> ingest.Post
 
 
 module Api =
     let private ttw (config: AppConfiguration) (query: IQueryCollection) =
-        let defaultTime = config.zkbRedisqTtwClient |> Strings.toInt 10
-
         match query.TryGetValue("ttw") with
-        | true, x -> x |> Seq.head |> Strings.toInt defaultTime
-        | _ -> defaultTime
+        | true, x -> x |> Seq.head |> Strings.toInt (config.ClientRedisqTtw())
+        | _ -> config.ClientRedisqTtw()
 
     let private countSessionKillFetch (ctx: HttpContext) sessionId =
         let stats = ctx.GetService<IApiStatsActor>()
