@@ -64,5 +64,3 @@ module ApiStartup =
             .AddJsonFile("appsettings.json", true, false)
             .AddEnvironmentVariables("eveproxy_")
             .AddCommandLine(args)
-
-    

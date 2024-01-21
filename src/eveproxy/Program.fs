@@ -23,11 +23,12 @@ module Program =
         | null -> AppConfiguration.defaultConfig.hostUrls
         | x -> x
 
-    let config argv = (new ConfigurationBuilder() |> ApiStartup.configSource argv).Build()
+    let config argv =
+        (new ConfigurationBuilder() |> ApiStartup.configSource argv).Build()
 
     [<EntryPoint>]
     let main argv =
-       
+
         let host =
             Host
                 .CreateDefaultBuilder()
