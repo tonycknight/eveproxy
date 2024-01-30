@@ -70,7 +70,7 @@ jobs:
             dotnet run --project ./build/build.fsproj -t "Tests"
 
       - name: Archive Test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: Unit_tests_results
@@ -78,7 +78,7 @@ jobs:
             ./tests/**/TestResults/*
             
       - name: Archive Code coverage
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: Full_code_coverage_report
