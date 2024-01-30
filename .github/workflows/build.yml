@@ -14,10 +14,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup .NET Core SDK
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
               
       - name: SCA
         run: |
@@ -28,10 +28,10 @@ jobs:
     runs-on: ubuntu-latest
     name: Check Style rules
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup .NET Core SDK
-        uses: actions/setup-dotnet@v3                
+        uses: actions/setup-dotnet@v4                
  
       - name: Style checks
         run: |
@@ -44,10 +44,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup .NET Core SDK
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
               
       - name: Run build
         run: |
@@ -59,10 +59,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup .NET Core SDK
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
                       
       - name: Tests
         run: |
@@ -70,7 +70,7 @@ jobs:
             dotnet run --project ./build/build.fsproj -t "Tests"
 
       - name: Archive Test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: Unit_tests_results
@@ -78,7 +78,7 @@ jobs:
             ./tests/**/TestResults/*
             
       - name: Archive Code coverage
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: Full_code_coverage_report

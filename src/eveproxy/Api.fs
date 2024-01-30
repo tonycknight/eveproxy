@@ -31,7 +31,7 @@ module Api =
 module ApiStartup =
 
     let addCommonInfrastructure (services: IServiceCollection) =
-        services.AddSingleton<ITimeProvider, TimeProvider>()
+        services.AddSingleton<ITimeProvider, eveproxy.TimeProvider>()
 
     let addApiLogging (services: IServiceCollection) =
         services
