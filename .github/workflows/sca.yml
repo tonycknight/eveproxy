@@ -24,7 +24,7 @@ jobs:
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v3
         
-      - name: Check SCA
-        uses: tonycknight/pkgchk-action@v1.0.10
-        with:
-          project-path: eveproxy.sln
+      - name: SCA
+        run: |
+            dotnet tool restore
+            dotnet run --project ./build/build.fsproj -t "SCA"
