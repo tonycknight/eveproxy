@@ -11,7 +11,7 @@ on:
       token:
         required: false
   schedule:
-    - cron: '1 0 * * 6'
+    - cron: '1 0 * * 8'
 
 jobs:
   sca:
@@ -25,10 +25,6 @@ jobs:
         uses: actions/setup-dotnet@v3
         
       - name: Check SCA
-        run: |
-          dotnet tool restore
-          set +e
-          dotnet pkgchk --transitive true --output ./report
-          exitcode="$?"
-          cat ./report/pkgchk.md >> $GITHUB_STEP_SUMMARY
-          exit "$exitcode"
+        uses: tonycknight/pkgchk-action@v1.0.10
+        with:
+          project-path: eveproxy.sln
