@@ -49,9 +49,6 @@ type MongoKillmailRepository(config: eveproxy.AppConfiguration) =
             collectionName
             (config.mongoUserName, config.mongoPassword)
 
-    let cache =
-        new System.Collections.Concurrent.ConcurrentDictionary<string, KillPackage>(StringComparer.OrdinalIgnoreCase)
-
     interface IKillmailRepository with
         member this.SetAsync(kill) =
             task {
