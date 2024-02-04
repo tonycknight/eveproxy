@@ -14,7 +14,9 @@ type AppConfiguration =
       zkbRedisqTtwExternal: string
       zkbRedisqTtwClient: string
       zkbApiUrl: string
-      redisqSessionMaxAge: string }
+      redisqSessionMaxAge: string
+      mongoConnection: string
+      mongoDbName: string}
 
     member this.ZkbRedisqUrl() =
         sprintf "%s?queueID=%s&ttw=%s" this.zkbRedisqBaseUrl this.zkbRedisqQueueId this.zkbRedisqTtwExternal
@@ -32,7 +34,9 @@ type AppConfiguration =
           zkbRedisqQueueId = ""
           zkbRedisqTtwExternal = ""
           zkbRedisqTtwClient = ""
-          redisqSessionMaxAge = "" }
+          redisqSessionMaxAge = ""
+          mongoConnection = ""
+          mongoDbName = ""}
 
     static member defaultConfig =
         { AppConfiguration.hostUrls = "http://+:8080"
@@ -41,7 +45,9 @@ type AppConfiguration =
           zkbRedisqTtwExternal = "10"
           zkbRedisqTtwClient = "10"
           zkbApiUrl = "https://zkillboard.com/api/"
-          redisqSessionMaxAge = "" }
+          redisqSessionMaxAge = ""
+          mongoConnection = ""
+          mongoDbName = "eveproxy"}
 
 module Configuration =
     open System.Reflection
@@ -133,6 +139,16 @@ module Configuration =
                 |> mustBe
                     timeSpan
                     $"{nameof Unchecked.defaultof<AppConfiguration>.redisqSessionMaxAge} must be a valid timespan (HH:mm:ss)."
+
+                config.mongoConnection
+                |> mustBe
+                    nonEmptyString
+                    $"{nameof Unchecked.defaultof<AppConfiguration>.mongoConnection} must be a non-empty string."
+
+                config.mongoDbName
+                |> mustBe
+                    nonEmptyString
+                    $"{nameof Unchecked.defaultof<AppConfiguration>.mongoDbName} must be a non-empty string."
             }
             |> Option.reduceMany
             |> Strings.toLine

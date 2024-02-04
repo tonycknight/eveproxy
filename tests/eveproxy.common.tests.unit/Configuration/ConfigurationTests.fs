@@ -32,6 +32,8 @@ module ConfigurationTests =
               zkbRedisqTtwExternal = apply config.zkbRedisqTtwExternal defaultConfig.zkbRedisqTtwExternal
               zkbRedisqTtwClient = apply config.zkbRedisqTtwClient defaultConfig.zkbRedisqTtwClient
               zkbApiUrl = apply config.zkbApiUrl defaultConfig.zkbApiUrl
-              redisqSessionMaxAge = apply config.redisqSessionMaxAge defaultConfig.redisqSessionMaxAge }
+              redisqSessionMaxAge = apply config.redisqSessionMaxAge defaultConfig.redisqSessionMaxAge
+              mongoConnection = apply config.mongoConnection defaultConfig.mongoConnection
+              mongoDbName = apply config.mongoDbName defaultConfig.mongoDbName}
 
         result = expected
