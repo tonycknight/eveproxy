@@ -8,6 +8,7 @@ open eveproxy.Threading
 type IKillmailRepository =
     abstract member SetAsync: kill: KillPackage -> Task<KillPackage option>
     abstract member GetAsync: id: string -> Task<KillPackage option>
+    abstract member GetCountAsync: unit -> Task<int>
 
 type MemoryKillmailRepository() =
     let cache =
@@ -29,6 +30,7 @@ type MemoryKillmailRepository() =
              | _ -> None)
             |> toTaskResult
 
+        member this.GetCountAsync() = task { return cache.Count }
 
 type IKillmailWriter =
     abstract member WriteAsync: kill: KillPackage -> Task<KillPackage>
