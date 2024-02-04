@@ -36,7 +36,6 @@ module ConfigurationTests =
               mongoServer = apply config.mongoServer defaultConfig.mongoServer
               mongoDbName = apply config.mongoDbName defaultConfig.mongoDbName
               mongoUserName = apply config.mongoUserName defaultConfig.mongoUserName
-              mongoPassword = apply config.mongoPassword defaultConfig.mongoPassword
-              }
+              mongoPassword = apply config.mongoPassword defaultConfig.mongoPassword }
 
         result = expected
