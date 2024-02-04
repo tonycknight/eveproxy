@@ -107,10 +107,13 @@ module Api =
 
         fun (next: HttpFunc) (ctx: HttpContext) ->
             task {
+                let kmRepo = ctx.GetService<IKillmailRepository>()
                 let statsActor = ctx.GetService<IApiStatsActor>()
 
                 let! statsActorStats = statsActor.GetStats()
                 let! apiStats = statsActor.GetApiStats()
+
+                let! kmCount = kmRepo.GetCountAsync()
 
                 let! ingestActorStats = ctx.GetService<IRedisqIngestionActor>().GetStats()
                 let! writeActorStats = ctx.GetService<IKillWriteActor>().GetStats()
@@ -121,6 +124,7 @@ module Api =
                        stats =
                         {| ingestion = apiStats.ingestion
                            distribution = apiStats.distribution
+                           storage = {| killmails = kmCount |}
                            routes = apiStats.routes |> Map.values |> Seq.sortByDescending (fun rs -> rs.count) |} |}
 
                 return! Successful.OK result next ctx
