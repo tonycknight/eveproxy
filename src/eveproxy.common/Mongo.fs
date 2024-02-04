@@ -5,6 +5,7 @@ open System.Diagnostics.CodeAnalysis
 open MongoDB.Bson
 open MongoDB.Driver
 
+
 [<ExcludeFromCodeCoverage>]
 module MongoBson =
     open MongoDB.Bson.IO
@@ -117,3 +118,32 @@ module Mongo =
 
     let query<'a> (collection: IMongoCollection<BsonDocument>) =
         collection.AsQueryable<BsonDocument>() |> Seq.map MongoBson.toObject<'a>
+
+    let pullSingletonFromQueue<'a> (collection: IMongoCollection<BsonDocument>) =
+        task {
+            let filter = new MongoDB.Bson.BsonDocument() |> FilterDefinition.op_Implicit
+            let opts = new FindOneAndDeleteOptions<MongoDB.Bson.BsonDocument>()
+            
+            let! r = collection.FindOneAndDeleteAsync<MongoDB.Bson.BsonDocument>(filter, opts)
+
+            return match Object.ReferenceEquals(r, null) with
+                        | true -> None
+                        | _ -> r |> MongoBson.toObject<'a> |> Some
+        }
+
+    let pushToQueue<'a> (collection: IMongoCollection<BsonDocument>)  (values: seq<'a>)=  
+        task {
+            let values =
+                values 
+                //|> Seq.map applyId // TODO: inject a unique ID into the BSON document
+                |> Seq.map MongoBson.ofObject
+                |> Array.ofSeq
+
+            if values.Length > 0 then
+                let opts = new InsertManyOptions()
+                
+                try                    
+                    do! collection.InsertManyAsync(values, opts)
+                with
+                | ex -> ignore ex // TODO: future ... telemetry.ex ex
+            }
