@@ -1,3 +1,4 @@
 group Main
 FSharp.Core
 Giraffe
+MongoDB.Driver

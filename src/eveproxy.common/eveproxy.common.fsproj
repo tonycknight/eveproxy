@@ -11,6 +11,7 @@
     <Compile Include="ApiModels.fs" />
     <Compile Include="Http.fs" />
     <Compile Include="Actors.fs" />
+    <Compile Include="Mongo.fs" />
     <None Include="paket.references" />
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />
