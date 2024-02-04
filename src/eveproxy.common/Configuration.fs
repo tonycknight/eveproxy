@@ -15,8 +15,10 @@ type AppConfiguration =
       zkbRedisqTtwClient: string
       zkbApiUrl: string
       redisqSessionMaxAge: string
-      mongoConnection: string
-      mongoDbName: string}
+      mongoServer: string
+      mongoDbName: string
+      mongoUserName: string
+      mongoPassword: string}
 
     member this.ZkbRedisqUrl() =
         sprintf "%s?queueID=%s&ttw=%s" this.zkbRedisqBaseUrl this.zkbRedisqQueueId this.zkbRedisqTtwExternal
@@ -35,8 +37,10 @@ type AppConfiguration =
           zkbRedisqTtwExternal = ""
           zkbRedisqTtwClient = ""
           redisqSessionMaxAge = ""
-          mongoConnection = ""
-          mongoDbName = ""}
+          mongoServer = ""
+          mongoDbName = ""
+          mongoUserName = ""
+          mongoPassword = ""}
 
     static member defaultConfig =
         { AppConfiguration.hostUrls = "http://+:8080"
@@ -46,8 +50,10 @@ type AppConfiguration =
           zkbRedisqTtwClient = "10"
           zkbApiUrl = "https://zkillboard.com/api/"
           redisqSessionMaxAge = ""
-          mongoConnection = ""
-          mongoDbName = "eveproxy"}
+          mongoServer = "127.0.0.1"
+          mongoDbName = "eveproxy"
+          mongoUserName = ""
+          mongoPassword = ""}
 
 module Configuration =
     open System.Reflection
@@ -140,15 +146,25 @@ module Configuration =
                     timeSpan
                     $"{nameof Unchecked.defaultof<AppConfiguration>.redisqSessionMaxAge} must be a valid timespan (HH:mm:ss)."
 
-                config.mongoConnection
+                config.mongoServer
                 |> mustBe
                     nonEmptyString
-                    $"{nameof Unchecked.defaultof<AppConfiguration>.mongoConnection} must be a non-empty string."
+                    $"{nameof Unchecked.defaultof<AppConfiguration>.mongoServer} must be a non-empty string."
 
                 config.mongoDbName
                 |> mustBe
                     nonEmptyString
                     $"{nameof Unchecked.defaultof<AppConfiguration>.mongoDbName} must be a non-empty string."
+
+                config.mongoUserName
+                |> mustBe
+                    nonEmptyString
+                    $"{nameof Unchecked.defaultof<AppConfiguration>.mongoUserName} must be a non-empty string."
+
+                config.mongoPassword
+                |> mustBe
+                    nonEmptyString
+                    $"{nameof Unchecked.defaultof<AppConfiguration>.mongoPassword} must be a non-empty string."
             }
             |> Option.reduceMany
             |> Strings.toLine
