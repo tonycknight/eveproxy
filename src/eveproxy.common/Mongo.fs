@@ -109,15 +109,26 @@ module Mongo =
             |> MongoBson.ofJson
             |> FilterDefinition.op_Implicit
 
-        collection.ReplaceOne(filter, doc, opts) |> ignore
+        collection.ReplaceOneAsync(filter, doc, opts)
 
     let delete (collection: IMongoCollection<BsonDocument>) id =
-
         let filter = id |> idFilter |> MongoBson.ofJson |> FilterDefinition.op_Implicit
-        collection.DeleteOne(filter) |> ignore
+        collection.DeleteOneAsync(filter)
 
     let query<'a> (collection: IMongoCollection<BsonDocument>) =
         collection.AsQueryable<BsonDocument>() |> Seq.map MongoBson.toObject<'a>
+
+    let getSingle<'a> (collection: IMongoCollection<BsonDocument>) (predicate: string) =
+        task {
+            let fieldFilter = new JsonFilterDefinition<BsonDocument>(predicate)
+            use! r = collection.FindAsync(fieldFilter)
+
+            return
+                r.FirstOrDefault<BsonDocument>()
+                |> Option.ofNull
+                |> Option.map MongoBson.toObject<'a>
+        }
+
 
     let count (collection: IMongoCollection<BsonDocument>) =
         new BsonDocument()

@@ -35,6 +35,12 @@ module Option =
     let nullToOption (value: obj) =
         if value = null then None else Some value
 
+    let ofNull<'a> (value: 'a) =
+        if Object.ReferenceEquals(value, null) then
+            None
+        else
+            Some value
+
     let reduceMany (values: seq<'a option>) =
         values |> Seq.filter Option.isSome |> Seq.map Option.get
 

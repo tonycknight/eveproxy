@@ -8,7 +8,7 @@ open eveproxy.Threading
 type IKillmailRepository =
     abstract member SetAsync: kill: KillPackage -> Task<KillPackage option>
     abstract member GetAsync: id: string -> Task<KillPackage option>
-    abstract member GetCountAsync: unit -> Task<int>
+    abstract member GetCountAsync: unit -> Task<int64>
 
 type MemoryKillmailRepository() =
     let cache =
@@ -31,6 +31,40 @@ type MemoryKillmailRepository() =
             |> toTaskResult
 
         member this.GetCountAsync() = task { return cache.Count }
+
+
+type MongoKillmailRepository(config: eveproxy.AppConfiguration) =
+
+    [<Literal>]
+    let indexPath = "_v.package.killID"
+
+    [<Literal>]
+    let collectionName = "killmails"
+
+    let mongoCol =
+        eveproxy.Mongo.initCollection
+            indexPath
+            config.mongoServer
+            config.mongoDbName
+            collectionName
+            (config.mongoUserName, config.mongoPassword)
+
+    let cache =
+        new System.Collections.Concurrent.ConcurrentDictionary<string, KillPackage>(StringComparer.OrdinalIgnoreCase)
+
+    interface IKillmailRepository with
+        member this.SetAsync(kill) =
+            task {
+                let! r = kill |> eveproxy.MongoBson.ofObject |> eveproxy.Mongo.upsert mongoCol
+                // TODO: Ids etc.?
+                return Some kill
+            }
+
+        member this.GetAsync(id) =
+            sprintf "{'%s': %s }" indexPath id
+            |> eveproxy.Mongo.getSingle<KillPackage> mongoCol
+
+        member this.GetCountAsync() = eveproxy.Mongo.count mongoCol
 
 type IKillmailWriter =
     abstract member WriteAsync: kill: KillPackage -> Task<KillPackage>
