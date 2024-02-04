@@ -30,10 +30,7 @@ type MemoryKillmailRepository() =
              | _ -> None)
             |> toTaskResult
 
-        member this.GetCountAsync() =
-            task {
-                return cache.Count
-            }
+        member this.GetCountAsync() = task { return cache.Count }
 
 type IKillmailWriter =
     abstract member WriteAsync: kill: KillPackage -> Task<KillPackage>

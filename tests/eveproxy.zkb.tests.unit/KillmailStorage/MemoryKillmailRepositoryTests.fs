@@ -52,20 +52,20 @@ module MemoryKillmailRepositoryTests =
         result.Result = Some kp
 
     [<Xunit.Fact>]
-    let ``GetCountAsync on empty repo returns zero``()=
+    let ``GetCountAsync on empty repo returns zero`` () =
         let repo = new MemoryKillmailRepository() :> IKillmailRepository
         let result = (repo.GetCountAsync()).Result
 
         result = 0
 
     [<Property>]
-    let ``GetCountAsync reflects stored count``(count: PositiveInt)=
-        
+    let ``GetCountAsync reflects stored count`` (count: PositiveInt) =
+
         let repo = new MemoryKillmailRepository() :> IKillmailRepository
 
         for x in [ 1 .. count.Get ] do
-            let kp = Guid.NewGuid() |> Utils.kill 
-            (repo.SetAsync kp).Result |> ignore            
+            let kp = Guid.NewGuid() |> Utils.kill
+            (repo.SetAsync kp).Result |> ignore
 
         let result = (repo.GetCountAsync()).Result
 
