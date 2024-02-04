@@ -124,7 +124,7 @@ module Api =
                        stats =
                         {| ingestion = apiStats.ingestion
                            distribution = apiStats.distribution
-                           storage = {| killmails = kmCount |}
+                           storage = {| kills = kmCount |}
                            routes = apiStats.routes |> Map.values |> Seq.sortByDescending (fun rs -> rs.count) |} |}
 
                 return! Successful.OK result next ctx
