@@ -50,7 +50,7 @@ module Mongo =
     let resolveServers (servers: string) =
         servers |> Strings.split "," |> Seq.map appendPort |> Strings.join ","
 
-    let connectionString userName password server =
+    let connectionString (userName, password) server =
         let servers = resolveServers server
 
         match userName with
@@ -88,10 +88,10 @@ module Mongo =
 
     let getCollection colName (db: IMongoDatabase) = db.GetCollection(colName)
 
-    let initCollection indexPath server dbName collectionName userName password =
+    let initCollection indexPath server dbName collectionName (userName, password) =
         let col =
             server
-            |> connectionString userName password
+            |> connectionString (userName, password)
             |> setDbConnection dbName
             |> initDb dbName
             |> getCollection collectionName
