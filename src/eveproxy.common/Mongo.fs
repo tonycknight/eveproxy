@@ -119,31 +119,38 @@ module Mongo =
     let query<'a> (collection: IMongoCollection<BsonDocument>) =
         collection.AsQueryable<BsonDocument>() |> Seq.map MongoBson.toObject<'a>
 
+    let count (collection: IMongoCollection<BsonDocument>) =
+        new BsonDocument()
+        |> FilterDefinition.op_Implicit
+        |> collection.CountDocumentsAsync
+
+
     let pullSingletonFromQueue<'a> (collection: IMongoCollection<BsonDocument>) =
         task {
             let filter = new MongoDB.Bson.BsonDocument() |> FilterDefinition.op_Implicit
             let opts = new FindOneAndDeleteOptions<MongoDB.Bson.BsonDocument>()
-            
+
             let! r = collection.FindOneAndDeleteAsync<MongoDB.Bson.BsonDocument>(filter, opts)
 
-            return match Object.ReferenceEquals(r, null) with
-                        | true -> None
-                        | _ -> r |> MongoBson.toObject<'a> |> Some
+            return
+                match Object.ReferenceEquals(r, null) with
+                | true -> None
+                | _ -> r |> MongoBson.toObject<'a> |> Some
         }
 
-    let pushToQueue<'a> (collection: IMongoCollection<BsonDocument>)  (values: seq<'a>)=  
+    let pushToQueue<'a> (collection: IMongoCollection<BsonDocument>) (values: seq<'a>) =
         task {
             let values =
-                values 
+                values
                 //|> Seq.map applyId // TODO: inject a unique ID into the BSON document
                 |> Seq.map MongoBson.ofObject
                 |> Array.ofSeq
 
             if values.Length > 0 then
                 let opts = new InsertManyOptions()
-                
-                try                    
+
+                try
                     do! collection.InsertManyAsync(values, opts)
-                with
-                | ex -> ignore ex // TODO: future ... telemetry.ex ex
-            }
+                with ex ->
+                    ignore ex // TODO: future ... telemetry.ex ex
+        }
