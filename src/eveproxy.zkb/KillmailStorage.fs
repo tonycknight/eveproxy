@@ -135,6 +135,34 @@ type MemoryKillmailReferenceQueue(name: string) =
                     | (false, _) -> None
             }
 
+type MongoKillmailReferenceQueue(config: eveproxy.AppConfiguration, name: string) =    
+    let collectionName = $"killmail_queue_{name}"
+
+    let mongoCol =
+        eveproxy.Mongo.initCollection
+            ""
+            config.mongoServer
+            config.mongoDbName
+            collectionName
+            (config.mongoUserName, config.mongoPassword)
+
+    interface IKillmailReferenceQueue with
+        member this.Name = name
+
+        member this.PushAsync(value: KillPackageReference) = 
+            task { 
+                do! [ value ] |> eveproxy.Mongo.pushToQueue mongoCol
+            }
+
+        member this.ClearAsync() = 
+            task { 
+                do ignore 0 // TODO: 
+            }
+
+        member this.PullAsync() =            
+            eveproxy.Mongo.pullSingletonFromQueue<KillPackageReference> mongoCol
+
+
 type IKillmailReferenceQueueFactory =
     abstract member Create: string -> IKillmailReferenceQueue
 
