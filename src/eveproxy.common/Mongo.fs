@@ -27,6 +27,14 @@ module MongoBson =
     let toObject<'a> doc =
         doc |> toJson |> Newtonsoft.Json.JsonConvert.DeserializeObject<'a>
 
+    let setDocId (id) (doc: BsonDocument) =
+        let existingId = doc.Elements |> Seq.filter (fun e -> e.Name = "_id") |> Seq.tryHead
+        match existingId with
+        | None -> 
+            doc["_id"] <- id
+            doc
+        | _ -> doc
+
     let getDocId (bson: BsonDocument) =
         bson.Elements |> Seq.filter (fun e -> e.Name = "_id") |> Seq.head
 
@@ -39,23 +47,24 @@ module MongoBson =
 [<ExcludeFromCodeCoverage>]
 module Mongo =
     let private defaultMongoPort = 27017
-
+    let private isMongoAtlas (server: string) = server.EndsWith(".mongodb.net")
     let private idFilter id = sprintf @"{ _id: ""%s"" }" id
 
-    let appendPort server =
+    let private appendPort server =
         match server |> Strings.split ":" with
         | [| name; port |] -> server
+        | [| x |] when isMongoAtlas x -> x
         | _ -> sprintf "%s:%i" server defaultMongoPort
 
-    let resolveServers (servers: string) =
-        servers |> Strings.split "," |> Seq.map appendPort |> Strings.join ","
-
     let connectionString (userName, password) server =
-        let servers = resolveServers server
+        let server = appendPort server
+        let modifier = if isMongoAtlas server then "+srv" else ""
 
         match userName with
-        | Strings.NullOrWhitespace _ -> sprintf "mongodb://%s" servers
-        | name -> sprintf "mongodb://%s:%s@%s" name password servers
+        | Strings.NullOrWhitespace _ -> sprintf "mongodb%s://%s" modifier server
+        | name ->            
+            sprintf "mongodb%s://%s:%s@%s" modifier name password server
+            
 
     let setDbConnection dbName connectionString =
         match dbName with
@@ -153,8 +162,8 @@ module Mongo =
         task {
             let values =
                 values
-                //|> Seq.map applyId // TODO: inject a unique ID into the BSON document
                 |> Seq.map MongoBson.ofObject
+                //|> Seq.map applyId // TODO: inject a unique ID into the BSON document
                 |> Array.ofSeq
 
             if values.Length > 0 then

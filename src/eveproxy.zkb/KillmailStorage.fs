@@ -32,18 +32,14 @@ type MemoryKillmailRepository() =
 
         member this.GetCountAsync() = task { return cache.Count }
 
-
 type MongoKillmailRepository(config: eveproxy.AppConfiguration) =
-
-    [<Literal>]
-    let indexPath = "_v.package.killID"
 
     [<Literal>]
     let collectionName = "killmails"
 
     let mongoCol =
         eveproxy.Mongo.initCollection
-            indexPath
+            ""
             config.mongoServer
             config.mongoDbName
             collectionName
@@ -52,13 +48,21 @@ type MongoKillmailRepository(config: eveproxy.AppConfiguration) =
     interface IKillmailRepository with
         member this.SetAsync(kill) =
             task {
-                let! r = kill |> eveproxy.MongoBson.ofObject |> eveproxy.Mongo.upsert mongoCol
-                // TODO: Ids etc.?
-                return Some kill
+                return!
+                    match KillPackage.killmailId kill with
+                    | Some id -> 
+                        task {
+                            let! r = kill 
+                                    |> eveproxy.MongoBson.ofObject 
+                                    |> eveproxy.MongoBson.setDocId id
+                                    |> eveproxy.Mongo.upsert mongoCol
+                            return Some kill
+                            }
+                    | None -> task { return None }                 
             }
 
         member this.GetAsync(id) =
-            sprintf "{'%s': %s }" indexPath id
+            sprintf "{'_id': '%s' }" id
             |> eveproxy.Mongo.getSingle<KillPackage> mongoCol
 
         member this.GetCountAsync() = eveproxy.Mongo.count mongoCol
