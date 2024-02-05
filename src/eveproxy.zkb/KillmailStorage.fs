@@ -1,6 +1,7 @@
 ﻿namespace eveproxy.zkb
 
 open System
+open System.Diagnostics.CodeAnalysis
 open System.Threading.Tasks
 open Microsoft.Extensions.Logging
 open eveproxy.Threading
@@ -32,6 +33,7 @@ type MemoryKillmailRepository() =
 
         member this.GetCountAsync() = task { return cache.Count }
 
+[<ExcludeFromCodeCoverage>]
 type MongoKillmailRepository(config: eveproxy.AppConfiguration) =
 
     [<Literal>]
@@ -120,12 +122,15 @@ type IKillmailReferenceQueue =
     abstract member PushAsync: value: KillPackageReference -> Task
     abstract member PullAsync: unit -> Task<KillPackageReference option>
     abstract member ClearAsync: unit -> Task
+    abstract member GetCountAsync: unit -> Task<int64>
 
-type MemoryKillmailReferenceQueue(name: string) =
+type MemoryKillmailReferenceQueue(config: eveproxy.AppConfiguration, name: string) =
     let kills = new System.Collections.Generic.Queue<KillPackageReference>()
 
     interface IKillmailReferenceQueue with
         member this.Name = name
+
+        member this.GetCountAsync() = task { return kills.Count }
 
         member this.PushAsync(value: KillPackageReference) = task { do kills.Enqueue value }
 
@@ -139,7 +144,9 @@ type MemoryKillmailReferenceQueue(name: string) =
                     | (false, _) -> None
             }
 
+[<ExcludeFromCodeCoverage>]
 type MongoKillmailReferenceQueue(config: eveproxy.AppConfiguration, name: string) =    
+    let name = if name = "" then "default" else name
     let collectionName = $"killmail_queue_{name}"
 
     let mongoCol =
@@ -152,6 +159,8 @@ type MongoKillmailReferenceQueue(config: eveproxy.AppConfiguration, name: string
 
     interface IKillmailReferenceQueue with
         member this.Name = name
+
+        member this.GetCountAsync() = eveproxy.Mongo.count mongoCol
 
         member this.PushAsync(value: KillPackageReference) = 
             task { 
@@ -170,8 +179,10 @@ type MongoKillmailReferenceQueue(config: eveproxy.AppConfiguration, name: string
 type IKillmailReferenceQueueFactory =
     abstract member Create: string -> IKillmailReferenceQueue
 
-type KillmailReferenceQueueFactory<'a when 'a :> IKillmailReferenceQueue>() =
+type KillmailReferenceQueueFactory<'a when 'a :> IKillmailReferenceQueue>(config: eveproxy.AppConfiguration) =
+    
     interface IKillmailReferenceQueueFactory with
-        member this.Create name =
+        member this.Create name =            
             let t = typeof<'a>
-            Activator.CreateInstance(t, name) :?> IKillmailReferenceQueue
+            let args = [| config :> obj; name  :> obj |] 
+            Activator.CreateInstance(t, args) :?> IKillmailReferenceQueue

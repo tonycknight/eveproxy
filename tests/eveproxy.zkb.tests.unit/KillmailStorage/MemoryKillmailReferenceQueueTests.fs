@@ -9,10 +9,11 @@ module MemoryKillmailReferenceQueueTests =
 
     [<Property(Verbose = true)>]
     let ``PushAsync PullAsync are symmetric`` (ids: NonEmptyString[]) =
+        let config = eveproxy.AppConfiguration.emptyConfig
         let ids = ids |> Array.map (fun id -> id.Get)
         let values = ids |> Array.map (fun id -> { KillPackageReference.id = id })
 
-        let queue = new MemoryKillmailReferenceQueue "" :> IKillmailReferenceQueue
+        let queue = new MemoryKillmailReferenceQueue(config, "") :> IKillmailReferenceQueue
 
         // Push
         let pushTasks = values |> Array.map queue.PushAsync

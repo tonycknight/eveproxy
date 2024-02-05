@@ -13,7 +13,7 @@ module ApiStartup =
             .AddSingleton<ISessionsActor, SessionsActor>()
             .AddSingleton<IRedisqIngestionActor, RedisqIngestionActor>()
             .AddSingleton<IKillmailRepository, MongoKillmailRepository>()
-            .AddSingleton<IKillmailReferenceQueueFactory, KillmailReferenceQueueFactory<MemoryKillmailReferenceQueue>>()
+            .AddSingleton<IKillmailReferenceQueueFactory, KillmailReferenceQueueFactory<MongoKillmailReferenceQueue>>()
             .AddSingleton<IKillmailWriter, KillmailWriter>()
             .AddSingleton<IKillmailReader, KillmailReader>()
             .AddSingleton<IKillWriteActor, KillWriteActor>()

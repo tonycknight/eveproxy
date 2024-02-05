@@ -163,7 +163,6 @@ module Mongo =
             let values =
                 values
                 |> Seq.map MongoBson.ofObject
-                //|> Seq.map applyId // TODO: inject a unique ID into the BSON document
                 |> Array.ofSeq
 
             if values.Length > 0 then

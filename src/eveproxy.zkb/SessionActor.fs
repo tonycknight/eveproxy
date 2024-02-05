@@ -106,7 +106,7 @@ type SessionActor
             task {
                 return
                     { ActorStats.name = (ActorStats.statsName this name)
-                      queueCount = actor.CurrentQueueLength
+                      queueCount = actor.CurrentQueueLength // TODO: in future, query the actor's queue count
                       childStats = [] }
             }
 
