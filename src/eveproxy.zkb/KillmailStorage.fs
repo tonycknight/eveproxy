@@ -7,17 +7,17 @@ open Microsoft.Extensions.Logging
 open eveproxy.Threading
 
 type IKillmailRepository =
-    abstract member SetAsync: kill: KillPackage -> Task<KillPackage option>
-    abstract member GetAsync: id: string -> Task<KillPackage option>
+    abstract member SetAsync: kill: KillPackageData -> Task<KillPackageData option>
+    abstract member GetAsync: id: string -> Task<KillPackageData option>
     abstract member GetCountAsync: unit -> Task<int64>
 
 type MemoryKillmailRepository() =
     let cache =
-        new System.Collections.Concurrent.ConcurrentDictionary<string, KillPackage>(StringComparer.OrdinalIgnoreCase)
+        new System.Collections.Concurrent.ConcurrentDictionary<string, KillPackageData>(StringComparer.OrdinalIgnoreCase)
 
     interface IKillmailRepository with
         member this.SetAsync(kill) =
-            let key = KillPackage.killmailId kill
+            let key = KillPackageData.killmailId kill
 
             match key with
             | Some k ->
@@ -47,7 +47,7 @@ type MongoKillmailRepository(config: eveproxy.AppConfiguration) =
             collectionName
             (config.mongoUserName, config.mongoPassword)
 
-    let setId id (kill: KillPackage) =        
+    let setId id (kill: KillPackageData) =        
         if Object.ReferenceEquals(kill._id, null) then 
             kill._id <- id
         kill
@@ -56,7 +56,7 @@ type MongoKillmailRepository(config: eveproxy.AppConfiguration) =
         member this.SetAsync(kill) =
             task {
                 return!
-                    match KillPackage.killmailId kill with
+                    match KillPackageData.killmailId kill with
                     | Some id -> 
                         task {                            
                             let! r = kill 
@@ -70,21 +70,21 @@ type MongoKillmailRepository(config: eveproxy.AppConfiguration) =
 
         member this.GetAsync(id) =
             sprintf "{'_id': '%s' }" id
-            |> eveproxy.Mongo.getSingle<KillPackage> mongoCol
+            |> eveproxy.Mongo.getSingle<KillPackageData> mongoCol
 
         member this.GetCountAsync() = eveproxy.Mongo.count mongoCol
 
 type IKillmailWriter =
-    abstract member WriteAsync: kill: KillPackage -> Task<KillPackage>
+    abstract member WriteAsync: kill: KillPackageData -> Task<KillPackageData>
 
 
 type KillmailWriter(logFactory: ILoggerFactory, repo: IKillmailRepository) =
     let log = logFactory.CreateLogger<KillmailWriter>()
 
     interface IKillmailWriter with
-        member this.WriteAsync(kill: KillPackage) =
+        member this.WriteAsync(kill: KillPackageData) =
             task {
-                match kill |> KillPackage.killmailId with
+                match kill |> KillPackageData.killmailId with
                 | Some id ->
                     id |> sprintf "--> Writing kill [%s]..." |> log.LogTrace
                     let! kill = repo.SetAsync kill
@@ -101,7 +101,7 @@ type KillmailWriter(logFactory: ILoggerFactory, repo: IKillmailRepository) =
 
 
 type IKillmailReader =
-    abstract member ReadAsync: id: string -> Task<KillPackage option>
+    abstract member ReadAsync: id: string -> Task<KillPackageData option>
 
 type KillmailReader(logFactory: ILoggerFactory, repo: IKillmailRepository) =
     let log = logFactory.CreateLogger<KillmailReader>()
@@ -124,20 +124,20 @@ type KillmailReader(logFactory: ILoggerFactory, repo: IKillmailRepository) =
 
 type IKillmailReferenceQueue =
     abstract member Name: string
-    abstract member PushAsync: value: KillPackageReference -> Task
-    abstract member PullAsync: unit -> Task<KillPackageReference option>
+    abstract member PushAsync: value: KillPackageReferenceData -> Task
+    abstract member PullAsync: unit -> Task<KillPackageReferenceData option>
     abstract member ClearAsync: unit -> Task
     abstract member GetCountAsync: unit -> Task<int64>
 
 type MemoryKillmailReferenceQueue(config: eveproxy.AppConfiguration, name: string) =
-    let kills = new System.Collections.Generic.Queue<KillPackageReference>()
+    let kills = new System.Collections.Generic.Queue<KillPackageReferenceData>()
 
     interface IKillmailReferenceQueue with
         member this.Name = name
 
         member this.GetCountAsync() = task { return kills.Count }
 
-        member this.PushAsync(value: KillPackageReference) = task { do kills.Enqueue value }
+        member this.PushAsync(value: KillPackageReferenceData) = task { do kills.Enqueue value }
 
         member this.ClearAsync() = task { do kills.Clear() }
 
@@ -167,7 +167,7 @@ type MongoKillmailReferenceQueue(config: eveproxy.AppConfiguration, name: string
 
         member this.GetCountAsync() = eveproxy.Mongo.count mongoCol
 
-        member this.PushAsync(value: KillPackageReference) = 
+        member this.PushAsync(value: KillPackageReferenceData) = 
             task { 
                 do! [ value ] |> eveproxy.Mongo.pushToQueue mongoCol
             }
@@ -178,7 +178,7 @@ type MongoKillmailReferenceQueue(config: eveproxy.AppConfiguration, name: string
             }
 
         member this.PullAsync() =            
-            eveproxy.Mongo.pullSingletonFromQueue<KillPackageReference> mongoCol
+            eveproxy.Mongo.pullSingletonFromQueue<KillPackageReferenceData> mongoCol
 
 
 type IKillmailReferenceQueueFactory =

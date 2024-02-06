@@ -52,7 +52,7 @@ module Api =
             next ctx
 
     let private getNullKill =
-        fun (next: HttpFunc) (ctx: HttpContext) -> task { return! Successful.OK KillPackage.empty next ctx }
+        fun (next: HttpFunc) (ctx: HttpContext) -> task { return! Successful.OK KillPackageData.empty next ctx }
 
     let private getNextKill sessionId =
         let rec pollPackage (sessions: ISessionsActor) (time: ITimeProvider) (endTime) =
@@ -60,10 +60,10 @@ module Api =
                 let! package = sessions.GetNext sessionId
 
                 return!
-                    if package <> KillPackage.empty then
+                    if package <> KillPackageData.empty then
                         task { return package }
                     else if time.GetUtcNow() >= endTime then
-                        task { return KillPackage.empty }
+                        task { return KillPackageData.empty }
                     else
                         task {
                             do! Threading.Tasks.Task.Delay(100)
@@ -84,7 +84,7 @@ module Api =
                     |> time.GetUtcNow().AddSeconds
                     |> pollPackage sessions time
 
-                if package <> KillPackage.empty then
+                if package <> KillPackageData.empty then
                     sessionId |> countSessionKillFetch ctx
 
                 return! Successful.OK package next ctx

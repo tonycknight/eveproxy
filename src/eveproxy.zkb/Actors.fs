@@ -16,9 +16,9 @@ type IApiStatsActor =
 
 type ISessionActor =
     inherit IActor
-    abstract member GetNext: unit -> Task<KillPackage>
+    abstract member GetNext: unit -> Task<KillPackageData>
     abstract member GetLastPullTime: unit -> Task<DateTime>
 
 type ISessionsActor =
     inherit IActor
-    abstract member GetNext: name: string -> Task<KillPackage>
+    abstract member GetNext: name: string -> Task<KillPackageData>

@@ -114,7 +114,7 @@ type SessionsActor
 
                     let! state =
                         match msg with
-                        | Entity e when (e :? KillPackage) -> onPush state e
+                        | Entity e when (e :? KillPackageData) -> onPush state e
                         | PullReply(url, rc) -> onPullNext state url rc |> Async.AwaitTask
                         | ScheduledMaintenance ->
                             async {
@@ -164,6 +164,6 @@ type SessionsActor
 
                 return
                     match r :?> ActorMessage with
-                    | Entity p -> p :?> KillPackage
-                    | _ -> KillPackage.empty
+                    | Entity p -> p :?> KillPackageData
+                    | _ -> KillPackageData.empty
             }

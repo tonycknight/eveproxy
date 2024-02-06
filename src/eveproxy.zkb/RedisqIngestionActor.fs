@@ -13,7 +13,7 @@ type RedisqIngestionActor
 
     let parse body =
         try
-            body |> Newtonsoft.Json.JsonConvert.DeserializeObject<KillPackage> |> Some
+            body |> Newtonsoft.Json.JsonConvert.DeserializeObject<KillPackageData> |> Some
         with ex ->
             body
             |> Strings.leftSnippet 20
@@ -38,9 +38,9 @@ type RedisqIngestionActor
         }
 
     // TOOD: output to a stream?
-    let forwardKill (state: RedisqIngestionActorState) (kill: KillPackage) =
+    let forwardKill (state: RedisqIngestionActorState) (kill: KillPackageData) =
         task {
-            if kill <> KillPackage.empty then
+            if kill <> KillPackageData.empty then
                 kill :> obj |> ActorMessage.Entity |> write.Post
                 { ReceivedKills.count = 1 } :> obj |> ActorMessage.Entity |> stats.Post
 
@@ -67,9 +67,9 @@ type RedisqIngestionActor
 
                                 let! state =
                                     match kill with
-                                    | Choice1Of3 kp when kp <> KillPackage.empty ->
+                                    | Choice1Of3 kp when kp <> KillPackageData.empty ->
                                         kp
-                                        |> KillPackage.killmailId
+                                        |> KillPackageData.killmailId
                                         |> Option.defaultValue ""
                                         |> sprintf "--> Received kill [%s]."
                                         |> log.LogTrace

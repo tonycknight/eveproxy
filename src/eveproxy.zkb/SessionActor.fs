@@ -20,13 +20,13 @@ type SessionActor
 
     let onPush (state: SessionActorState) (kill: obj) =
         async {
-            let kp = (kill :?> KillPackage)
-            let id = kp |> KillPackage.killmailId
+            let kp = (kill :?> KillPackageData)
+            let id = kp |> KillPackageData.killmailId
 
             if id |> Option.isSome then
                 let id = id |> Option.get
                 sprintf "Pushing kill reference [%s] to queue [%s]..." id name |> log.LogTrace
-                let kpr = { KillPackageReference.killmailId = id; _id = MongoBson.id() } 
+                let kpr = { KillPackageReferenceData.killmailId = id; _id = MongoBson.id() } 
                 do! kpr |> state.kills.PushAsync |> Async.AwaitTask
                 sprintf "Pushed kill reference [%s] to queue [%s]." id name |> log.LogTrace
 
@@ -60,7 +60,7 @@ type SessionActor
                     }
 
 
-            let package = package |> Option.defaultValue KillPackage.empty
+            let package = package |> Option.defaultValue KillPackageData.empty
             package :> obj |> ActorMessage.Entity |> rc.Reply
 
             return state
@@ -84,7 +84,7 @@ type SessionActor
 
                     let! state =
                         match msg with
-                        | Entity e when (e :? KillPackage) -> onPush state e
+                        | Entity e when (e :? KillPackageData) -> onPush state e
                         | PullReply(url, rc) -> onPullNext state rc
                         | Destroy n -> shutdown state
                         | LastUpdate rc ->
@@ -118,8 +118,8 @@ type SessionActor
 
                 return
                     match r :?> ActorMessage with
-                    | Entity p -> p :?> KillPackage
-                    | _ -> KillPackage.empty
+                    | Entity p -> p :?> KillPackageData
+                    | _ -> KillPackageData.empty
             }
 
         member this.GetLastPullTime() =
