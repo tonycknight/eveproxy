@@ -14,21 +14,12 @@ module MongoBson =
     let id () = ObjectId.GenerateNewId()
 
     let ofJson (json: string) = BsonSerializer.Deserialize<BsonDocument>(json)
-
-    // TODO: 
-    let toJson (bson: BsonDocument) =
-        let jsonWriterSettings = JsonWriterSettings()
-        jsonWriterSettings.OutputMode <- JsonOutputMode.Shell
-        jsonWriterSettings.Indent <- false
-        jsonWriterSettings.IndentChars <- ""
-        bson.ToJson(jsonWriterSettings)
         
     // TODO: expensive...
     let ofObject (value) =
         value |> Newtonsoft.Json.JsonConvert.SerializeObject |> ofJson
 
     let toObject<'a> (doc: BsonDocument) =        
-        // TODO: doc |> toJson |> Newtonsoft.Json.JsonConvert.DeserializeObject<'a>
         MongoDB.Bson.Serialization.BsonSerializer.Deserialize<'a>(doc)
 
     let setDocId (id) (doc: BsonDocument) =
