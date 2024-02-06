@@ -4,13 +4,16 @@ open eveproxy
 open Newtonsoft.Json.Linq
 
 [<CLIMutable>]
-type KillPackageReferenceData = { _id : obj; killmailId: string }
+type KillPackageReferenceData = { _id: obj; killmailId: string }
 
 [<CLIMutable>]
 type KillPackageData =
-    { mutable _id : obj; package: obj }
+    { mutable _id: obj
+      package: obj }
 
-    static member empty = { KillPackageData.package = null; _id = null }
+    static member empty =
+        { KillPackageData.package = null
+          _id = null }
 
     static member killmail(value: KillPackageData) =
         match value.package |> Option.nullToOption with

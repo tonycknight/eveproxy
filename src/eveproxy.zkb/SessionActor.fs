@@ -26,7 +26,11 @@ type SessionActor
             if id |> Option.isSome then
                 let id = id |> Option.get
                 sprintf "Pushing kill reference [%s] to queue [%s]..." id name |> log.LogTrace
-                let kpr = { KillPackageReferenceData.killmailId = id; _id = MongoBson.id() } 
+
+                let kpr =
+                    { KillPackageReferenceData.killmailId = id
+                      _id = MongoBson.id () }
+
                 do! kpr |> state.kills.PushAsync |> Async.AwaitTask
                 sprintf "Pushed kill reference [%s] to queue [%s]." id name |> log.LogTrace
 

@@ -9,6 +9,7 @@ module KillmailReferenceQueueFactoryTests =
     [<Property>]
     let ``Create of memory queue with names returns queue`` (name: NonEmptyString) =
         let config = eveproxy.AppConfiguration.emptyConfig
+
         let fact =
             new KillmailReferenceQueueFactory<MemoryKillmailReferenceQueue>(config) :> IKillmailReferenceQueueFactory
 

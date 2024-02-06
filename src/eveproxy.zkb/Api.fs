@@ -28,8 +28,8 @@ module ApiStartup =
 [<CLIMutable>]
 type KillPackage =
     { package: obj }
-    static member ofKillPackageData (value: KillPackageData) =
-        { KillPackage.package = value.package }
+
+    static member ofKillPackageData(value: KillPackageData) = { KillPackage.package = value.package }
 
 module Api =
     let private ttw (config: AppConfiguration) (query: IQueryCollection) =
@@ -57,7 +57,8 @@ module Api =
             next ctx
 
     let private getNullKill =
-        fun (next: HttpFunc) (ctx: HttpContext) -> task { return! Successful.OK (KillPackageData.empty |> KillPackage.ofKillPackageData ) next ctx }
+        fun (next: HttpFunc) (ctx: HttpContext) ->
+            task { return! Successful.OK (KillPackageData.empty |> KillPackage.ofKillPackageData) next ctx }
 
     let private getNextKill sessionId =
         let rec pollPackage (sessions: ISessionsActor) (time: ITimeProvider) (endTime) =
@@ -92,7 +93,7 @@ module Api =
                 if package <> KillPackageData.empty then
                     sessionId |> countSessionKillFetch ctx
 
-                return! Successful.OK ( package |> KillPackage.ofKillPackageData ) next ctx
+                return! Successful.OK (package |> KillPackage.ofKillPackageData) next ctx
             }
 
     let private getKillById killId =

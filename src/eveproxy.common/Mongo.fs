@@ -13,19 +13,21 @@ module MongoBson =
 
     let id () = ObjectId.GenerateNewId()
 
-    let ofJson (json: string) = BsonSerializer.Deserialize<BsonDocument>(json)
-        
+    let ofJson (json: string) =
+        BsonSerializer.Deserialize<BsonDocument>(json)
+
     // TODO: expensive...
     let ofObject (value) =
         value |> Newtonsoft.Json.JsonConvert.SerializeObject |> ofJson
 
-    let toObject<'a> (doc: BsonDocument) =        
+    let toObject<'a> (doc: BsonDocument) =
         MongoDB.Bson.Serialization.BsonSerializer.Deserialize<'a>(doc)
 
     let setDocId (id) (doc: BsonDocument) =
         let existingId = doc.Elements |> Seq.filter (fun e -> e.Name = "_id") |> Seq.tryHead
+
         match existingId with
-        | None -> 
+        | None ->
             doc["_id"] <- id
             doc
         | _ -> doc
@@ -57,8 +59,7 @@ module Mongo =
 
         match userName with
         | Strings.NullOrWhitespace _ -> sprintf "mongodb%s://%s" modifier server
-        | name ->            
-            sprintf "mongodb%s://%s:%s@%s" modifier name password server
+        | name -> sprintf "mongodb%s://%s:%s@%s" modifier name password server
 
     let setDbConnection dbName connectionString =
         match dbName with
@@ -154,14 +155,11 @@ module Mongo =
 
     let pushToQueue<'a> (collection: IMongoCollection<BsonDocument>) (values: seq<'a>) =
         task {
-            let values =
-                values
-                |> Seq.map MongoBson.ofObject
-                |> Array.ofSeq
+            let values = values |> Seq.map MongoBson.ofObject |> Array.ofSeq
 
             if values.Length > 0 then
                 let opts = new InsertManyOptions()
-                
+
                 try
                     do! collection.InsertManyAsync(values, opts)
                 with ex ->
