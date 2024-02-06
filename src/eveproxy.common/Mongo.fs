@@ -11,21 +11,25 @@ module MongoBson =
     open MongoDB.Bson.IO
     open MongoDB.Bson.Serialization
 
-    let ofJson (json: string) =
-        BsonSerializer.Deserialize<BsonDocument>(json)
+    let id () = ObjectId.GenerateNewId()
 
+    let ofJson (json: string) = BsonSerializer.Deserialize<BsonDocument>(json)
+
+    // TODO: 
     let toJson (bson: BsonDocument) =
         let jsonWriterSettings = JsonWriterSettings()
-        jsonWriterSettings.OutputMode <- JsonOutputMode.CanonicalExtendedJson
+        jsonWriterSettings.OutputMode <- JsonOutputMode.Shell
         jsonWriterSettings.Indent <- false
         jsonWriterSettings.IndentChars <- ""
         bson.ToJson(jsonWriterSettings)
-
+        
+    // TODO: expensive...
     let ofObject (value) =
         value |> Newtonsoft.Json.JsonConvert.SerializeObject |> ofJson
 
-    let toObject<'a> doc =
-        doc |> toJson |> Newtonsoft.Json.JsonConvert.DeserializeObject<'a>
+    let toObject<'a> (doc: BsonDocument) =        
+        // TODO: doc |> toJson |> Newtonsoft.Json.JsonConvert.DeserializeObject<'a>
+        MongoDB.Bson.Serialization.BsonSerializer.Deserialize<'a>(doc)
 
     let setDocId (id) (doc: BsonDocument) =
         let existingId = doc.Elements |> Seq.filter (fun e -> e.Name = "_id") |> Seq.tryHead
@@ -64,7 +68,6 @@ module Mongo =
         | Strings.NullOrWhitespace _ -> sprintf "mongodb%s://%s" modifier server
         | name ->            
             sprintf "mongodb%s://%s:%s@%s" modifier name password server
-            
 
     let setDbConnection dbName connectionString =
         match dbName with
@@ -167,7 +170,7 @@ module Mongo =
 
             if values.Length > 0 then
                 let opts = new InsertManyOptions()
-
+                
                 try
                     do! collection.InsertManyAsync(values, opts)
                 with ex ->

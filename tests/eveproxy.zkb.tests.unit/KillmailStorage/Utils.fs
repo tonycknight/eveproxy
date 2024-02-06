@@ -6,7 +6,7 @@ open Newtonsoft.Json.Linq
 module Utils =
 
     let killFromJson json =
-        { KillPackage.package = JObject.Parse(json) }
+        { KillPackage.package = JObject.Parse(json); _id = eveproxy.MongoBson.id() }
 
     let kill (id) =
         $" {{ killID: '{id}', testdata: {{}} }}" |> killFromJson

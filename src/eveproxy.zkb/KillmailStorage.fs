@@ -47,17 +47,22 @@ type MongoKillmailRepository(config: eveproxy.AppConfiguration) =
             collectionName
             (config.mongoUserName, config.mongoPassword)
 
+    let setId id (kill: KillPackage) =        
+        if Object.ReferenceEquals(kill._id, null) then 
+            kill._id <- id
+        kill
+
     interface IKillmailRepository with
         member this.SetAsync(kill) =
             task {
                 return!
                     match KillPackage.killmailId kill with
                     | Some id -> 
-                        task {
+                        task {                            
                             let! r = kill 
-                                    |> eveproxy.MongoBson.ofObject 
-                                    |> eveproxy.MongoBson.setDocId id
-                                    |> eveproxy.Mongo.upsert mongoCol
+                                     |> setId id
+                                     |> eveproxy.MongoBson.ofObject 
+                                     |> eveproxy.Mongo.upsert mongoCol
                             return Some kill
                             }
                     | None -> task { return None }                 

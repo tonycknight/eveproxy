@@ -26,7 +26,7 @@ type SessionActor
             if id |> Option.isSome then
                 let id = id |> Option.get
                 sprintf "Pushing kill reference [%s] to queue [%s]..." id name |> log.LogTrace
-                let kpr = { KillPackageReference.id = id }
+                let kpr = { KillPackageReference.killmailId = id; _id = MongoBson.id() } 
                 do! kpr |> state.kills.PushAsync |> Async.AwaitTask
                 sprintf "Pushed kill reference [%s] to queue [%s]." id name |> log.LogTrace
 
@@ -47,13 +47,13 @@ type SessionActor
                 | None -> async { return None }
                 | Some kr ->
                     async {
-                        sprintf "Fetching kill [%s] by reference for queue [%s]..." kr.id name
+                        sprintf "Fetching kill [%s] by reference for queue [%s]..." kr.killmailId name
                         |> log.LogTrace
 
-                        let! km = kr.id |> killReader.ReadAsync |> Async.AwaitTask
+                        let! km = kr.killmailId |> killReader.ReadAsync |> Async.AwaitTask
 
                         if km |> Option.isSome then
-                            sprintf "Fetched kill [%s] by reference for queue [%s]." kr.id name
+                            sprintf "Fetched kill [%s] by reference for queue [%s]." kr.killmailId name
                             |> log.LogTrace
 
                         return km
