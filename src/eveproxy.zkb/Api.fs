@@ -132,7 +132,9 @@ module Api =
                        stats =
                         {| ingestion = apiStats.ingestion
                            distribution = apiStats.distribution
-                           storage = {| kills = kmCount; sessions = sessionStorageStats |} // TODO: append session storage counts - as map???
+                           storage =
+                            {| kills = kmCount
+                               sessions = sessionStorageStats |}
                            routes = apiStats.routes |> Map.values |> Seq.sortByDescending (fun rs -> rs.count) |} |}
 
                 return! Successful.OK result next ctx

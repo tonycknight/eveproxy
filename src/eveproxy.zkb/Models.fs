@@ -47,4 +47,3 @@ type ApiStats =
     { ingestion: IngestionStats
       distribution: DistributionStats
       routes: Map<string, RouteStatistics> }
-

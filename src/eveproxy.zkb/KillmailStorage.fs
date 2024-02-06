@@ -175,10 +175,7 @@ type MongoKillmailReferenceQueue(config: eveproxy.AppConfiguration, name: string
         member this.PushAsync(value: KillPackageReferenceData) =
             task { do! [ value ] |> eveproxy.Mongo.pushToQueue mongoCol }
 
-        member this.ClearAsync() =
-            task {
-                do ignore 0 // TODO:
-            }
+        member this.ClearAsync() = task { do ignore 0 }
 
         member this.PullAsync() =
             eveproxy.Mongo.pullSingletonFromQueue<KillPackageReferenceData> mongoCol

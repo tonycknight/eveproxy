@@ -14,11 +14,7 @@ type ActorStats =
         else
             $"{parent.GetType().FullName}:{name}"
 
-type StorageStats =
-    {
-        name: string
-        count: int64
-    }
+type StorageStats = { name: string; count: int64 }
 
 type ActorMessage =
     | Stop
@@ -36,4 +32,3 @@ type ActorMessage =
 type IActor =
     abstract member Post: ActorMessage -> unit
     abstract member GetStats: unit -> Task<ActorStats>
-

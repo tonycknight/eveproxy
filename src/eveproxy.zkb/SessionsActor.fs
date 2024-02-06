@@ -64,7 +64,7 @@ type SessionsActor
         |> Map.values
         |> Seq.map (fun a -> a.GetStorageStats())
         |> Array.ofSeq
-        |> Threading.whenAll        
+        |> Threading.whenAll
 
     let findSessionsToDestroy (state: SessionsActorState) =
         task {
@@ -168,10 +168,8 @@ type SessionsActor
                         childStats = (stats |> List.ofArray) }
             }
 
-        member this.GetStorageStats()=
-            task {
-                return! actor.PostAndAsyncReply(fun rc -> ActorMessage.StorageStats rc)
-                }
+        member this.GetStorageStats() =
+            task { return! actor.PostAndAsyncReply(fun rc -> ActorMessage.StorageStats rc) }
 
         member this.Post(msg: ActorMessage) = actor.Post msg
 
