@@ -70,6 +70,12 @@ type SessionActor
             return state
         }
 
+    let storageStats (state: SessionActorState) =
+        task {
+            let! count = state.kills.GetCountAsync()
+            return { StorageStats.name = name; count = count }
+        }
+
     let shutdown state =
         async {
             $"Shutting down session [{name}]..." |> log.LogTrace
@@ -96,6 +102,12 @@ type SessionActor
                                 rc.Reply state.lastPull
                                 return state
                             }
+                        | StorageStats rc ->
+                            async {
+                                let! result = storageStats state |> Async.AwaitTask
+                                rc.Reply [| result |]
+                                return state
+                            }
                         | _ -> async { return state }
 
                     return! loop state
@@ -110,9 +122,15 @@ type SessionActor
             task {
                 return
                     { ActorStats.name = (ActorStats.statsName this name)
-                      queueCount = actor.CurrentQueueLength // TODO: in future, query the actor's queue count
+                      queueCount = actor.CurrentQueueLength 
                       childStats = [] }
             }
+
+        member this.GetStorageStats() =
+            task {
+                return! actor.PostAndAsyncReply(fun rc -> ActorMessage.StorageStats rc)                
+            }
+        
 
         member this.Post(msg: ActorMessage) = actor.Post msg
 

@@ -115,6 +115,7 @@ module Api =
             task {
                 let kmRepo = ctx.GetService<IKillmailRepository>()
                 let statsActor = ctx.GetService<IApiStatsActor>()
+                let sessionsActor = ctx.GetService<ISessionsActor>()
 
                 let! statsActorStats = statsActor.GetStats()
                 let! apiStats = statsActor.GetApiStats()
@@ -123,14 +124,15 @@ module Api =
 
                 let! ingestActorStats = ctx.GetService<IRedisqIngestionActor>().GetStats()
                 let! writeActorStats = ctx.GetService<IKillWriteActor>().GetStats()
-                let! sessionsActorStats = ctx.GetService<ISessionsActor>().GetStats()
+                let! sessionsActorStats = sessionsActor.GetStats()
+                let! sessionStorageStats = sessionsActor.GetStorageStats()
 
                 let result =
                     {| actors = [| statsActorStats; ingestActorStats; writeActorStats; sessionsActorStats |]
                        stats =
                         {| ingestion = apiStats.ingestion
                            distribution = apiStats.distribution
-                           storage = {| kills = kmCount |}
+                           storage = {| kills = kmCount; sessions = sessionStorageStats |} // TODO: append session storage counts - as map???
                            routes = apiStats.routes |> Map.values |> Seq.sortByDescending (fun rs -> rs.count) |} |}
 
                 return! Successful.OK result next ctx
