@@ -32,8 +32,11 @@ type SessionActor
                     { KillPackageReferenceData.killmailId = id
                       _id = MongoBson.id () }
 
-                do! kpr |> state.kills.PushAsync |> Async.AwaitTask
-                sprintf "Pushed kill reference [%s] to queue [%s]." id name |> log.LogTrace
+                try
+                    do! kpr |> state.kills.PushAsync |> Async.AwaitTask
+                    sprintf "Pushed kill reference [%s] to queue [%s]." id name |> log.LogTrace
+                with
+                | ex -> log.LogError(ex, ex.Message)
 
             return state
         }
@@ -43,30 +46,34 @@ type SessionActor
             let state =
                 { state with
                     lastPull = DateTime.UtcNow }
+            try
+                sprintf "Fetching next kill reference for queue [%s]..." name |> log.LogTrace
+                let! killRef = state.kills.PullAsync() |> Async.AwaitTask
 
-            sprintf "Fetching next kill reference for queue [%s]..." name |> log.LogTrace
-            let! killRef = state.kills.PullAsync() |> Async.AwaitTask
-
-            let! package =
-                match killRef with
-                | None -> async { return None }
-                | Some kr ->
-                    async {
-                        sprintf "Fetching kill [%s] by reference for queue [%s]..." kr.killmailId name
-                        |> log.LogTrace
-
-                        let! km = kr.killmailId |> killReader.ReadAsync |> Async.AwaitTask
-
-                        if km |> Option.isSome then
-                            sprintf "Fetched kill [%s] by reference for queue [%s]." kr.killmailId name
+                let! package =
+                    match killRef with
+                    | None -> async { return None }
+                    | Some kr ->
+                        async {
+                            sprintf "Fetching kill [%s] by reference for queue [%s]..." kr.killmailId name
                             |> log.LogTrace
 
-                        return km
-                    }
+                            let! km = kr.killmailId |> killReader.ReadAsync |> Async.AwaitTask
+
+                            if km |> Option.isSome then
+                                sprintf "Fetched kill [%s] by reference for queue [%s]." kr.killmailId name
+                                |> log.LogTrace
+
+                            return km
+                        }
 
 
-            let package = package |> Option.defaultValue KillPackageData.empty
-            package :> obj |> ActorMessage.Entity |> rc.Reply
+                let package = package |> Option.defaultValue KillPackageData.empty
+                package :> obj |> ActorMessage.Entity |> rc.Reply
+            with
+            | ex -> 
+                log.LogError(ex, ex.Message)
+                KillPackageData.empty :> obj |> ActorMessage.Entity |> rc.Reply
 
             return state
         }

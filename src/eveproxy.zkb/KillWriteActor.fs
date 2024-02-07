@@ -29,12 +29,14 @@ type KillWriteActor
                 async {
                     let! msg = inbox.Receive()
 
-                    match msg with
-                    | Entity e when (e :? KillPackageData) ->
-                        let! kp = (e :?> KillPackageData) |> writeKill
-                        kp |> countKill |> broadcastKill |> ignore
-                    | _ -> ignore 0
-
+                    try
+                        match msg with
+                        | Entity e when (e :? KillPackageData) ->
+                            let! kp = (e :?> KillPackageData) |> writeKill
+                            kp |> countKill |> broadcastKill |> ignore
+                        | _ -> ignore 0
+                    with
+                    | ex -> log.LogError(ex, ex.Message)
                     return! loop ()
                 }
 
