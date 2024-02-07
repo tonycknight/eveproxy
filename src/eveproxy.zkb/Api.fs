@@ -171,7 +171,7 @@ module Api =
                            (choose
                                [ routeCif "/kills/session/%s/" (fun session -> getNextKill session)
                                  routeCif "/kills/id/%s/" (fun killId -> getKillById killId)
-                                 route "/kills/null/" >=> getNullKill                                 
+                                 route "/kills/null/" >=> getNullKill
                                  route "/kills/" >=> (getNextKill "") ]) ])
 
     let zkbWebRoutes () =

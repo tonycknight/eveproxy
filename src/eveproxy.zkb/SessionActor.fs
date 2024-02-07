@@ -35,8 +35,8 @@ type SessionActor
                 try
                     do! kpr |> state.kills.PushAsync |> Async.AwaitTask
                     sprintf "Pushed kill reference [%s] to queue [%s]." id name |> log.LogTrace
-                with
-                | ex -> log.LogError(ex, ex.Message)
+                with ex ->
+                    log.LogError(ex, ex.Message)
 
             return state
         }
@@ -46,6 +46,7 @@ type SessionActor
             let state =
                 { state with
                     lastPull = DateTime.UtcNow }
+
             try
                 sprintf "Fetching next kill reference for queue [%s]..." name |> log.LogTrace
                 let! killRef = state.kills.PullAsync() |> Async.AwaitTask
@@ -70,8 +71,7 @@ type SessionActor
 
                 let package = package |> Option.defaultValue KillPackageData.empty
                 package :> obj |> ActorMessage.Entity |> rc.Reply
-            with
-            | ex -> 
+            with ex ->
                 log.LogError(ex, ex.Message)
                 KillPackageData.empty :> obj |> ActorMessage.Entity |> rc.Reply
 

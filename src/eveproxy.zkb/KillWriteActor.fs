@@ -35,8 +35,9 @@ type KillWriteActor
                             let! kp = (e :?> KillPackageData) |> writeKill
                             kp |> countKill |> broadcastKill |> ignore
                         | _ -> ignore 0
-                    with
-                    | ex -> log.LogError(ex, ex.Message)
+                    with ex ->
+                        log.LogError(ex, ex.Message)
+
                     return! loop ()
                 }
 
