@@ -85,7 +85,7 @@ type SessionsActor
 
             return
                 results
-                |> Seq.filter (fun (_, _, t, c) -> (t > DateTime.MinValue  && t < exp) || (c < exp) )
+                |> Seq.filter (fun (_, _, t, c) -> (t > DateTime.MinValue && t < exp) || (c < exp))
                 |> Seq.map (fun (k, a, _, _) -> (k, a))
                 |> List.ofSeq
         }
@@ -112,18 +112,17 @@ type SessionsActor
             { SessionsActorState.sessions = cleanSessions }
 
     let initActorState () =
-        let actors = 
-            queueFinder.GetNames () 
-                |> Seq.filter (fun n -> n <> "default") // TODO: not default!
-                |> Seq.map getStateActor // TODO: apply last pull time as now???
-                |> List.ofSeq
+        let actors =
+            queueFinder.GetNames()
+            |> Seq.filter (fun n -> n <> "default") // TODO: not default!
+            |> Seq.map getStateActor
+            |> List.ofSeq
 
         let actors = (getStateActor defaultSessionName) :: actors
-                
-        actors 
-            |> List.fold (fun s f -> f s |> fst )            
-            { SessionsActorState.sessions = Map.empty }
-        
+
+        actors
+        |> List.fold (fun s f -> f s |> fst) { SessionsActorState.sessions = Map.empty }
+
 
     let actor =
         MailboxProcessor<ActorMessage>.Start(fun inbox ->

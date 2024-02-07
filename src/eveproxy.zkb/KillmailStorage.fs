@@ -182,27 +182,27 @@ type MongoKillmailReferenceQueue(config: eveproxy.AppConfiguration, name: string
         member this.PushAsync(value: KillPackageReferenceData) =
             task { do! [ value ] |> eveproxy.Mongo.pushToQueue mongoCol }
 
-        member this.ClearAsync() = 
-            task { do eveproxy.Mongo.deleteCol mongoCol } 
+        member this.ClearAsync() =
+            task { do eveproxy.Mongo.deleteCol mongoCol }
 
         member this.PullAsync() =
             eveproxy.Mongo.pullSingletonFromQueue<KillPackageReferenceData> mongoCol
 
 type MongoKillmailReferenceQueueFinder(config: eveproxy.AppConfiguration) =
     interface IKillmailReferenceQueueFinder with
-        member this.GetNames () = 
-            
-            let colNames = 
+        member this.GetNames() =
+
+            let colNames =
                 eveproxy.Mongo.findCollectionNames
                     config.mongoServer
                     config.mongoDbName
                     (config.mongoUserName, config.mongoPassword)
-            
-            colNames 
+
+            colNames
             |> Array.filter (fun n -> n.StartsWith(KillmailReferenceQueues.queueNamePrefix))
             |> Array.map (fun n -> n.Substring(KillmailReferenceQueues.queueNamePrefix.Length))
 
-            
+
 
 type IKillmailReferenceQueueFactory =
     abstract member Create: string -> IKillmailReferenceQueue

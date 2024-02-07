@@ -146,7 +146,7 @@ type SessionActor
                     | _ -> KillPackageData.empty
             }
 
-        member this.GetCreationTime () = creation
+        member this.GetCreationTime() = creation
 
         member this.GetLastPullTime() =
             task { return! actor.PostAndAsyncReply(fun rc -> ActorMessage.LastUpdate rc) }
