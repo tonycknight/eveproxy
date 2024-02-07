@@ -15,7 +15,8 @@ type SessionsActor
         logFactory: ILoggerFactory,
         killReader: IKillmailReader,
         timeProvider: ITimeProvider,
-        queueFactory: IKillmailReferenceQueueFactory
+        queueFactory: IKillmailReferenceQueueFactory,
+        queueFinder: IKillmailReferenceQueueFinder
     ) =
     let defaultSessionName = ""
     let log = logFactory.CreateLogger<SessionsActor>()
@@ -74,7 +75,8 @@ type SessionsActor
                 |> Seq.map (fun a ->
                     task {
                         let! t = a.Value.GetLastPullTime()
-                        return (a.Key, a.Value, t)
+                        let c = a.Value.GetCreationTime()
+                        return (a.Key, a.Value, t, c)
                     })
                 |> Array.ofSeq
                 |> Threading.whenAll
@@ -83,8 +85,8 @@ type SessionsActor
 
             return
                 results
-                |> Seq.filter (fun (_, _, t) -> t < exp)
-                |> Seq.map (fun (k, a, _) -> (k, a))
+                |> Seq.filter (fun (_, _, t, c) -> (t > DateTime.MinValue  && t < exp) || (c < exp) )
+                |> Seq.map (fun (k, a, _, _) -> (k, a))
                 |> List.ofSeq
         }
 
@@ -95,7 +97,7 @@ type SessionsActor
             "No sessions found to destroy." |> log.LogTrace
             state
         | sessions ->
-            "Starting session destruction..." |> log.LogTrace
+            "Starting session destruction..." |> log.LogTrace // TODO: include count
 
             let cleanSessions =
                 sessions
@@ -110,7 +112,18 @@ type SessionsActor
             { SessionsActorState.sessions = cleanSessions }
 
     let initActorState () =
-        { SessionsActorState.sessions = Map.empty } |> getStateActor defaultSessionName
+        let actors = 
+            queueFinder.GetNames () 
+                |> Seq.filter (fun n -> n <> "default") // TODO: not default!
+                |> Seq.map getStateActor // TODO: apply last pull time as now???
+                |> List.ofSeq
+
+        let actors = (getStateActor defaultSessionName) :: actors
+                
+        actors 
+            |> List.fold (fun s f -> f s |> fst )            
+            { SessionsActorState.sessions = Map.empty }
+        
 
     let actor =
         MailboxProcessor<ActorMessage>.Start(fun inbox ->
@@ -145,8 +158,7 @@ type SessionsActor
                     return! loop state
                 }
 
-            let state, _ = initActorState ()
-            state |> loop)
+            initActorState () |> loop)
 
     do scheduledMaint.Elapsed.Add(fun _ -> ActorMessage.ScheduledMaintenance |> actor.Post)
     do scheduledMaint.Start()

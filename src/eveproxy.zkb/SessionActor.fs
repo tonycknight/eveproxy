@@ -16,6 +16,7 @@ type SessionActor
         killReader: IKillmailReader,
         queueFactory: IKillmailReferenceQueueFactory
     ) =
+    let creation = DateTime.UtcNow
     let log = logFactory.CreateLogger<SessionActor>()
 
     let onPush (state: SessionActorState) (kill: obj) =
@@ -144,6 +145,8 @@ type SessionActor
                     | Entity p -> p :?> KillPackageData
                     | _ -> KillPackageData.empty
             }
+
+        member this.GetCreationTime () = creation
 
         member this.GetLastPullTime() =
             task { return! actor.PostAndAsyncReply(fun rc -> ActorMessage.LastUpdate rc) }

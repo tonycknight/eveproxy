@@ -92,6 +92,8 @@ module Mongo =
 
     let getCollection colName (db: IMongoDatabase) = db.GetCollection(colName)
 
+            
+
     let initCollection indexPath server dbName collectionName (userName, password) =
         let col =
             server
@@ -101,6 +103,16 @@ module Mongo =
             |> getCollection collectionName
 
         if indexPath <> "" then col |> setIndex indexPath else col
+
+    let findCollectionNames server dbName (userName, password) =        
+        use colNames =
+            server
+            |> connectionString (userName, password)
+            |> setDbConnection dbName
+            |> initDb dbName
+            |> (fun db -> db.ListCollectionNames())
+                      
+        colNames.ToEnumerable() |> Array.ofSeq            
 
     let upsert (collection: IMongoCollection<BsonDocument>) (doc: BsonDocument) =
         let opts = ReplaceOptions()
@@ -115,9 +127,14 @@ module Mongo =
 
         collection.ReplaceOneAsync(filter, doc, opts)
 
-    let delete (collection: IMongoCollection<BsonDocument>) id =
+    let deleteSingle (collection: IMongoCollection<BsonDocument>) id =
         let filter = id |> idFilter |> MongoBson.ofJson |> FilterDefinition.op_Implicit
         collection.DeleteOneAsync(filter)
+                
+    let deleteCol (collection: IMongoCollection<BsonDocument>) =
+        let db = collection.Database
+        let name = collection.CollectionNamespace.CollectionName
+        db.DropCollection(name)
 
     let query<'a> (collection: IMongoCollection<BsonDocument>) =
         collection.AsQueryable<BsonDocument>() |> Seq.map MongoBson.toObject<'a>

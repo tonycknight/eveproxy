@@ -134,6 +134,9 @@ type IKillmailReferenceQueue =
     abstract member ClearAsync: unit -> Task
     abstract member GetCountAsync: unit -> Task<int64>
 
+type IKillmailReferenceQueueFinder =
+    abstract member GetNames: unit -> string[]
+
 type MemoryKillmailReferenceQueue(config: eveproxy.AppConfiguration, name: string) =
     let kills = new System.Collections.Generic.Queue<KillPackageReferenceData>()
 
@@ -154,10 +157,14 @@ type MemoryKillmailReferenceQueue(config: eveproxy.AppConfiguration, name: strin
                     | (false, _) -> None
             }
 
+module KillmailReferenceQueues =
+    [<Literal>]
+    let queueNamePrefix = $"killmail_queue__"
+
 [<ExcludeFromCodeCoverage>]
 type MongoKillmailReferenceQueue(config: eveproxy.AppConfiguration, name: string) =
     let name = if name = "" then "default" else name
-    let collectionName = $"killmail_queue__{name}"
+    let collectionName = $"{KillmailReferenceQueues.queueNamePrefix}{name}"
 
     let mongoCol =
         eveproxy.Mongo.initCollection
@@ -175,11 +182,27 @@ type MongoKillmailReferenceQueue(config: eveproxy.AppConfiguration, name: string
         member this.PushAsync(value: KillPackageReferenceData) =
             task { do! [ value ] |> eveproxy.Mongo.pushToQueue mongoCol }
 
-        member this.ClearAsync() = task { do ignore 0 }
+        member this.ClearAsync() = 
+            task { do eveproxy.Mongo.deleteCol mongoCol } 
 
         member this.PullAsync() =
             eveproxy.Mongo.pullSingletonFromQueue<KillPackageReferenceData> mongoCol
 
+type MongoKillmailReferenceQueueFinder(config: eveproxy.AppConfiguration) =
+    interface IKillmailReferenceQueueFinder with
+        member this.GetNames () = 
+            
+            let colNames = 
+                eveproxy.Mongo.findCollectionNames
+                    config.mongoServer
+                    config.mongoDbName
+                    (config.mongoUserName, config.mongoPassword)
+            
+            colNames 
+            |> Array.filter (fun n -> n.StartsWith(KillmailReferenceQueues.queueNamePrefix))
+            |> Array.map (fun n -> n.Substring(KillmailReferenceQueues.queueNamePrefix.Length))
+
+            
 
 type IKillmailReferenceQueueFactory =
     abstract member Create: string -> IKillmailReferenceQueue
