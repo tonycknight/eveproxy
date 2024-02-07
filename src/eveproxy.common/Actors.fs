@@ -14,6 +14,8 @@ type ActorStats =
         else
             $"{parent.GetType().FullName}:{name}"
 
+type StorageStats = { name: string; count: int64 }
+
 type ActorMessage =
     | Stop
     | Start
@@ -25,7 +27,7 @@ type ActorMessage =
     | PullReply of url: string * rc: AsyncReplyChannel<obj>
     | ChildStats of rc: AsyncReplyChannel<ActorStats[]>
     | LastUpdate of rc: AsyncReplyChannel<DateTime>
-
+    | StorageStats of rc: AsyncReplyChannel<StorageStats[]>
 
 type IActor =
     abstract member Post: ActorMessage -> unit

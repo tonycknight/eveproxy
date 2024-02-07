@@ -15,7 +15,8 @@ type SessionsActor
         logFactory: ILoggerFactory,
         killReader: IKillmailReader,
         timeProvider: ITimeProvider,
-        queueFactory: IKillmailReferenceQueueFactory
+        queueFactory: IKillmailReferenceQueueFactory,
+        queueFinder: IKillmailReferenceQueueFinder
     ) =
     let defaultSessionName = ""
     let log = logFactory.CreateLogger<SessionsActor>()
@@ -59,6 +60,12 @@ type SessionsActor
         |> Array.ofSeq
         |> Threading.whenAll
 
+    let storageStats (state: SessionsActorState) =
+        state.sessions
+        |> Map.values
+        |> Seq.map (fun a -> a.GetStorageStats())
+        |> Array.ofSeq
+        |> Threading.whenAll
 
     let findSessionsToDestroy (state: SessionsActorState) =
         task {
@@ -68,7 +75,8 @@ type SessionsActor
                 |> Seq.map (fun a ->
                     task {
                         let! t = a.Value.GetLastPullTime()
-                        return (a.Key, a.Value, t)
+                        let c = a.Value.GetCreationTime()
+                        return (a.Key, a.Value, t, c)
                     })
                 |> Array.ofSeq
                 |> Threading.whenAll
@@ -77,8 +85,8 @@ type SessionsActor
 
             return
                 results
-                |> Seq.filter (fun (_, _, t) -> t < exp)
-                |> Seq.map (fun (k, a, _) -> (k, a))
+                |> Seq.filter (fun (_, _, t, c) -> (t > DateTime.MinValue && t < exp) || (c < exp))
+                |> Seq.map (fun (k, a, _, _) -> (k, a))
                 |> List.ofSeq
         }
 
@@ -89,7 +97,7 @@ type SessionsActor
             "No sessions found to destroy." |> log.LogTrace
             state
         | sessions ->
-            "Starting session destruction..." |> log.LogTrace
+            "Starting session destruction..." |> log.LogTrace // TODO: include count
 
             let cleanSessions =
                 sessions
@@ -104,7 +112,17 @@ type SessionsActor
             { SessionsActorState.sessions = cleanSessions }
 
     let initActorState () =
-        { SessionsActorState.sessions = Map.empty } |> getStateActor defaultSessionName
+        let actors =
+            queueFinder.GetNames()
+            |> Seq.filter (fun n -> n <> "default") // TODO: not default!
+            |> Seq.map getStateActor
+            |> List.ofSeq
+
+        let actors = (getStateActor defaultSessionName) :: actors
+
+        actors
+        |> List.fold (fun s f -> f s |> fst) { SessionsActorState.sessions = Map.empty }
+
 
     let actor =
         MailboxProcessor<ActorMessage>.Start(fun inbox ->
@@ -114,7 +132,7 @@ type SessionsActor
 
                     let! state =
                         match msg with
-                        | Entity e when (e :? KillPackage) -> onPush state e
+                        | Entity e when (e :? KillPackageData) -> onPush state e
                         | PullReply(url, rc) -> onPullNext state url rc |> Async.AwaitTask
                         | ScheduledMaintenance ->
                             async {
@@ -128,13 +146,18 @@ type SessionsActor
                                 stats |> rc.Reply
                                 return state
                             }
+                        | StorageStats(rc) ->
+                            async {
+                                let! stats = storageStats state |> Async.AwaitTask
+                                stats |> Array.collect id |> rc.Reply
+                                return state
+                            }
                         | _ -> async { return state }
 
                     return! loop state
                 }
 
-            let state, _ = initActorState ()
-            state |> loop)
+            initActorState () |> loop)
 
     do scheduledMaint.Elapsed.Add(fun _ -> ActorMessage.ScheduledMaintenance |> actor.Post)
     do scheduledMaint.Start()
@@ -156,6 +179,9 @@ type SessionsActor
                         childStats = (stats |> List.ofArray) }
             }
 
+        member this.GetStorageStats() =
+            task { return! actor.PostAndAsyncReply(fun rc -> ActorMessage.StorageStats rc) }
+
         member this.Post(msg: ActorMessage) = actor.Post msg
 
         member this.GetNext(name: string) =
@@ -164,6 +190,6 @@ type SessionsActor
 
                 return
                     match r :?> ActorMessage with
-                    | Entity p -> p :?> KillPackage
-                    | _ -> KillPackage.empty
+                    | Entity p -> p :?> KillPackageData
+                    | _ -> KillPackageData.empty
             }

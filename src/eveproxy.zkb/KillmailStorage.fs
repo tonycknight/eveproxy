@@ -1,22 +1,25 @@
 ﻿namespace eveproxy.zkb
 
 open System
+open System.Diagnostics.CodeAnalysis
 open System.Threading.Tasks
 open Microsoft.Extensions.Logging
 open eveproxy.Threading
 
 type IKillmailRepository =
-    abstract member SetAsync: kill: KillPackage -> Task<KillPackage option>
-    abstract member GetAsync: id: string -> Task<KillPackage option>
-    abstract member GetCountAsync: unit -> Task<int>
+    abstract member SetAsync: kill: KillPackageData -> Task<KillPackageData option>
+    abstract member GetAsync: id: string -> Task<KillPackageData option>
+    abstract member GetCountAsync: unit -> Task<int64>
 
 type MemoryKillmailRepository() =
     let cache =
-        new System.Collections.Concurrent.ConcurrentDictionary<string, KillPackage>(StringComparer.OrdinalIgnoreCase)
+        new System.Collections.Concurrent.ConcurrentDictionary<string, KillPackageData>(
+            StringComparer.OrdinalIgnoreCase
+        )
 
     interface IKillmailRepository with
         member this.SetAsync(kill) =
-            let key = KillPackage.killmailId kill
+            let key = KillPackageData.killmailId kill
 
             match key with
             | Some k ->
@@ -32,17 +35,61 @@ type MemoryKillmailRepository() =
 
         member this.GetCountAsync() = task { return cache.Count }
 
+[<ExcludeFromCodeCoverage>]
+type MongoKillmailRepository(config: eveproxy.AppConfiguration) =
+
+    [<Literal>]
+    let collectionName = "killmails"
+
+    let mongoCol =
+        eveproxy.Mongo.initCollection
+            ""
+            config.mongoServer
+            config.mongoDbName
+            collectionName
+            (config.mongoUserName, config.mongoPassword)
+
+    let setId id (kill: KillPackageData) =
+        if Object.ReferenceEquals(kill._id, null) then
+            kill._id <- id
+
+        kill
+
+    interface IKillmailRepository with
+        member this.SetAsync(kill) =
+            task {
+                return!
+                    match KillPackageData.killmailId kill with
+                    | Some id ->
+                        task {
+                            let! r =
+                                kill
+                                |> setId id
+                                |> eveproxy.MongoBson.ofObject
+                                |> eveproxy.Mongo.upsert mongoCol
+
+                            return Some kill
+                        }
+                    | None -> task { return None }
+            }
+
+        member this.GetAsync(id) =
+            sprintf "{'_id': '%s' }" id
+            |> eveproxy.Mongo.getSingle<KillPackageData> mongoCol
+
+        member this.GetCountAsync() = eveproxy.Mongo.count mongoCol
+
 type IKillmailWriter =
-    abstract member WriteAsync: kill: KillPackage -> Task<KillPackage>
+    abstract member WriteAsync: kill: KillPackageData -> Task<KillPackageData>
 
 
 type KillmailWriter(logFactory: ILoggerFactory, repo: IKillmailRepository) =
     let log = logFactory.CreateLogger<KillmailWriter>()
 
     interface IKillmailWriter with
-        member this.WriteAsync(kill: KillPackage) =
+        member this.WriteAsync(kill: KillPackageData) =
             task {
-                match kill |> KillPackage.killmailId with
+                match kill |> KillPackageData.killmailId with
                 | Some id ->
                     id |> sprintf "--> Writing kill [%s]..." |> log.LogTrace
                     let! kill = repo.SetAsync kill
@@ -59,7 +106,7 @@ type KillmailWriter(logFactory: ILoggerFactory, repo: IKillmailRepository) =
 
 
 type IKillmailReader =
-    abstract member ReadAsync: id: string -> Task<KillPackage option>
+    abstract member ReadAsync: id: string -> Task<KillPackageData option>
 
 type KillmailReader(logFactory: ILoggerFactory, repo: IKillmailRepository) =
     let log = logFactory.CreateLogger<KillmailReader>()
@@ -82,17 +129,23 @@ type KillmailReader(logFactory: ILoggerFactory, repo: IKillmailRepository) =
 
 type IKillmailReferenceQueue =
     abstract member Name: string
-    abstract member PushAsync: value: KillPackageReference -> Task
-    abstract member PullAsync: unit -> Task<KillPackageReference option>
+    abstract member PushAsync: value: KillPackageReferenceData -> Task
+    abstract member PullAsync: unit -> Task<KillPackageReferenceData option>
     abstract member ClearAsync: unit -> Task
+    abstract member GetCountAsync: unit -> Task<int64>
 
-type MemoryKillmailReferenceQueue(name: string) =
-    let kills = new System.Collections.Generic.Queue<KillPackageReference>()
+type IKillmailReferenceQueueFinder =
+    abstract member GetNames: unit -> string[]
+
+type MemoryKillmailReferenceQueue(config: eveproxy.AppConfiguration, name: string) =
+    let kills = new System.Collections.Generic.Queue<KillPackageReferenceData>()
 
     interface IKillmailReferenceQueue with
         member this.Name = name
 
-        member this.PushAsync(value: KillPackageReference) = task { do kills.Enqueue value }
+        member this.GetCountAsync() = task { return kills.Count }
+
+        member this.PushAsync(value: KillPackageReferenceData) = task { do kills.Enqueue value }
 
         member this.ClearAsync() = task { do kills.Clear() }
 
@@ -104,11 +157,60 @@ type MemoryKillmailReferenceQueue(name: string) =
                     | (false, _) -> None
             }
 
+module KillmailReferenceQueues =
+    [<Literal>]
+    let queueNamePrefix = $"killmail_queue__"
+
+[<ExcludeFromCodeCoverage>]
+type MongoKillmailReferenceQueue(config: eveproxy.AppConfiguration, name: string) =
+    let name = if name = "" then "default" else name
+    let collectionName = $"{KillmailReferenceQueues.queueNamePrefix}{name}"
+
+    let mongoCol =
+        eveproxy.Mongo.initCollection
+            ""
+            config.mongoServer
+            config.mongoDbName
+            collectionName
+            (config.mongoUserName, config.mongoPassword)
+
+    interface IKillmailReferenceQueue with
+        member this.Name = name
+
+        member this.GetCountAsync() = eveproxy.Mongo.count mongoCol
+
+        member this.PushAsync(value: KillPackageReferenceData) =
+            task { do! [ value ] |> eveproxy.Mongo.pushToQueue mongoCol }
+
+        member this.ClearAsync() =
+            task { do eveproxy.Mongo.deleteCol mongoCol }
+
+        member this.PullAsync() =
+            eveproxy.Mongo.pullSingletonFromQueue<KillPackageReferenceData> mongoCol
+
+type MongoKillmailReferenceQueueFinder(config: eveproxy.AppConfiguration) =
+    interface IKillmailReferenceQueueFinder with
+        member this.GetNames() =
+
+            let colNames =
+                eveproxy.Mongo.findCollectionNames
+                    config.mongoServer
+                    config.mongoDbName
+                    (config.mongoUserName, config.mongoPassword)
+
+            colNames
+            |> Array.filter (fun n -> n.StartsWith(KillmailReferenceQueues.queueNamePrefix))
+            |> Array.map (fun n -> n.Substring(KillmailReferenceQueues.queueNamePrefix.Length))
+
+
+
 type IKillmailReferenceQueueFactory =
     abstract member Create: string -> IKillmailReferenceQueue
 
-type KillmailReferenceQueueFactory<'a when 'a :> IKillmailReferenceQueue>() =
+type KillmailReferenceQueueFactory<'a when 'a :> IKillmailReferenceQueue>(config: eveproxy.AppConfiguration) =
+
     interface IKillmailReferenceQueueFactory with
         member this.Create name =
             let t = typeof<'a>
-            Activator.CreateInstance(t, name) :?> IKillmailReferenceQueue
+            let args = [| config :> obj; name :> obj |]
+            Activator.CreateInstance(t, args) :?> IKillmailReferenceQueue

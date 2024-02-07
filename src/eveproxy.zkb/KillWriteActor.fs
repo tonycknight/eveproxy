@@ -8,18 +8,18 @@ type KillWriteActor
     (stats: IApiStatsActor, sessions: ISessionsActor, logFactory: ILoggerFactory, writer: IKillmailWriter) =
     let log = logFactory.CreateLogger<KillWriteActor>()
 
-    let writeKill (kill: KillPackage) =
-        match kill |> KillPackage.killmailId with
+    let writeKill (kill: KillPackageData) =
+        match kill |> KillPackageData.killmailId with
         | Some id ->
             id |> sprintf "--> Received kill [%s]. Sending to write..." |> log.LogTrace
             kill |> writer.WriteAsync |> Async.AwaitTask
         | _ -> async { return kill }
 
-    let countKill (kill: KillPackage) =
+    let countKill (kill: KillPackageData) =
         { WrittenKills.count = 1 } :> obj |> ActorMessage.Entity |> stats.Post
         kill
 
-    let broadcastKill (kill: KillPackage) =
+    let broadcastKill (kill: KillPackageData) =
         kill :> obj |> ActorMessage.Entity |> sessions.Post
         kill
 
@@ -29,11 +29,14 @@ type KillWriteActor
                 async {
                     let! msg = inbox.Receive()
 
-                    match msg with
-                    | Entity e when (e :? KillPackage) ->
-                        let! kp = (e :?> KillPackage) |> writeKill
-                        kp |> countKill |> broadcastKill |> ignore
-                    | _ -> ignore 0
+                    try
+                        match msg with
+                        | Entity e when (e :? KillPackageData) ->
+                            let! kp = (e :?> KillPackageData) |> writeKill
+                            kp |> countKill |> broadcastKill |> ignore
+                        | _ -> ignore 0
+                    with ex ->
+                        log.LogError(ex, ex.Message)
 
                     return! loop ()
                 }

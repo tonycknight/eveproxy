@@ -12,8 +12,9 @@ module ApiStartup =
             .AddSingleton<IApiStatsActor, ApiStatsActor>()
             .AddSingleton<ISessionsActor, SessionsActor>()
             .AddSingleton<IRedisqIngestionActor, RedisqIngestionActor>()
-            .AddSingleton<IKillmailRepository, MemoryKillmailRepository>()
-            .AddSingleton<IKillmailReferenceQueueFactory, KillmailReferenceQueueFactory<MemoryKillmailReferenceQueue>>()
+            .AddSingleton<IKillmailRepository, MongoKillmailRepository>()
+            .AddSingleton<IKillmailReferenceQueueFinder, MongoKillmailReferenceQueueFinder>()
+            .AddSingleton<IKillmailReferenceQueueFactory, KillmailReferenceQueueFactory<MongoKillmailReferenceQueue>>()
             .AddSingleton<IKillmailWriter, KillmailWriter>()
             .AddSingleton<IKillmailReader, KillmailReader>()
             .AddSingleton<IKillWriteActor, KillWriteActor>()
@@ -25,6 +26,11 @@ module ApiStartup =
 
         config.ZkbRedisqUrl() |> ActorMessage.Pull |> ingest.Post
 
+[<CLIMutable>]
+type KillPackage =
+    { package: obj }
+
+    static member ofKillPackageData(value: KillPackageData) = { KillPackage.package = value.package }
 
 module Api =
     let private ttw (config: AppConfiguration) (query: IQueryCollection) =
@@ -52,7 +58,8 @@ module Api =
             next ctx
 
     let private getNullKill =
-        fun (next: HttpFunc) (ctx: HttpContext) -> task { return! Successful.OK KillPackage.empty next ctx }
+        fun (next: HttpFunc) (ctx: HttpContext) ->
+            task { return! Successful.OK (KillPackageData.empty |> KillPackage.ofKillPackageData) next ctx }
 
     let private getNextKill sessionId =
         let rec pollPackage (sessions: ISessionsActor) (time: ITimeProvider) (endTime) =
@@ -60,10 +67,10 @@ module Api =
                 let! package = sessions.GetNext sessionId
 
                 return!
-                    if package <> KillPackage.empty then
+                    if package <> KillPackageData.empty then
                         task { return package }
                     else if time.GetUtcNow() >= endTime then
-                        task { return KillPackage.empty }
+                        task { return KillPackageData.empty }
                     else
                         task {
                             do! Threading.Tasks.Task.Delay(100)
@@ -84,10 +91,10 @@ module Api =
                     |> time.GetUtcNow().AddSeconds
                     |> pollPackage sessions time
 
-                if package <> KillPackage.empty then
+                if package <> KillPackageData.empty then
                     sessionId |> countSessionKillFetch ctx
 
-                return! Successful.OK package next ctx
+                return! Successful.OK (package |> KillPackage.ofKillPackageData) next ctx
             }
 
     let private getKillById killId =
@@ -99,7 +106,7 @@ module Api =
 
                 return!
                     match km with
-                    | Some km -> Successful.OK km next ctx
+                    | Some km -> Successful.OK (km |> KillPackage.ofKillPackageData) next ctx
                     | _ -> RequestErrors.notFound (text "") next ctx
             }
 
@@ -109,6 +116,7 @@ module Api =
             task {
                 let kmRepo = ctx.GetService<IKillmailRepository>()
                 let statsActor = ctx.GetService<IApiStatsActor>()
+                let sessionsActor = ctx.GetService<ISessionsActor>()
 
                 let! statsActorStats = statsActor.GetStats()
                 let! apiStats = statsActor.GetApiStats()
@@ -117,14 +125,17 @@ module Api =
 
                 let! ingestActorStats = ctx.GetService<IRedisqIngestionActor>().GetStats()
                 let! writeActorStats = ctx.GetService<IKillWriteActor>().GetStats()
-                let! sessionsActorStats = ctx.GetService<ISessionsActor>().GetStats()
+                let! sessionsActorStats = sessionsActor.GetStats()
+                let! sessionStorageStats = sessionsActor.GetStorageStats()
 
                 let result =
                     {| actors = [| statsActorStats; ingestActorStats; writeActorStats; sessionsActorStats |]
                        stats =
                         {| ingestion = apiStats.ingestion
                            distribution = apiStats.distribution
-                           storage = {| kills = kmCount |}
+                           storage =
+                            {| kills = kmCount
+                               sessions = sessionStorageStats |}
                            routes = apiStats.routes |> Map.values |> Seq.sortByDescending (fun rs -> rs.count) |} |}
 
                 return! Successful.OK result next ctx
@@ -161,7 +172,6 @@ module Api =
                                [ routeCif "/kills/session/%s/" (fun session -> getNextKill session)
                                  routeCif "/kills/id/%s/" (fun killId -> getKillById killId)
                                  route "/kills/null/" >=> getNullKill
-                                 route "/kills/replay/" >=> getNullKill
                                  route "/kills/" >=> (getNextKill "") ]) ])
 
     let zkbWebRoutes () =
