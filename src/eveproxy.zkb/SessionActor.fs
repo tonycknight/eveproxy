@@ -90,10 +90,12 @@ type SessionActor
     let shutdown state =
         async {
             $"Shutting down session [{name}]..." |> log.LogTrace
+
             try
                 do! state.kills.ClearAsync() |> Async.AwaitTask
-            with
-            | ex -> log.LogError(ex, ex.Message)
+            with ex ->
+                log.LogError(ex, ex.Message)
+
             $"Shut down session [{name}]." |> log.LogTrace
             return state
         }
