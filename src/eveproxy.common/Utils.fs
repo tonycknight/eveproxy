@@ -62,3 +62,10 @@ type ITimeProvider =
 type TimeProvider() =
     interface ITimeProvider with
         member _.GetUtcNow() = System.DateTime.UtcNow
+
+[<ExcludeFromCodeCoverage>]
+module Uri =
+    let tryParse (uri: string) =
+        match Uri.IsWellFormedUriString(uri, UriKind.Absolute) with
+        | true -> new Uri(uri) |> Some
+        | _ -> None
