@@ -157,7 +157,7 @@ type MemoryKillmailReferenceQueue(config: eveproxy.AppConfiguration, name: strin
 [<ExcludeFromCodeCoverage>]
 type MongoKillmailReferenceQueue(config: eveproxy.AppConfiguration, name: string) =
     let name = if name = "" then "default" else name
-    let collectionName = $"killmail_queue_{name}"
+    let collectionName = $"killmail_queue__{name}"
 
     let mongoCol =
         eveproxy.Mongo.initCollection
