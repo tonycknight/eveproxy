@@ -67,7 +67,10 @@ type RedisqIngestionActor
 
                                 let! state =
                                     match kill with
-                                    | Choice1Of3 kp when kp <> KillPackageData.empty ->
+                                    | Choice1Of3 kp when kp = KillPackageData.empty ->
+                                        "Empty package received." |> log.LogTrace
+                                        async { return state }
+                                    | Choice1Of3 kp ->
                                         kp
                                         |> KillPackageData.killmailId
                                         |> Option.defaultValue ""
@@ -75,10 +78,6 @@ type RedisqIngestionActor
                                         |> log.LogTrace
 
                                         forwardKill state kp |> Async.AwaitTask
-
-                                    | Choice1Of3 kp ->
-                                        "Empty package received." |> log.LogTrace
-                                        async { return state }
                                     | Choice2Of3 ts -> wait state ts |> Async.AwaitTask
                                     | _ -> wait state TimeSpan.Zero |> Async.AwaitTask
 
