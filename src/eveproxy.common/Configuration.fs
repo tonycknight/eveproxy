@@ -9,6 +9,7 @@ open Microsoft.Extensions.DependencyInjection
 [<CLIMutable>]
 type AppConfiguration =
     { hostUrls: string
+      allowExternalTraffic: string
       zkbRedisqBaseUrl: string
       zkbRedisqQueueId: string
       zkbRedisqTtwExternal: string
@@ -31,6 +32,7 @@ type AppConfiguration =
 
     static member emptyConfig =
         { AppConfiguration.hostUrls = ""
+          allowExternalTraffic = false.ToString()
           zkbApiUrl = ""
           zkbRedisqBaseUrl = ""
           zkbRedisqQueueId = ""
@@ -44,6 +46,7 @@ type AppConfiguration =
 
     static member defaultConfig =
         { AppConfiguration.hostUrls = "http://+:8080"
+          allowExternalTraffic = false.ToString()
           zkbRedisqBaseUrl = "https://redisq.zkillboard.com/listen.php"
           zkbRedisqQueueId = (System.Guid.NewGuid() |> sprintf "eveProxy%A")
           zkbRedisqTtwExternal = "10"

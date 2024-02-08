@@ -9,7 +9,10 @@ open Microsoft.Extensions.DependencyInjection
 
 module Api =
     let private isHomeIp (ctx: HttpContext) =
-        ctx.Connection.RemoteIpAddress |> IPAddress.IsLoopback
+        let config = ctx.GetService<AppConfiguration>()
+        match config.allowExternalTraffic |> Strings.toBool false with
+        | true -> true
+        | _ -> ctx.Connection.RemoteIpAddress |> IPAddress.IsLoopback        
 
     let private isValidApiKey (secrets: ISecretProvider) (ctx: HttpContext) =
         match ctx.TryGetRequestHeader "x-api-key" with

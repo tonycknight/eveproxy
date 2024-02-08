@@ -27,6 +27,7 @@ module ConfigurationTests =
 
         let expected =
             { AppConfiguration.hostUrls = apply config.hostUrls defaultConfig.hostUrls
+              allowExternalTraffic = apply config.allowExternalTraffic defaultConfig.allowExternalTraffic
               zkbRedisqBaseUrl = apply config.zkbRedisqBaseUrl defaultConfig.zkbRedisqBaseUrl
               zkbRedisqQueueId = apply config.zkbRedisqQueueId defaultConfig.zkbRedisqQueueId
               zkbRedisqTtwExternal = apply config.zkbRedisqTtwExternal defaultConfig.zkbRedisqTtwExternal
