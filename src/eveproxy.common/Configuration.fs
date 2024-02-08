@@ -9,6 +9,7 @@ open Microsoft.Extensions.DependencyInjection
 [<CLIMutable>]
 type AppConfiguration =
     { hostUrls: string
+      allowExternalTraffic: string
       zkbRedisqBaseUrl: string
       zkbRedisqQueueId: string
       zkbRedisqTtwExternal: string
@@ -31,6 +32,7 @@ type AppConfiguration =
 
     static member emptyConfig =
         { AppConfiguration.hostUrls = ""
+          allowExternalTraffic = true.ToString()
           zkbApiUrl = ""
           zkbRedisqBaseUrl = ""
           zkbRedisqQueueId = ""
@@ -44,12 +46,13 @@ type AppConfiguration =
 
     static member defaultConfig =
         { AppConfiguration.hostUrls = "http://+:8080"
+          allowExternalTraffic = true.ToString()
           zkbRedisqBaseUrl = "https://redisq.zkillboard.com/listen.php"
           zkbRedisqQueueId = (System.Guid.NewGuid() |> sprintf "eveProxy%A")
           zkbRedisqTtwExternal = "10"
           zkbRedisqTtwClient = "10"
           zkbApiUrl = "https://zkillboard.com/api/"
-          redisqSessionMaxAge = ""
+          redisqSessionMaxAge = TimeSpan.FromHours(3).ToString()
           mongoServer = "127.0.0.1"
           mongoDbName = "eveproxy"
           mongoUserName = ""

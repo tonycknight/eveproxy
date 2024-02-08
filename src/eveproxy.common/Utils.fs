@@ -15,6 +15,11 @@ module Strings =
         | true, x -> x
         | _ -> defaultValue
 
+    let toBool (defaultValue: bool) (value: string) =
+        match bool.TryParse(value) with
+        | true, x -> x
+        | _ -> defaultValue
+
     let toTimeSpan (defaultValue: TimeSpan) (value: string) =
         match TimeSpan.TryParse(value) with
         | true, x -> x

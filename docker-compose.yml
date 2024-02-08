@@ -1,0 +1,9 @@
+
+version: '3.4'
+
+services:
+  tubescan:
+    image: tubescan
+    build:
+      context: .
+      dockerfile: Dockerfile
