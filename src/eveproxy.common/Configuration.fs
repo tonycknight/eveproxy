@@ -32,7 +32,7 @@ type AppConfiguration =
 
     static member emptyConfig =
         { AppConfiguration.hostUrls = ""
-          allowExternalTraffic = false.ToString()
+          allowExternalTraffic = true.ToString()
           zkbApiUrl = ""
           zkbRedisqBaseUrl = ""
           zkbRedisqQueueId = ""
