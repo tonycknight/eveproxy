@@ -46,7 +46,7 @@ type AppConfiguration =
 
     static member defaultConfig =
         { AppConfiguration.hostUrls = "http://+:8080"
-          allowExternalTraffic = false.ToString()
+          allowExternalTraffic = true.ToString()
           zkbRedisqBaseUrl = "https://redisq.zkillboard.com/listen.php"
           zkbRedisqQueueId = (System.Guid.NewGuid() |> sprintf "eveProxy%A")
           zkbRedisqTtwExternal = "10"
