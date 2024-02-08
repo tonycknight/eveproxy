@@ -33,6 +33,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "http", "http", "{7BD4B3D3-1
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{A3507842-5C80-434F-A881-8EE0DD9D8398}"
 	ProjectSection(SolutionItems) = preProject
+		CCP.md = CCP.md
 		README.md = README.md
 	EndProjectSection
 EndProject

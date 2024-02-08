@@ -47,18 +47,10 @@ This value uniquely identifies the container with Redisq. This mandatory require
 
 | | | 
 | - | - |
-| `/redisq/stats/` | Get stats for the redisq proxy |
-| `/redisq/v1/kills/` | Get the next-in-sequence killmail |
+| `/redisq/stats/` | Get ingress, egress and workload statistics for the proxy. |
+| `/redisq/v1/kills/` | Get the next-in-sequence killmail. |
 | `/redisq/v1/kills/id/[id]/` | Get the killmail of `id` if it's been cached. |
 | `/redisq/v1/kills/session/[session]/` | Sessions are analogous to queues. To split kills into different sessions, just give an arbitrary name for `session`. |
-
-### Zkb API
-
-WIP!
-
-### Evewho API
-
-WIP!
 
 ## Copyright and disclaimers
 
