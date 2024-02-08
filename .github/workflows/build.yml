@@ -34,6 +34,7 @@ jobs:
         uses: actions/setup-dotnet@v4                
  
       - name: Style checks
+        if: ${{ github.event_name == 'pull_request' }}
         run: |
             dotnet tool restore    
             dotnet run --project ./build/build.fsproj -t "Check Style Rules"
