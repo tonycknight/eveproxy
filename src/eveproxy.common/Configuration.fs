@@ -187,21 +187,25 @@ module Configuration =
 type ISecretProvider =
     abstract member IsSecretValueEqual: string -> string -> bool
     abstract member GetSecretValue: string -> string
+    abstract member SetSecretValue: string -> string -> unit
 
 [<ExcludeFromCodeCoverage>]
 type StubSecretProvider(secrets: (string * string) seq) =
 
-    let secrets = secrets |> Map.ofSeq
-
+    let secrets = Dictionary.toDictionary secrets
+    
     new() = StubSecretProvider([ ("apikey", "abc") ])
 
     interface ISecretProvider with
         member this.IsSecretValueEqual name value =
-            match secrets |> Map.tryFind name with
+            match secrets |> Dictionary.tryFind name with
             | Some v -> StringComparer.Ordinal.Equals(v, value)
             | _ -> false
 
         member this.GetSecretValue name =
-            match secrets |> Map.tryFind name with
+            match secrets |> Dictionary.tryFind name with
             | Some v -> v
             | _ -> ""
+
+        member this.SetSecretValue name value =
+            secrets.[name] <- value
