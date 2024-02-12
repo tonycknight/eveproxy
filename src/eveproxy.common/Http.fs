@@ -42,11 +42,11 @@ type IInternalHttpClient =
     abstract member PutAsync: url: string -> content: string -> Task<HttpRequestResponse>
 
 [<ExcludeFromCodeCoverage>]
-type InternalHttpClient(httpClient: HttpClient, config: AppConfiguration, secrets: ISecretProvider) =
+type InternalHttpClient(httpClient: HttpClient, config: AppConfiguration, secrets: IKeyValueProvider) =
     let httpSend = Http.send httpClient
 
     let appendApiKey (req: HttpRequestMessage) =
-        req.Headers.Add("x-api-key", secrets.GetSecretValue "apikey")
+        req.Headers.Add("x-api-key", secrets.GetValue "apikey")
         req
 
     let getReq (url: string) =

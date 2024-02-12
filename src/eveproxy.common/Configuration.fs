@@ -5,6 +5,7 @@ open System.Diagnostics.CodeAnalysis
 open eveproxy.Validators
 open Microsoft.Extensions.Configuration
 open Microsoft.Extensions.DependencyInjection
+open Microsoft.Extensions.Logging
 
 [<CLIMutable>]
 type AppConfiguration =
@@ -184,28 +185,82 @@ module Configuration =
         |> mergeDefaults AppConfiguration.defaultConfig
         |> validate
 
-type ISecretProvider =
-    abstract member IsSecretValueEqual: string -> string -> bool
-    abstract member GetSecretValue: string -> string
-    abstract member SetSecretValue: string -> string -> unit
+type IKeyValueProvider =
+    abstract member IsValueEqual: string -> string -> bool
+    abstract member GetValue: string -> string
+    abstract member SetValue: string -> string -> unit
 
 [<ExcludeFromCodeCoverage>]
-type StubSecretProvider(secrets: (string * string) seq) =
+type MemoryKeyValueProvider(secrets: (string * string) seq) =
 
     let secrets = Dictionary.toDictionary secrets
     
-    new() = StubSecretProvider([ ("apikey", "abc") ])
+    new() = MemoryKeyValueProvider([ ("apikey", "abc") ])
 
-    interface ISecretProvider with
-        member this.IsSecretValueEqual name value =
+    interface IKeyValueProvider with
+        member this.IsValueEqual name value =
             match secrets |> Dictionary.tryFind name with
             | Some v -> StringComparer.Ordinal.Equals(v, value)
             | _ -> false
 
-        member this.GetSecretValue name =
+        member this.GetValue name =
             match secrets |> Dictionary.tryFind name with
             | Some v -> v
             | _ -> ""
 
-        member this.SetSecretValue name value =
+        member this.SetValue name value =
             secrets.[name] <- value
+
+open MongoDB.Bson
+
+[<ExcludeFromCodeCoverage>]
+type MongoKeyValueProvider(logger: ILoggerFactory, config: AppConfiguration)=
+
+    [<Literal>]
+    let collectionName = "keyvalues"
+
+    let logger = logger.CreateLogger<MongoKeyValueProvider>()
+
+    let mongoCol =
+        eveproxy.Mongo.initCollection
+            ""
+            config.mongoServer
+            config.mongoDbName
+            collectionName
+            (config.mongoUserName, config.mongoPassword)
+
+
+    let getValue name =
+        task {
+            let! x = 
+                sprintf "{'_id': '%s' }" name
+                    |> eveproxy.Mongo.getSingle<BsonDocument> mongoCol
+
+            return 
+                match x with
+                | Some bd -> bd.["value"].ToString() |> Some
+                | _ -> None
+        }
+
+    let setValue (name: string) (value: string) =
+        task {
+            let doc = new MongoDB.Bson.BsonDocument()
+            doc.["_id"] <- name
+            doc.["value"] <- value
+            
+            let! x = doc |> eveproxy.Mongo.upsert mongoCol
+            ignore x
+        }
+
+    interface IKeyValueProvider with
+        member this.IsValueEqual name value = 
+            let v = (getValue name).Result
+            match v with 
+            | Some v -> StringComparer.Ordinal.Equals(v, value)
+            | _ -> false
+
+        member this.GetValue name = (getValue name).Result |> Option.defaultValue ""
+
+        member this.SetValue name value = 
+            (setValue name value).Result |> ignore
+            
