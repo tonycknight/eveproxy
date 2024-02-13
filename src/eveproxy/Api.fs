@@ -44,10 +44,10 @@ module ApiStartup =
             .AddHttpLogging(fun lo -> lo.LoggingFields <- Microsoft.AspNetCore.HttpLogging.HttpLoggingFields.Request)
 
     let addApiConfig (services: IServiceCollection) =
-        
         services
-            .AddSingleton<AppConfiguration>(Configuration.create)
             .AddSingleton<eveproxy.IKeyValueProvider, eveproxy.MemoryKeyValueProvider>()
+            .AddSingleton<AppConfiguration>(Configuration.create)
+            
             
     let addApiHttp (services: IServiceCollection) =
         services.AddHttpClient().AddSingleton<IExternalHttpClient, ExternalHttpClient>()
