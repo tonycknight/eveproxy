@@ -46,7 +46,8 @@ type InternalHttpClient(httpClient: HttpClient, config: AppConfiguration, secret
     let httpSend = Http.send httpClient
 
     let appendApiKey (req: HttpRequestMessage) =
-        req.Headers.Add("x-api-key", secrets.GetValue "apikey")
+        let key = secrets.GetValue "apikey" |> Option.defaultValue ""
+        req.Headers.Add("x-api-key", key)
         req
 
     let getReq (url: string) =

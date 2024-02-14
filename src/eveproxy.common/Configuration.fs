@@ -7,6 +7,11 @@ open Microsoft.Extensions.Configuration
 open Microsoft.Extensions.DependencyInjection
 open Microsoft.Extensions.Logging
 
+type IKeyValueProvider =
+    abstract member IsValueEqual: string -> string -> bool
+    abstract member GetValue: string -> string option
+    abstract member SetValue: string -> string -> unit
+
 [<CLIMutable>]
 type AppConfiguration =
     { hostUrls: string
@@ -185,16 +190,20 @@ module Configuration =
         |> mergeDefaults AppConfiguration.defaultConfig
         |> validate
 
-type IKeyValueProvider =
-    abstract member IsValueEqual: string -> string -> bool
-    abstract member GetValue: string -> string
-    abstract member SetValue: string -> string -> unit
+    let applyKeyValues (kvs: IKeyValueProvider) (config: AppConfiguration) =
+        let k = nameof Unchecked.defaultof<AppConfiguration>.zkbRedisqQueueId
+
+        match kvs.GetValue k with
+        | Some qId -> { config with zkbRedisqQueueId = qId }
+        | None ->
+            kvs.SetValue k config.zkbRedisqQueueId
+            config
 
 [<ExcludeFromCodeCoverage>]
 type MemoryKeyValueProvider(secrets: (string * string) seq) =
 
     let secrets = Dictionary.toDictionary secrets
-    
+
     new() = MemoryKeyValueProvider([ ("apikey", "abc") ])
 
     interface IKeyValueProvider with
@@ -203,18 +212,14 @@ type MemoryKeyValueProvider(secrets: (string * string) seq) =
             | Some v -> StringComparer.Ordinal.Equals(v, value)
             | _ -> false
 
-        member this.GetValue name =
-            match secrets |> Dictionary.tryFind name with
-            | Some v -> v
-            | _ -> ""
+        member this.GetValue name = secrets |> Dictionary.tryFind name
 
-        member this.SetValue name value =
-            secrets.[name] <- value
+        member this.SetValue name value = secrets.[name] <- value
 
 open MongoDB.Bson
 
 [<ExcludeFromCodeCoverage>]
-type MongoKeyValueProvider(logger: ILoggerFactory, config: AppConfiguration)=
+type MongoKeyValueProvider(logger: ILoggerFactory, config: AppConfiguration) =
 
     [<Literal>]
     let collectionName = "keyvalues"
@@ -232,11 +237,9 @@ type MongoKeyValueProvider(logger: ILoggerFactory, config: AppConfiguration)=
 
     let getValue name =
         task {
-            let! x = 
-                sprintf "{'_id': '%s' }" name
-                    |> eveproxy.Mongo.getSingle<BsonDocument> mongoCol
+            let! x = sprintf "{'_id': '%s' }" name |> eveproxy.Mongo.getSingle<BsonDocument> mongoCol
 
-            return 
+            return
                 match x with
                 | Some bd -> bd.["value"].ToString() |> Some
                 | _ -> None
@@ -247,20 +250,19 @@ type MongoKeyValueProvider(logger: ILoggerFactory, config: AppConfiguration)=
             let doc = new MongoDB.Bson.BsonDocument()
             doc.["_id"] <- name
             doc.["value"] <- value
-            
+
             let! x = doc |> eveproxy.Mongo.upsert mongoCol
             ignore x
         }
 
     interface IKeyValueProvider with
-        member this.IsValueEqual name value = 
+        member this.IsValueEqual name value =
             let v = (getValue name).Result
-            match v with 
+
+            match v with
             | Some v -> StringComparer.Ordinal.Equals(v, value)
             | _ -> false
 
-        member this.GetValue name = (getValue name).Result |> Option.defaultValue ""
+        member this.GetValue name = (getValue name).Result
 
-        member this.SetValue name value = 
-            (setValue name value).Result |> ignore
-            
+        member this.SetValue name value = (setValue name value).Result |> ignore

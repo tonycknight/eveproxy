@@ -44,11 +44,20 @@ module ApiStartup =
             .AddHttpLogging(fun lo -> lo.LoggingFields <- Microsoft.AspNetCore.HttpLogging.HttpLoggingFields.Request)
 
     let addApiConfig (services: IServiceCollection) =
+        let sp = services.BuildServiceProvider()
+        let lf = sp.GetRequiredService<ILoggerFactory>()
+
+        let config = Configuration.create sp
+        let kvs = eveproxy.MongoKeyValueProvider(lf, config) :> eveproxy.IKeyValueProvider
+
+        let config = config |> Configuration.applyKeyValues kvs
+
         services
-            .AddSingleton<eveproxy.IKeyValueProvider, eveproxy.MemoryKeyValueProvider>()
-            .AddSingleton<AppConfiguration>(Configuration.create)
-            
-            
+            .AddSingleton<AppConfiguration>(config)
+            .AddSingleton<eveproxy.IKeyValueProvider>(kvs)
+
+
+
     let addApiHttp (services: IServiceCollection) =
         services.AddHttpClient().AddSingleton<IExternalHttpClient, ExternalHttpClient>()
 
