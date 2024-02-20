@@ -185,10 +185,13 @@ type MongoKillmailReferenceQueue(config: eveproxy.AppConfiguration, logFactory: 
                 $"Pushing killmail reference {value.killmailId} to queue [{name}]..."
                 |> logger.LogTrace
 
-                do! [ value ] |> eveproxy.Mongo.pushToQueue mongoCol
+                try
+                    do! [ value ] |> eveproxy.Mongo.pushToQueue mongoCol
 
-                $"Pushed killmail reference {value.killmailId} to queue [{name}]."
-                |> logger.LogTrace
+                    $"Pushed killmail reference {value.killmailId} to queue [{name}]."
+                    |> logger.LogTrace
+                with ex ->
+                    logger.LogError(ex.Message, ex)
             }
 
         member this.ClearAsync() =
