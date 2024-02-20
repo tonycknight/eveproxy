@@ -96,7 +96,10 @@ type SessionsActor
             "No sessions found to destroy." |> log.LogTrace
             state
         | sessions ->
-            sessions |> List.length |> sprintf "Starting destruction of %i session(s)..." |> log.LogTrace 
+            sessions
+            |> List.length
+            |> sprintf "Starting destruction of %i session(s)..."
+            |> log.LogTrace
 
             let cleanSessions =
                 sessions
