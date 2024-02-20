@@ -6,6 +6,10 @@ Accept: application/json
 GET http://localhost:8080/api/redisq/v1/kills/?ttw=1
 Accept: application/json
 
+### next kill - default
+GET http://localhost:8080/api/redisq/v1/kills/session/DEFAULT/?ttw=1
+Accept: application/json
+
 ### next kill - test1
 GET http://localhost:8080/api/redisq/v1/kills/session/test1/?ttw=1
 Accept: application/json

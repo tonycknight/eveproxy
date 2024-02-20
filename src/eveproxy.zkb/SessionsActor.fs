@@ -17,7 +17,7 @@ type SessionsActor
         queueFactory: IKillmailReferenceQueueFactory,
         queueFinder: IKillmailReferenceQueueFinder
     ) =
-    let defaultSessionName = ""
+    let defaultSessionName = KillmailReferenceQueues.defaultQueueName
     let log = logFactory.CreateLogger<SessionsActor>()
     let maxSessionAge = config.RedisqSessionMaxAge()
     let scheduledMaint = new System.Timers.Timer(TimeSpan.FromMinutes(1))
@@ -116,7 +116,7 @@ type SessionsActor
     let initActorState () =
         let actors =
             queueFinder.GetNames()
-            |> Seq.filter (fun n -> n <> "default") // TODO: not default!
+            |> Seq.filter (fun n -> n <> KillmailReferenceQueues.defaultQueueName)
             |> Seq.map getStateActor
             |> List.ofSeq
 
@@ -188,6 +188,8 @@ type SessionsActor
 
         member this.GetNext(name: string) =
             task {
+                let name = (if name = "" then defaultSessionName else name) |> Strings.toLower
+
                 let! r = actor.PostAndAsyncReply(fun rc -> ActorMessage.PullReply(name, rc))
 
                 return

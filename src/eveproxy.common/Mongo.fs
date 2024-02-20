@@ -16,7 +16,6 @@ module MongoBson =
     let ofJson (json: string) =
         BsonSerializer.Deserialize<BsonDocument>(json)
 
-    // TODO: expensive...
     let ofObject (value) =
         value |> Newtonsoft.Json.JsonConvert.SerializeObject |> ofJson
 
@@ -177,8 +176,5 @@ module Mongo =
             if values.Length > 0 then
                 let opts = new InsertManyOptions()
 
-                try
-                    do! collection.InsertManyAsync(values, opts)
-                with ex ->
-                    ignore ex // TODO: future ... telemetry.ex ex
+                do! collection.InsertManyAsync(values, opts)
         }

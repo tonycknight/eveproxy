@@ -4,12 +4,16 @@ open System.Threading.Tasks
 open FsCheck
 open FsCheck.Xunit
 open eveproxy.zkb
+open Microsoft.Extensions.Logging
+open NSubstitute
 
 module MemoryKillmailReferenceQueueTests =
 
     [<Property(Verbose = true)>]
     let ``PushAsync PullAsync are symmetric`` (ids: NonEmptyString[]) =
         let config = eveproxy.AppConfiguration.emptyConfig
+        let logger = Substitute.For<ILoggerFactory>()
+
         let ids = ids |> Array.map (fun id -> id.Get)
 
         let values =
@@ -18,7 +22,8 @@ module MemoryKillmailReferenceQueueTests =
                 { KillPackageReferenceData.killmailId = id
                   _id = eveproxy.MongoBson.id () })
 
-        let queue = new MemoryKillmailReferenceQueue(config, "") :> IKillmailReferenceQueue
+        let queue =
+            new MemoryKillmailReferenceQueue(config, logger, "") :> IKillmailReferenceQueue
 
         // Push
         let pushTasks = values |> Array.map queue.PushAsync
