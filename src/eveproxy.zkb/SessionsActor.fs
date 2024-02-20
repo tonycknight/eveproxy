@@ -1,7 +1,6 @@
 ﻿namespace eveproxy.zkb
 
 open System
-open System.Threading.Tasks
 open eveproxy
 open Microsoft.Extensions.Logging
 
