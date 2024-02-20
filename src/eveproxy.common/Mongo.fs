@@ -16,7 +16,6 @@ module MongoBson =
     let ofJson (json: string) =
         BsonSerializer.Deserialize<BsonDocument>(json)
 
-    // TODO: expensive...
     let ofObject (value) =
         value |> Newtonsoft.Json.JsonConvert.SerializeObject |> ofJson
 

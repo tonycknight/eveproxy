@@ -26,7 +26,6 @@ type SessionActor
 
             if id |> Option.isSome then
                 let id = id |> Option.get
-                sprintf "Pushing kill reference [%s] to queue [%s]..." id name |> log.LogTrace
 
                 let kpr =
                     { KillPackageReferenceData.killmailId = id
@@ -34,7 +33,6 @@ type SessionActor
 
                 try
                     do! kpr |> state.kills.PushAsync |> Async.AwaitTask
-                    sprintf "Pushed kill reference [%s] to queue [%s]." id name |> log.LogTrace
                 with ex ->
                     log.LogError(ex, ex.Message)
 

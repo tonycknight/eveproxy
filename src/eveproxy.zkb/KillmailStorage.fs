@@ -137,7 +137,7 @@ type IKillmailReferenceQueue =
 type IKillmailReferenceQueueFinder =
     abstract member GetNames: unit -> string[]
 
-type MemoryKillmailReferenceQueue(config: eveproxy.AppConfiguration, name: string) =
+type MemoryKillmailReferenceQueue(config: eveproxy.AppConfiguration, logFactory: ILoggerFactory, name: string) =
     let kills = new System.Collections.Generic.Queue<KillPackageReferenceData>()
 
     interface IKillmailReferenceQueue with
@@ -162,9 +162,10 @@ module KillmailReferenceQueues =
     let queueNamePrefix = $"killmail_queue__"
 
 [<ExcludeFromCodeCoverage>]
-type MongoKillmailReferenceQueue(config: eveproxy.AppConfiguration, name: string) =
+type MongoKillmailReferenceQueue(config: eveproxy.AppConfiguration, logFactory: ILoggerFactory, name: string) =
     let name = if name = "" then "default" else name
     let collectionName = $"{KillmailReferenceQueues.queueNamePrefix}{name}"
+    let logger = logFactory.CreateLogger<MongoKillmailReferenceQueue>()
 
     let mongoCol =
         eveproxy.Mongo.initCollection
@@ -180,10 +181,21 @@ type MongoKillmailReferenceQueue(config: eveproxy.AppConfiguration, name: string
         member this.GetCountAsync() = eveproxy.Mongo.count mongoCol
 
         member this.PushAsync(value: KillPackageReferenceData) =
-            task { do! [ value ] |> eveproxy.Mongo.pushToQueue mongoCol }
+            task {
+                $"Pushing killmail reference {value.killmailId} to queue [{name}]..."
+                |> logger.LogTrace
+
+                do! [ value ] |> eveproxy.Mongo.pushToQueue mongoCol
+
+                $"Pushed killmail reference {value.killmailId} to queue [{name}]."
+                |> logger.LogTrace
+            }
 
         member this.ClearAsync() =
-            task { do eveproxy.Mongo.deleteCol mongoCol }
+            task {
+                $"Clearing queue [{name}]..." |> logger.LogTrace
+                do eveproxy.Mongo.deleteCol mongoCol
+            }
 
         member this.PullAsync() =
             eveproxy.Mongo.pullSingletonFromQueue<KillPackageReferenceData> mongoCol
@@ -207,10 +219,11 @@ type MongoKillmailReferenceQueueFinder(config: eveproxy.AppConfiguration) =
 type IKillmailReferenceQueueFactory =
     abstract member Create: string -> IKillmailReferenceQueue
 
-type KillmailReferenceQueueFactory<'a when 'a :> IKillmailReferenceQueue>(config: eveproxy.AppConfiguration) =
+type KillmailReferenceQueueFactory<'a when 'a :> IKillmailReferenceQueue>
+    (config: eveproxy.AppConfiguration, logFactory: ILoggerFactory) =
 
     interface IKillmailReferenceQueueFactory with
         member this.Create name =
             let t = typeof<'a>
-            let args = [| config :> obj; name :> obj |]
+            let args = [| config :> obj; logFactory :> obj; name :> obj |]
             Activator.CreateInstance(t, args) :?> IKillmailReferenceQueue
