@@ -188,7 +188,8 @@ type SessionsActor
 
         member this.GetNext(name: string) =
             task {
-                let name = if name = "" then defaultSessionName else name
+                let name = (if name = "" then defaultSessionName else name) |> Strings.toLower
+
                 let! r = actor.PostAndAsyncReply(fun rc -> ActorMessage.PullReply(name, rc))
 
                 return
