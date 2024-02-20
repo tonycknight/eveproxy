@@ -176,5 +176,5 @@ module Mongo =
             if values.Length > 0 then
                 let opts = new InsertManyOptions()
 
-                do! collection.InsertManyAsync(values, opts)                
+                do! collection.InsertManyAsync(values, opts)
         }

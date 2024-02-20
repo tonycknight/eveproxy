@@ -160,13 +160,18 @@ type MemoryKillmailReferenceQueue(config: eveproxy.AppConfiguration, logFactory:
 module KillmailReferenceQueues =
     [<Literal>]
     let defaultQueueName = "default"
-    
+
     [<Literal>]
     let queueNamePrefix = $"killmail_queue__"
 
 [<ExcludeFromCodeCoverage>]
 type MongoKillmailReferenceQueue(config: eveproxy.AppConfiguration, logFactory: ILoggerFactory, name: string) =
-    let name = if name = "" then KillmailReferenceQueues.defaultQueueName else name
+    let name =
+        if name = "" then
+            KillmailReferenceQueues.defaultQueueName
+        else
+            name
+
     let collectionName = $"{KillmailReferenceQueues.queueNamePrefix}{name}"
     let logger = logFactory.CreateLogger<MongoKillmailReferenceQueue>()
 
