@@ -23,7 +23,7 @@ jobs:
 
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
-        
+                
       - name: SCA
         run: |
             dotnet tool restore

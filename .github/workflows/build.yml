@@ -10,7 +10,7 @@ on:
 env:
   build-version-number: 0.1.${{ github.run_number }}  
   docker-image-name: ghcr.io/tonycknight/eveproxy
-
+  
 jobs:
   sca:
     name: SCA

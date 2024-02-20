@@ -6,6 +6,7 @@ open Giraffe
 open Microsoft.AspNetCore.Http
 open Microsoft.Extensions.Configuration
 open Microsoft.Extensions.DependencyInjection
+open Microsoft.Extensions.Logging
 
 module Api =
     let private isHomeIp (ctx: HttpContext) =
@@ -15,9 +16,9 @@ module Api =
         | true -> true
         | _ -> ctx.Connection.RemoteIpAddress |> IPAddress.IsLoopback
 
-    let private isValidApiKey (secrets: ISecretProvider) (ctx: HttpContext) =
+    let private isValidApiKey (keyValues: IKeyValueProvider) (ctx: HttpContext) =
         match ctx.TryGetRequestHeader "x-api-key" with
-        | Some k -> secrets.IsSecretValueEqual "apikey" k
+        | Some k -> keyValues.IsValueEqual "apikey" k
         | None -> false
 
     let private accessDenied: HttpHandler = setStatusCode 401 >=> setBody [||]
@@ -25,12 +26,12 @@ module Api =
 
     let private requiresValidIp: HttpHandler = authorizeRequest isHomeIp forbidden
 
-    let private requiresApiKey secrets : HttpHandler =
-        authorizeRequest (isValidApiKey secrets >||> isHomeIp) accessDenied
+    let private requiresApiKey keyValues : HttpHandler =
+        authorizeRequest (isValidApiKey keyValues >||> isHomeIp) accessDenied
 
     let isAuthorised (sp: System.IServiceProvider) : HttpHandler =
-        let secrets = sp.GetRequiredService<ISecretProvider>()
-        requiresValidIp >=> requiresApiKey secrets
+        let keyValues = sp.GetRequiredService<IKeyValueProvider>()
+        requiresValidIp >=> requiresApiKey keyValues
 
 module ApiStartup =
 
@@ -43,9 +44,19 @@ module ApiStartup =
             .AddHttpLogging(fun lo -> lo.LoggingFields <- Microsoft.AspNetCore.HttpLogging.HttpLoggingFields.Request)
 
     let addApiConfig (services: IServiceCollection) =
+        let sp = services.BuildServiceProvider()
+        let lf = sp.GetRequiredService<ILoggerFactory>()
+
+        let config = Configuration.create sp
+        let kvs = eveproxy.MongoKeyValueProvider(lf, config) :> eveproxy.IKeyValueProvider
+
+        let config = config |> Configuration.applyKeyValues kvs
+
         services
-            .AddSingleton<AppConfiguration>(Configuration.create)
-            .AddSingleton<eveproxy.ISecretProvider, eveproxy.StubSecretProvider>()
+            .AddSingleton<AppConfiguration>(config)
+            .AddSingleton<eveproxy.IKeyValueProvider>(kvs)
+
+
 
     let addApiHttp (services: IServiceCollection) =
         services.AddHttpClient().AddSingleton<IExternalHttpClient, ExternalHttpClient>()

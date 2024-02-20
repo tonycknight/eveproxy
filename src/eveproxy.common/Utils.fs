@@ -74,3 +74,15 @@ module Uri =
         match Uri.IsWellFormedUriString(uri, UriKind.Absolute) with
         | true -> new Uri(uri) |> Some
         | _ -> None
+
+module Dictionary =
+    open System.Collections.Generic
+
+    let toDictionary<'v> (values: (string * 'v) seq) =
+        let pairs = values |> Seq.map (fun (n, v) -> new KeyValuePair<string, 'v>(n, v))
+        new Dictionary<string, 'v>(pairs)
+
+    let tryFind<'v> key (dictionary: Dictionary<string, 'v>) =
+        match dictionary.TryGetValue key with
+        | (true, v) -> Some v
+        | _ -> None

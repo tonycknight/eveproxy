@@ -9,7 +9,7 @@ EXPOSE 8080
 RUN adduser -u 5678 --disabled-password --gecos "" eveproxyuser && chown -R eveproxyuser /app
 USER eveproxyuser
 
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0.100 AS build
 ARG BuildVersion
 WORKDIR /src
 

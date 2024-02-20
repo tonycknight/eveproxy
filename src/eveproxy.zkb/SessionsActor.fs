@@ -1,7 +1,6 @@
 ﻿namespace eveproxy.zkb
 
 open System
-open System.Threading.Tasks
 open eveproxy
 open Microsoft.Extensions.Logging
 
@@ -97,7 +96,10 @@ type SessionsActor
             "No sessions found to destroy." |> log.LogTrace
             state
         | sessions ->
-            "Starting session destruction..." |> log.LogTrace // TODO: include count
+            sessions
+            |> List.length
+            |> sprintf "Starting destruction of %i session(s)..."
+            |> log.LogTrace
 
             let cleanSessions =
                 sessions
