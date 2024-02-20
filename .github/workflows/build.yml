@@ -10,6 +10,7 @@ on:
 env:
   build-version-number: 0.1.${{ github.run_number }}  
   docker-image-name: ghcr.io/tonycknight/eveproxy
+  dotnet-version: 8.0.100
 
 jobs:
   sca:
@@ -22,7 +23,7 @@ jobs:
       - name: Setup .NET Core SDK
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.100'
+          dotnet-version: ${{ env.dotnet-version }}
               
       - name: SCA
         run: |
@@ -37,6 +38,8 @@ jobs:
 
       - name: Setup .NET Core SDK
         uses: actions/setup-dotnet@v4                
+        with:
+          dotnet-version: ${{ env.dotnet-version }}
  
       - name: Style checks
         if: ${{ github.event_name == 'pull_request' }}
@@ -54,6 +57,8 @@ jobs:
 
       - name: Setup .NET Core SDK
         uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.dotnet-version }}
               
       - name: Run build
         run: |
@@ -69,6 +74,8 @@ jobs:
 
       - name: Setup .NET Core SDK
         uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.dotnet-version }}
                       
       - name: Tests
         run: |
