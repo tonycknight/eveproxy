@@ -116,7 +116,7 @@ type SessionsActor
     let initActorState () =
         let actors =
             queueFinder.GetNames()
-            |> Seq.filter (fun n -> n <> "default") // TODO: not default!
+            |> Seq.filter (fun n -> n <> KillmailReferenceQueues.defaultQueueName)
             |> Seq.map getStateActor
             |> List.ofSeq
 
