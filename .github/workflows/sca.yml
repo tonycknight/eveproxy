@@ -13,6 +13,9 @@ on:
   schedule:
     - cron: '1 0 * * *'
 
+env:
+  dotnet-version: 8.0.100
+
 jobs:
   sca:
     name: Scheduled SCA
@@ -23,7 +26,9 @@ jobs:
 
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
-                
+        with:
+          dotnet-version: ${{ env.dotnet-version }}
+        
       - name: SCA
         run: |
             dotnet tool restore
