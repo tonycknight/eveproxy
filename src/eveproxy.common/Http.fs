@@ -20,7 +20,7 @@ module Http =
             let! body =
                 match resp.Content.Headers.ContentEncoding |> Seq.tryHead with
                 | Some x when x = "gzip" ->
-                    task {                        
+                    task {
                         use s = resp.Content.ReadAsStream(System.Threading.CancellationToken.None)
                         return Strings.fromGzip s
                     }

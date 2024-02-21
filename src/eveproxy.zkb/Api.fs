@@ -160,24 +160,34 @@ module Api =
                 return! Successful.OK result next ctx
             }
 
+    let private getZkbApiRoute (routePrefix: string) (request: HttpRequest) =
+        let path = request.Path
+
+        let path =
+            match path.HasValue with
+            | true -> Some path.Value
+            | _ -> None
+
+        path
+        |> Option.map (fun p -> $"{p.Substring(routePrefix.Length)}{request.QueryString}" |> Strings.trim)
+
+    let private toZkbBodyType (body: string) =
+        try
+            Newtonsoft.Json.JsonConvert.DeserializeObject(body) |> Successful.OK
+        with :? Newtonsoft.Json.JsonReaderException as ex ->
+            (text body)
+
     let private getZkbApi (routePrefix: string) =
         fun (next: HttpFunc) (ctx: HttpContext) ->
             task {
-
-                let path = ctx.Request.Path
-
-                let route =
-                    match path.HasValue with
-                    | true ->
-                        $"{path.Value.Substring(routePrefix.Length)}{ctx.Request.QueryString}"
-                        |> Strings.trim
-                        |> Some
-                    | false -> None
+                let route = ctx.Request |> getZkbApiRoute routePrefix
+                let notFound = RequestErrors.notFound (text "")
+                let badRequest = RequestErrors.badRequest (text "")
 
                 let! result =
                     match route with
-                    | None -> task { return RequestErrors.notFound (text "") }
-                    | Some r when r = "" -> task { return RequestErrors.notFound (text "") }
+                    | None -> task { return notFound }
+                    | Some r when r = "" -> task { return notFound }
                     | Some r ->
                         task {
                             let! resp = ctx.GetService<IZkbApiPassthroughActor>().Get r
@@ -186,15 +196,14 @@ module Api =
                                 match resp with
                                 | HttpOkRequestResponse(_, body) ->
                                     // TODO: Hack to work around Giraffe's automatic Json encoding....
-                                    // TODO: zkb sometimes returns things that are not json...
-                                    Newtonsoft.Json.JsonConvert.DeserializeObject(body) |> Successful.OK
+                                    toZkbBodyType body
                                 | HttpTooManyRequestsResponse _ -> RequestErrors.tooManyRequests (text "")
                                 | HttpExceptionRequestResponse _ -> ServerErrors.internalError (text "")
                                 | HttpErrorRequestResponse(rc, _) when rc = System.Net.HttpStatusCode.NotFound ->
-                                    RequestErrors.notFound (text "")
+                                    notFound
                                 | HttpErrorRequestResponse(rc, _) when rc = System.Net.HttpStatusCode.BadRequest ->
-                                    RequestErrors.badRequest (text "")
-                                | _ -> RequestErrors.notFound (text "")
+                                    badRequest
+                                | _ -> badRequest
                         }
 
                 return! result next ctx
