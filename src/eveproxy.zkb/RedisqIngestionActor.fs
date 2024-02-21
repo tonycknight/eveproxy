@@ -74,7 +74,7 @@ type RedisqIngestionActor
                                         |> KillPackageData.killmailId
                                         |> Option.defaultValue ""
                                         |> sprintf "--> Received kill [%s]."
-                                        |> log.LogTrace
+                                        |> log.LogInformation
 
                                         forwardKill state kp |> Async.AwaitTask
                                     | Choice2Of3 ts -> wait state ts |> Async.AwaitTask
