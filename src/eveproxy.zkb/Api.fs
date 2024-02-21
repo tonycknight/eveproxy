@@ -173,15 +173,15 @@ module Api =
                         |> Strings.trim
                         |> Some
                     | false -> None
-                                    
+
                 let! result =
                     match route with
                     | None -> task { return RequestErrors.notFound (text "") }
                     | Some r when r = "" -> task { return RequestErrors.notFound (text "") }
-                    | Some r ->                         
+                    | Some r ->
                         task {
                             let! resp = ctx.GetService<IZkbApiPassthroughActor>().Get r
-                            
+
                             return
                                 match resp with
                                 | HttpOkRequestResponse(_, body) ->
@@ -189,8 +189,10 @@ module Api =
                                     Newtonsoft.Json.JsonConvert.DeserializeObject(body) |> Successful.OK
                                 | HttpTooManyRequestsResponse _ -> RequestErrors.tooManyRequests (text "")
                                 | HttpExceptionRequestResponse _ -> ServerErrors.internalError (text "")
-                                | HttpErrorRequestResponse(rc,_) when rc = System.Net.HttpStatusCode.NotFound -> RequestErrors.notFound (text "")
-                                | HttpErrorRequestResponse(rc,_) when rc = System.Net.HttpStatusCode.BadRequest -> RequestErrors.badRequest (text "")
+                                | HttpErrorRequestResponse(rc, _) when rc = System.Net.HttpStatusCode.NotFound ->
+                                    RequestErrors.notFound (text "")
+                                | HttpErrorRequestResponse(rc, _) when rc = System.Net.HttpStatusCode.BadRequest ->
+                                    RequestErrors.badRequest (text "")
                                 | _ -> RequestErrors.notFound (text "")
                         }
 
