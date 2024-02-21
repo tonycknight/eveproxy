@@ -34,6 +34,13 @@ type KillPackage =
     static member ofKillPackageData(value: KillPackageData) = { KillPackage.package = value.package }
 
 module Api =
+    
+    let private jsonString (str : string) : HttpHandler =
+        let bytes = System.Text.Encoding.UTF8.GetBytes str
+        fun (_ : HttpFunc) (ctx : HttpContext) ->
+            ctx.SetContentType "application/json; charset=utf-8"
+            ctx.WriteBytesAsync bytes
+
     let private ttw (config: AppConfiguration) (query: IQueryCollection) =
         match query.TryGetValue("ttw") with
         | true, x -> x |> Seq.head |> Strings.toInt (config.ClientRedisqTtw())
@@ -171,12 +178,6 @@ module Api =
         path
         |> Option.map (fun p -> $"{p.Substring(routePrefix.Length)}{request.QueryString}" |> Strings.trim)
 
-    let private toZkbBodyType (body: string) =
-        // TODO: Hack to work around Giraffe's automatic Json encoding....
-        try
-            Newtonsoft.Json.JsonConvert.DeserializeObject(body) |> Successful.OK
-        with :? Newtonsoft.Json.JsonReaderException as ex ->
-            (text body)
 
     let private getZkbApi (routePrefix: string) =
         fun (next: HttpFunc) (ctx: HttpContext) ->
@@ -195,7 +196,7 @@ module Api =
 
                             return
                                 match resp with
-                                | HttpOkRequestResponse(_, body) -> toZkbBodyType body
+                                | HttpOkRequestResponse(_, body) -> jsonString body
                                 | HttpTooManyRequestsResponse _ -> RequestErrors.tooManyRequests (text "")
                                 | HttpExceptionRequestResponse _ -> ServerErrors.internalError (text "")
                                 | HttpErrorRequestResponse(rc, _) when rc = System.Net.HttpStatusCode.NotFound ->
