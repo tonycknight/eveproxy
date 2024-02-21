@@ -81,6 +81,7 @@ module Api =
 
         fun (next: HttpFunc) (ctx: HttpContext) ->
             task {
+                let sessionId = sessionId |> Strings.toLower
                 let sessions = ctx.GetService<ISessionsActor>()
                 let time = ctx.GetService<ITimeProvider>()
                 let config = ctx.GetService<AppConfiguration>()
@@ -172,7 +173,7 @@ module Api =
                                [ routeCif "/kills/session/%s/" (fun session -> getNextKill session)
                                  routeCif "/kills/id/%s/" (fun killId -> getKillById killId)
                                  route "/kills/null/" >=> getNullKill
-                                 route "/kills/" >=> (getNextKill "") ]) ])
+                                 route "/kills/" >=> (getNextKill KillmailReferenceQueues.defaultQueueName) ]) ])
 
     let zkbWebRoutes () =
         subRouteCi
