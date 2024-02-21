@@ -80,8 +80,7 @@ type ZkbApiPassthroughActor
 
     interface IZkbApiPassthroughActor with
         member this.GetStats() =
-            task {
-                // TODO: needs integrating with the rest of stats...
+            task {                
                 return
                     { ActorStats.name = (typedefof<ZkbApiPassthroughActor>).FullName
                       queueCount = actor.CurrentQueueLength

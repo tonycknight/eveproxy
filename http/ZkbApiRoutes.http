@@ -23,5 +23,5 @@ GET http://localhost:8080/api/zkb/v1/losses/solo/
 Accept: application/json
 
 ### pass through 3
-GET http://localhost:8080/api/zkb/v1/w-space/corporationID/98076299/page/4/
+GET http://localhost:8080/api/zkb/v1/w-space/corporationID/98076299/page/1/
 Accept: application/json

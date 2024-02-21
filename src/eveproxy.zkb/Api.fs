@@ -161,8 +161,10 @@ module Api =
                 let! statsActorStats = statsActor.GetStats()
                 let! apiStats = statsActor.GetApiStats()
 
+                let! passthruStats = ctx.GetService<IZkbApiPassthroughActor>().GetStats()
+
                 let result =
-                    {| actors = [| statsActorStats |]
+                    {| actors = [| statsActorStats; passthruStats |]
                        routes = apiStats.routes |> Map.values |> Seq.sortByDescending (fun rs -> rs.count) |}
 
                 return! Successful.OK result next ctx
