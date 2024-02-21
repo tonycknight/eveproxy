@@ -94,7 +94,7 @@ type SessionActor
             with ex ->
                 log.LogError(ex, ex.Message)
 
-            $"Shut down session [{name}]." |> log.LogTrace
+            $"Shut down session [{name}]." |> log.LogInformation
             return state
         }
 

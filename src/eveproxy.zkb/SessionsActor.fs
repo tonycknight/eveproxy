@@ -27,7 +27,7 @@ type SessionsActor
             match state.sessions |> Map.tryFind name with
             | Some a -> a
             | None ->
-                sprintf "Creating session [%s]" name |> log.LogTrace
+                sprintf "Creating session [%s]" name |> log.LogInformation
                 new SessionActor(name, logFactory, stats, killReader, queueFactory)
 
         let sessions = state.sessions |> Map.add name actor
@@ -99,7 +99,7 @@ type SessionsActor
             sessions
             |> List.length
             |> sprintf "Starting destruction of %i session(s)..."
-            |> log.LogTrace
+            |> log.LogInformation
 
             let cleanSessions =
                 sessions

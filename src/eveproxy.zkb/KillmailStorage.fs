@@ -98,7 +98,7 @@ type KillmailWriter(logFactory: ILoggerFactory, repo: IKillmailRepository) =
                         id |> sprintf "--> Kill [%s] not written." |> log.LogTrace
                     else
                         id |> sprintf "--> Written kill [%s]." |> log.LogTrace
-                | _ -> "--> Received kill without killmailID - ignoring." |> log.LogTrace
+                | _ -> "--> Received kill without killmailID - ignoring." |> log.LogWarning
 
                 return kill
             }
@@ -123,7 +123,7 @@ type KillmailReader(logFactory: ILoggerFactory, repo: IKillmailRepository) =
                         id |> sprintf "--> Fetched kill [%s]." |> log.LogTrace
                         Some r
                     | _ ->
-                        id |> sprintf "--> Could not find kill [%s]." |> log.LogTrace
+                        id |> sprintf "--> Could not find kill [%s]." |> log.LogWarning
                         None
             }
 

@@ -37,7 +37,6 @@ type RedisqIngestionActor
                 | _ -> Choice3Of3 None
         }
 
-    // TOOD: output to a stream?
     let forwardKill (state: RedisqIngestionActorState) (kill: KillPackageData) =
         task {
             if kill <> KillPackageData.empty then
