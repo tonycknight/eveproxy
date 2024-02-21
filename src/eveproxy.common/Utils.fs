@@ -35,6 +35,9 @@ module Strings =
 
     let toLower (value: string) = value.ToLower()
 
+    let defaultIf (comparand: string) (defaultValue: string) (value: string) =
+        if value = comparand then defaultValue else value
+
     let (|NullOrWhitespace|_|) value =
         if String.IsNullOrWhiteSpace value then Some value else None
 
