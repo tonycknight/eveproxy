@@ -29,8 +29,8 @@ type SessionActor
 
                 let kpr =
                     { KillPackageReferenceData.killmailId = id
-                      _id = MongoBson.id ();
-                      created = DateTime.UtcNow}
+                      _id = MongoBson.id ()
+                      created = DateTime.UtcNow }
 
                 try
                     do! kpr |> state.kills.PushAsync |> Async.AwaitTask

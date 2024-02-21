@@ -5,7 +5,10 @@ open eveproxy
 open Newtonsoft.Json.Linq
 
 [<CLIMutable>]
-type KillPackageReferenceData = { _id: obj; killmailId: string; created: DateTime }
+type KillPackageReferenceData =
+    { _id: obj
+      killmailId: string
+      created: DateTime }
 
 [<CLIMutable>]
 type KillPackageData =

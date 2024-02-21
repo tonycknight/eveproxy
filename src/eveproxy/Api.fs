@@ -50,7 +50,8 @@ module ApiStartup =
                     ||| HttpLoggingFields.RequestProtocol
                     ||| HttpLoggingFields.RequestMethod
                     ||| HttpLoggingFields.RequestScheme
-                    ||| HttpLoggingFields.ResponseStatusCode                    
+                    ||| HttpLoggingFields.ResponseStatusCode
+
                 lo.CombineLogs <- true)
 
     let addApiConfig (services: IServiceCollection) =
