@@ -12,6 +12,17 @@ type HttpRequestResponse =
     | HttpErrorRequestResponse of status: HttpStatusCode * body: string
     | HttpExceptionRequestResponse of ex: Exception
 
+    static member status(response: HttpRequestResponse) =
+        match response with
+        | HttpOkRequestResponse(status, _) -> status
+        | HttpTooManyRequestsResponse(status) -> status
+        | HttpErrorRequestResponse(status, _) -> status
+        | HttpExceptionRequestResponse _ -> HttpStatusCode.InternalServerError
+
+    static member loggable(response: HttpRequestResponse) =
+        let status = HttpRequestResponse.status response
+        $"{response.GetType().Name} {status}"
+
 [<ExcludeFromCodeCoverage>]
 module Http =
 

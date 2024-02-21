@@ -15,29 +15,39 @@ type ZkbApiPassthroughActor
     let log = logFactory.CreateLogger<ZkbApiPassthroughActor>()
 
     let pause (lastPoll: DateTime) =
-        let limit = TimeSpan.FromSeconds(1.)
-        let diff = DateTime.UtcNow - lastPoll
-                
-        if diff < limit then limit
-        else if diff > limit then TimeSpan.Zero
-        else diff
-        
+        task {
+            let limit = TimeSpan.FromSeconds(1.)
+            let diff = DateTime.UtcNow - lastPoll
 
-    let rec getZkbApiIterate lastPoll countiteration url =
+            let duration =
+                if diff < limit then limit
+                else if diff > limit then TimeSpan.Zero
+                else diff
+
+            if duration > TimeSpan.Zero then
+                log.LogTrace $"Waiting {duration} for Zkb API..."
+                do! System.Threading.Tasks.Task.Delay duration
+        }
+
+
+    let rec getZkbApiIterate lastPoll count url =
         task {
             try
-                do! lastPoll |> pause |> System.Threading.Tasks.Task.Delay 
-                
+                do! pause lastPoll
+
+                $"GET [{url}] iteration #{count}..." |> log.LogTrace
                 let! resp = hc.GetAsync url
+                $"GET {HttpRequestResponse.loggable resp} received from [{url}]." |> log.LogTrace
 
                 return!
                     match resp with
-                    | HttpTooManyRequestsResponse _ when countiteration <= 0 -> resp |> eveproxy.Threading.toTaskResult
+                    | HttpTooManyRequestsResponse _ when count <= 0 -> resp |> Threading.toTaskResult
                     | HttpOkRequestResponse _
                     | HttpErrorRequestResponse _
-                    | HttpExceptionRequestResponse _ -> resp |> eveproxy.Threading.toTaskResult
-                    | HttpTooManyRequestsResponse _ -> getZkbApiIterate lastPoll (countiteration - 1) url
+                    | HttpExceptionRequestResponse _ -> resp |> Threading.toTaskResult
+                    | HttpTooManyRequestsResponse _ -> getZkbApiIterate lastPoll (count - 1) url
             with ex ->
+                log.LogError(ex.Message, ex)
                 return HttpErrorRequestResponse(Net.HttpStatusCode.InternalServerError, "")
         }
 
@@ -55,7 +65,7 @@ type ZkbApiPassthroughActor
                         match msg with
                         | ActorMessage.PullReply(route, rc) ->
                             task {
-                                let! resp = getZkbApi state.lastZkbRequest route                                    
+                                let! resp = getZkbApi state.lastZkbRequest route
                                 (resp :> obj) |> rc.Reply
 
                                 return { ZkbApiPassthroughActorState.lastZkbRequest = System.DateTime.UtcNow }

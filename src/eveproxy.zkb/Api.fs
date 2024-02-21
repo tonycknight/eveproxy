@@ -34,10 +34,11 @@ type KillPackage =
     static member ofKillPackageData(value: KillPackageData) = { KillPackage.package = value.package }
 
 module Api =
-    
-    let private jsonString (str : string) : HttpHandler =
+
+    let private jsonString (str: string) : HttpHandler =
         let bytes = System.Text.Encoding.UTF8.GetBytes str
-        fun (_ : HttpFunc) (ctx : HttpContext) ->
+
+        fun (_: HttpFunc) (ctx: HttpContext) ->
             ctx.SetContentType "application/json; charset=utf-8"
             ctx.WriteBytesAsync bytes
 
@@ -203,7 +204,9 @@ module Api =
                                     notFound
                                 | HttpErrorRequestResponse(rc, _) when rc = System.Net.HttpStatusCode.BadRequest ->
                                     badRequest
-                                | HttpErrorRequestResponse(rc, _) when rc = System.Net.HttpStatusCode.InternalServerError ->
+                                | HttpErrorRequestResponse(rc, _) when
+                                    rc = System.Net.HttpStatusCode.InternalServerError
+                                    ->
                                     ServerErrors.internalError (text "")
                                 | _ -> badRequest
                         }
