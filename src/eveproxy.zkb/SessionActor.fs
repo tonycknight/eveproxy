@@ -29,7 +29,8 @@ type SessionActor
 
                 let kpr =
                     { KillPackageReferenceData.killmailId = id
-                      _id = MongoBson.id () }
+                      _id = MongoBson.id ()
+                      created = DateTime.UtcNow }
 
                 try
                     do! kpr |> state.kills.PushAsync |> Async.AwaitTask
@@ -46,7 +47,7 @@ type SessionActor
                     lastPull = DateTime.UtcNow }
 
             try
-                sprintf "Fetching next kill reference for queue [%s]..." name |> log.LogTrace
+                sprintf "Fetching next kill reference from queue [%s]..." name |> log.LogTrace
                 let! killRef = state.kills.PullAsync() |> Async.AwaitTask
 
                 let! package =
@@ -54,13 +55,13 @@ type SessionActor
                     | None -> async { return None }
                     | Some kr ->
                         async {
-                            sprintf "Fetching kill [%s] by reference for queue [%s]..." kr.killmailId name
+                            sprintf "Fetching kill [%s] by reference from queue [%s]..." kr.killmailId name
                             |> log.LogTrace
 
                             let! km = kr.killmailId |> killReader.ReadAsync |> Async.AwaitTask
 
                             if km |> Option.isSome then
-                                sprintf "Fetched kill [%s] by reference for queue [%s]." kr.killmailId name
+                                sprintf "Fetched kill [%s] by reference from queue [%s]." kr.killmailId name
                                 |> log.LogTrace
 
                             return km
@@ -94,7 +95,7 @@ type SessionActor
             with ex ->
                 log.LogError(ex, ex.Message)
 
-            $"Shut down session [{name}]." |> log.LogTrace
+            $"Shut down session [{name}]." |> log.LogInformation
             return state
         }
 

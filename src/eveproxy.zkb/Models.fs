@@ -1,10 +1,14 @@
 ﻿namespace eveproxy.zkb
 
+open System
 open eveproxy
 open Newtonsoft.Json.Linq
 
 [<CLIMutable>]
-type KillPackageReferenceData = { _id: obj; killmailId: string }
+type KillPackageReferenceData =
+    { _id: obj
+      killmailId: string
+      created: DateTime }
 
 [<CLIMutable>]
 type KillPackageData =

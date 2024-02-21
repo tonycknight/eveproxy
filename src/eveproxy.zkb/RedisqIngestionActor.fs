@@ -37,7 +37,6 @@ type RedisqIngestionActor
                 | _ -> Choice3Of3 None
         }
 
-    // TOOD: output to a stream?
     let forwardKill (state: RedisqIngestionActorState) (kill: KillPackageData) =
         task {
             if kill <> KillPackageData.empty then
@@ -75,7 +74,7 @@ type RedisqIngestionActor
                                         |> KillPackageData.killmailId
                                         |> Option.defaultValue ""
                                         |> sprintf "--> Received kill [%s]."
-                                        |> log.LogTrace
+                                        |> log.LogInformation
 
                                         forwardKill state kp |> Async.AwaitTask
                                     | Choice2Of3 ts -> wait state ts |> Async.AwaitTask

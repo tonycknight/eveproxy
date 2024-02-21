@@ -34,6 +34,7 @@ module Api =
         requiresValidIp >=> requiresApiKey keyValues
 
 module ApiStartup =
+    open Microsoft.AspNetCore.HttpLogging
 
     let addCommonInfrastructure (services: IServiceCollection) =
         services.AddSingleton<ITimeProvider, eveproxy.TimeProvider>()
@@ -41,7 +42,17 @@ module ApiStartup =
     let addApiLogging (services: IServiceCollection) =
         services
             .AddLogging()
-            .AddHttpLogging(fun lo -> lo.LoggingFields <- Microsoft.AspNetCore.HttpLogging.HttpLoggingFields.Request)
+            .AddHttpLogging(fun lo ->
+                lo.LoggingFields <-
+                    HttpLoggingFields.Duration
+                    ||| HttpLoggingFields.RequestPath
+                    ||| HttpLoggingFields.RequestQuery
+                    ||| HttpLoggingFields.RequestProtocol
+                    ||| HttpLoggingFields.RequestMethod
+                    ||| HttpLoggingFields.RequestScheme
+                    ||| HttpLoggingFields.ResponseStatusCode
+
+                lo.CombineLogs <- true)
 
     let addApiConfig (services: IServiceCollection) =
         let sp = services.BuildServiceProvider()
