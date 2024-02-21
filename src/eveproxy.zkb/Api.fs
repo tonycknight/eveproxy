@@ -159,6 +159,30 @@ module Api =
                 return! Successful.OK result next ctx
             }
 
+    let private getZkbApi (routePrefix: string) =
+        fun (next: HttpFunc) (ctx: HttpContext) ->
+            task {
+
+                let path = ctx.Request.Path
+
+                let route =
+                    match path.HasValue with
+                    | true ->
+                        $"{path.Value.Substring(routePrefix.Length)}{ctx.Request.QueryString}"
+                        |> Strings.trim
+                        |> Some
+                    | false -> None
+
+                let result =
+                    match route with
+                    | None -> RequestErrors.notFound (text "")
+                    | Some r when r = "" -> RequestErrors.notFound (text "")
+                    | Some r -> Successful.OK [ r ] // TODO: do the work...
+
+                return! result next ctx
+            }
+
+
     let redisqWebRoutes () =
         subRouteCi
             "/redisq"
@@ -183,4 +207,6 @@ module Api =
              >=> countRouteFetch
              >=> ResponseCaching.noResponseCaching
              >=> (setContentType "application/json")
-             >=> choose [ route "/stats/" >=> getZkbStats ])
+             >=> choose
+                     [ route "/stats/" >=> getZkbStats
+                       subRouteCi "/v1" (choose [ routeStartsWithCi "/" >=> (getZkbApi "/api/zkb/v1/") ]) ])

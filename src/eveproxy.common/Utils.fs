@@ -35,6 +35,8 @@ module Strings =
 
     let toLower (value: string) = value.ToLower()
 
+    let trim (value: string) = value.Trim()
+
     let defaultIf (comparand: string) (defaultValue: string) (value: string) =
         if value = comparand then defaultValue else value
 
