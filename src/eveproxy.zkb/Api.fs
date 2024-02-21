@@ -18,6 +18,7 @@ module ApiStartup =
             .AddSingleton<IKillmailWriter, KillmailWriter>()
             .AddSingleton<IKillmailReader, KillmailReader>()
             .AddSingleton<IKillWriteActor, KillWriteActor>()
+            .AddSingleton<IZkbApiPassthroughActor, ZkbApiPassthroughActor>()
 
 
     let start (sp: IServiceProvider) =
@@ -173,11 +174,17 @@ module Api =
                         |> Some
                     | false -> None
 
-                let result =
+                let! result =
                     match route with
-                    | None -> RequestErrors.notFound (text "")
-                    | Some r when r = "" -> RequestErrors.notFound (text "")
-                    | Some r -> Successful.OK [ r ] // TODO: do the work...
+                    | None -> task { return RequestErrors.notFound (text "") }
+                    | Some r when r = "" -> task { return RequestErrors.notFound (text "") }
+                    | Some r -> 
+                        let actor = ctx.GetService<IZkbApiPassthroughActor>()
+                        task {
+                            let! resp = actor.Get r
+                            // TODO: when receiving an HTTP response, set return code accordingly
+                            return Successful.OK [resp]
+                        }
 
                 return! result next ctx
             }
