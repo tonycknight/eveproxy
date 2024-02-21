@@ -20,7 +20,8 @@ module MemoryKillmailReferenceQueueTests =
             ids
             |> Array.map (fun id ->
                 { KillPackageReferenceData.killmailId = id
-                  _id = eveproxy.MongoBson.id () })
+                  _id = eveproxy.MongoBson.id ();
+                  created = System.DateTime.UtcNow})
 
         let queue =
             new MemoryKillmailReferenceQueue(config, logger, "") :> IKillmailReferenceQueue
