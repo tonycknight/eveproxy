@@ -187,13 +187,13 @@ type MongoKillmailReferenceQueue(config: eveproxy.AppConfiguration, logFactory: 
 
         member this.PushAsync(value: KillPackageReferenceData) =
             task {
-                $"Pushing killmail reference {value.killmailId} to queue [{name}]..."
+                $"Pushing killmail reference [{value.killmailId}] to queue [{name}]..."
                 |> logger.LogTrace
 
                 try
                     do! [ value ] |> eveproxy.Mongo.pushToQueue mongoCol
 
-                    $"Pushed killmail reference {value.killmailId} to queue [{name}]."
+                    $"Pushed killmail reference [{value.killmailId}] to queue [{name}]."
                     |> logger.LogTrace
                 with ex ->
                     logger.LogError(ex.Message, ex)
