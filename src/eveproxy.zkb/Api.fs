@@ -172,6 +172,7 @@ module Api =
         |> Option.map (fun p -> $"{p.Substring(routePrefix.Length)}{request.QueryString}" |> Strings.trim)
 
     let private toZkbBodyType (body: string) =
+        // TODO: Hack to work around Giraffe's automatic Json encoding....
         try
             Newtonsoft.Json.JsonConvert.DeserializeObject(body) |> Successful.OK
         with :? Newtonsoft.Json.JsonReaderException as ex ->
@@ -187,16 +188,14 @@ module Api =
                 let! result =
                     match route with
                     | None -> task { return notFound }
-                    | Some r when r = "" -> task { return notFound }
-                    | Some r ->
+                    | Some route when route = "" -> task { return notFound }
+                    | Some route ->
                         task {
-                            let! resp = ctx.GetService<IZkbApiPassthroughActor>().Get r
+                            let! resp = ctx.GetService<IZkbApiPassthroughActor>().Get route
 
                             return
                                 match resp with
-                                | HttpOkRequestResponse(_, body) ->
-                                    // TODO: Hack to work around Giraffe's automatic Json encoding....
-                                    toZkbBodyType body
+                                | HttpOkRequestResponse(_, body) -> toZkbBodyType body
                                 | HttpTooManyRequestsResponse _ -> RequestErrors.tooManyRequests (text "")
                                 | HttpExceptionRequestResponse _ -> ServerErrors.internalError (text "")
                                 | HttpErrorRequestResponse(rc, _) when rc = System.Net.HttpStatusCode.NotFound ->
