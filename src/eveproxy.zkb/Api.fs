@@ -203,6 +203,8 @@ module Api =
                                     notFound
                                 | HttpErrorRequestResponse(rc, _) when rc = System.Net.HttpStatusCode.BadRequest ->
                                     badRequest
+                                | HttpErrorRequestResponse(rc, _) when rc = System.Net.HttpStatusCode.InternalServerError ->
+                                    ServerErrors.internalError (text "")
                                 | _ -> badRequest
                         }
 
