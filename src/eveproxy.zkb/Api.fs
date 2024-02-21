@@ -173,17 +173,25 @@ module Api =
                         |> Strings.trim
                         |> Some
                     | false -> None
-
+                                    
                 let! result =
                     match route with
                     | None -> task { return RequestErrors.notFound (text "") }
                     | Some r when r = "" -> task { return RequestErrors.notFound (text "") }
-                    | Some r -> 
-                        let actor = ctx.GetService<IZkbApiPassthroughActor>()
+                    | Some r ->                         
                         task {
-                            let! resp = actor.Get r
-                            // TODO: when receiving an HTTP response, set return code accordingly
-                            return Successful.OK [resp]
+                            let! resp = ctx.GetService<IZkbApiPassthroughActor>().Get r
+                            
+                            return
+                                match resp with
+                                | HttpOkRequestResponse(_, body) ->
+                                    // TODO: Hack to work around Giraffe's automatic Json encoding....
+                                    Newtonsoft.Json.JsonConvert.DeserializeObject(body) |> Successful.OK
+                                | HttpTooManyRequestsResponse _ -> RequestErrors.tooManyRequests (text "")
+                                | HttpExceptionRequestResponse _ -> ServerErrors.internalError (text "")
+                                | HttpErrorRequestResponse(rc,_) when rc = System.Net.HttpStatusCode.NotFound -> RequestErrors.notFound (text "")
+                                | HttpErrorRequestResponse(rc,_) when rc = System.Net.HttpStatusCode.BadRequest -> RequestErrors.badRequest (text "")
+                                | _ -> RequestErrors.notFound (text "")
                         }
 
                 return! result next ctx

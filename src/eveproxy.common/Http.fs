@@ -16,13 +16,15 @@ type HttpRequestResponse =
 module Http =
 
     let parse (resp: HttpResponseMessage) =
-        match resp.IsSuccessStatusCode with
-        | true ->
+        match resp.IsSuccessStatusCode, resp.StatusCode with
+        | true,_ ->
             task {
                 let! body = resp.Content.ReadAsStringAsync()
                 return HttpOkRequestResponse(resp.StatusCode, body)
             }
-        | false ->
+        | false, HttpStatusCode.TooManyRequests -> 
+            HttpTooManyRequestsResponse(resp.StatusCode) |> eveproxy.Threading.toTaskResult            
+        | false,_ ->
             task {
                 let! body = resp.Content.ReadAsStringAsync()
                 return HttpErrorRequestResponse(resp.StatusCode, body)

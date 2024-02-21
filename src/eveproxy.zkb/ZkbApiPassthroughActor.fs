@@ -1,5 +1,6 @@
 ﻿namespace eveproxy.zkb
 
+open System
 open eveproxy
 open Microsoft.Extensions.Logging
 
@@ -13,6 +14,35 @@ type ZkbApiPassthroughActor
     (hc: IExternalHttpClient, stats: IApiStatsActor, logFactory: ILoggerFactory, config: AppConfiguration) =
     let log = logFactory.CreateLogger<ZkbApiPassthroughActor>()
 
+    let pause (lastPoll: DateTime) =
+        let limit = TimeSpan.FromSeconds(1.)
+        let diff = DateTime.UtcNow - lastPoll         
+        if diff < limit then limit 
+        else if diff > limit then TimeSpan.Zero
+        else diff
+
+    let rec getZkbApiIterate lastPoll countiteration url =
+        task {                        
+            let wait = (pause lastPoll)
+            do! System.Threading.Tasks.Task.Delay wait
+
+            let! resp = hc.GetAsync url
+            
+            return! 
+                match resp with
+                | HttpTooManyRequestsResponse _ when countiteration <= 0 ->
+                    resp |> eveproxy.Threading.toTaskResult
+                | HttpOkRequestResponse _
+                | HttpErrorRequestResponse _ 
+                | HttpExceptionRequestResponse _ ->                
+                    resp |> eveproxy.Threading.toTaskResult
+                | HttpTooManyRequestsResponse _  -> getZkbApiIterate lastPoll (countiteration-1) url
+        }
+
+    let getZkbApi lastPoll route =        
+        let url = $"{config.zkbApiUrl}{route}"
+        getZkbApiIterate lastPoll 10 url
+
     let actor =
         MailboxProcessor<ActorMessage>.Start(fun inbox ->
             let rec loop (state: ZkbApiPassthroughActorState) =
@@ -23,10 +53,8 @@ type ZkbApiPassthroughActor
                         match msg with
                         | ActorMessage.PullReply(route, rc) ->
                             task {
-                                // TODO: need to fetch...
-                                (HttpOkRequestResponse(System.Net.HttpStatusCode.OK, "TODO: Fetching from zkb API")
-                                :> obj)
-                                |> rc.Reply 
+                                let! resp = getZkbApi state.lastZkbRequest route
+                                (resp :> obj) |> rc.Reply 
                                 
                                 return { ZkbApiPassthroughActorState.lastZkbRequest = System.DateTime.UtcNow }
                             } |> Async.AwaitTask
