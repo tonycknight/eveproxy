@@ -186,6 +186,7 @@ module Api =
                                 match resp with
                                 | HttpOkRequestResponse(_, body) ->
                                     // TODO: Hack to work around Giraffe's automatic Json encoding....
+                                    // TODO: zkb sometimes returns things that are not json...
                                     Newtonsoft.Json.JsonConvert.DeserializeObject(body) |> Successful.OK
                                 | HttpTooManyRequestsResponse _ -> RequestErrors.tooManyRequests (text "")
                                 | HttpExceptionRequestResponse _ -> ServerErrors.internalError (text "")

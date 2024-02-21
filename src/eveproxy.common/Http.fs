@@ -15,18 +15,32 @@ type HttpRequestResponse =
 [<ExcludeFromCodeCoverage>]
 module Http =
 
+    let body (resp: HttpResponseMessage) =
+        task {
+            let! body =
+                match resp.Content.Headers.ContentEncoding |> Seq.tryHead with
+                | Some x when x = "gzip" ->
+                    task {                        
+                        use s = resp.Content.ReadAsStream(System.Threading.CancellationToken.None)
+                        return Strings.fromGzip s
+                    }
+                | _ -> resp.Content.ReadAsStringAsync()
+
+            return body
+        }
+
     let parse (resp: HttpResponseMessage) =
         match resp.IsSuccessStatusCode, resp.StatusCode with
         | true, _ ->
             task {
-                let! body = resp.Content.ReadAsStringAsync()
+                let! body = body resp
                 return HttpOkRequestResponse(resp.StatusCode, body)
             }
         | false, HttpStatusCode.TooManyRequests ->
             HttpTooManyRequestsResponse(resp.StatusCode) |> eveproxy.Threading.toTaskResult
         | false, _ ->
             task {
-                let! body = resp.Content.ReadAsStringAsync()
+                let! body = body resp
                 return HttpErrorRequestResponse(resp.StatusCode, body)
             }
 
@@ -83,6 +97,7 @@ type ExternalHttpClient(httpClient: HttpClient, config: AppConfiguration) =
     let req (url: string) =
         let req = new HttpRequestMessage(HttpMethod.Get, url)
         req.Headers.Add("User-Agent", "eveproxy")
+        req.Headers.Add("Accept-Encoding", "gzip")
         req
 
     interface IExternalHttpClient with

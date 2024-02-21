@@ -40,6 +40,26 @@ module Strings =
     let defaultIf (comparand: string) (defaultValue: string) (value: string) =
         if value = comparand then defaultValue else value
 
+    let fromGzip (value: System.IO.Stream) =
+        let bufferSize = 512
+        let buffer = Array.create<byte> bufferSize 0uy
+        use outStream = new System.IO.MemoryStream()
+
+        use decomp =
+            new System.IO.Compression.GZipStream(value, System.IO.Compression.CompressionMode.Decompress)
+
+        let mutable len = -1
+
+        while len <> 0 do
+            len <- decomp.Read(buffer)
+
+            if len > 0 then
+                outStream.Write(buffer, 0, len)
+
+        outStream.Seek(0, System.IO.SeekOrigin.Begin) |> ignore
+        use reader = new System.IO.StreamReader(outStream)
+        reader.ReadToEnd()
+
     let (|NullOrWhitespace|_|) value =
         if String.IsNullOrWhiteSpace value then Some value else None
 

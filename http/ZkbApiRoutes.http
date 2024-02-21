@@ -3,10 +3,6 @@ GET http://localhost:8080/api/zkb/stats/
 Accept: application/json
 
 ### test 1
-GET http://localhost:8080/api/zkb/v1/stuff/
-Accept: application/json
-
-### test 2
 GET http://localhost:8080/api/zkb/v1/stuff?test=a
 Accept: application/json
 
