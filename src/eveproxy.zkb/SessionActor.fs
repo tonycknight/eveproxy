@@ -6,7 +6,8 @@ open Microsoft.Extensions.Logging
 
 type private SessionActorState =
     { kills: IKillmailReferenceQueue
-      lastPull: DateTime }
+      lastPull: DateTime
+      lastPush: DateTime}
 
 type SessionActor
     (
@@ -37,7 +38,7 @@ type SessionActor
                 with ex ->
                     log.LogError(ex, ex.Message)
 
-            return state
+            return { state with lastPush = DateTime.UtcNow }
         }
 
     let onPullNext state (rc: AsyncReplyChannel<obj>) =
@@ -127,7 +128,8 @@ type SessionActor
                 }
 
             { SessionActorState.kills = queueFactory.Create name
-              lastPull = DateTime.MinValue }
+              lastPull = DateTime.MinValue
+              lastPush = DateTime.MinValue}
             |> loop)
 
     interface ISessionActor with
