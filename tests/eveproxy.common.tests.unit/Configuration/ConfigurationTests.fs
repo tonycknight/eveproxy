@@ -1,9 +1,9 @@
 ﻿namespace eveproxy.common.tests.unit.Utils
 
 open System
-open FsCheck
-open FsCheck.Xunit
 open eveproxy
+open eveproxy.common.tests.unit
+open FsCheck.Xunit
 
 module ConfigurationTests =
 
@@ -40,3 +40,24 @@ module ConfigurationTests =
               mongoPassword = apply config.mongoPassword defaultConfig.mongoPassword }
 
         result = expected
+
+    [<Property(Arbitrary = [| typeof<AlphaNumericString> |], Verbose = true)>]
+    let ``validate on default throws no exception`` (mongoUserName: string) (mongoPassword: string) =
+
+        let config =
+            { AppConfiguration.defaultConfig with
+                mongoUserName = mongoUserName
+                mongoPassword = mongoPassword }
+
+        Configuration.validate config |> ignore
+
+        true 
+
+    [<Property(MaxTest = 1)>]
+    let ``validate on empty throws exception``()=
+        let config = AppConfiguration.emptyConfig
+
+        try
+            Configuration.validate config |> ignore
+            false
+        with ex -> true

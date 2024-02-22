@@ -7,6 +7,7 @@
     <IsTestProject>true</IsTestProject>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="TestDataGenerators.fs" />
     <Compile Include="Configuration\ConfigurationTests.fs" />
     <Compile Include="Utils\StringsTests.fs" />
     <Compile Include="Utils\OptionTests.fs" />
