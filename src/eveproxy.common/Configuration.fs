@@ -103,63 +103,63 @@ module Configuration =
 
         configCtor.Invoke(paramValues) :?> AppConfiguration
 
+    let validationErrors (config: AppConfiguration) =
+        seq {
+            config.hostUrls
+            |> mustBe
+                isNonEmptyString
+                $"{nameof Unchecked.defaultof<AppConfiguration>.hostUrls} must be a non-empty string."
+
+            config.zkbRedisqBaseUrl
+            |> mustBe
+                (isNonEmptyString &&>> isUrl)
+                $"{nameof Unchecked.defaultof<AppConfiguration>.zkbRedisqBaseUrl} must be a valid URL."
+
+            config.zkbRedisqTtwExternal
+            |> mustBe
+                isPositiveInteger
+                $"{nameof Unchecked.defaultof<AppConfiguration>.zkbRedisqTtwExternal} must be a positive integer."
+
+            config.zkbRedisqTtwClient
+            |> mustBe
+                isPositiveInteger
+                $"{nameof Unchecked.defaultof<AppConfiguration>.zkbRedisqTtwClient} must be a positive integer."
+
+            config.zkbApiUrl
+            |> mustBe
+                (isNonEmptyString &&>> isUrl)
+                $"{nameof Unchecked.defaultof<AppConfiguration>.zkbApiUrl} must be a valid URL."
+
+            config.redisqSessionMaxAge
+            |> mustBe
+                isTimeSpan
+                $"{nameof Unchecked.defaultof<AppConfiguration>.redisqSessionMaxAge} must be a valid timespan (HH:mm:ss)."
+
+            config.mongoServer
+            |> mustBe
+                isNonEmptyString
+                $"{nameof Unchecked.defaultof<AppConfiguration>.mongoServer} must be a non-empty string."
+
+            config.mongoDbName
+            |> mustBe
+                isNonEmptyString
+                $"{nameof Unchecked.defaultof<AppConfiguration>.mongoDbName} must be a non-empty string."
+
+            config.mongoUserName
+            |> mustBe
+                isNonEmptyString
+                $"{nameof Unchecked.defaultof<AppConfiguration>.mongoUserName} must be a non-empty string."
+
+            config.mongoPassword
+            |> mustBe
+                isNonEmptyString
+                $"{nameof Unchecked.defaultof<AppConfiguration>.mongoPassword} must be a non-empty string."
+        }
+        |> Option.reduceMany
+
     let validate (config: AppConfiguration) =
-        
 
-        let errors =
-            seq {
-                config.hostUrls
-                |> mustBe
-                    isNonEmptyString
-                    $"{nameof Unchecked.defaultof<AppConfiguration>.hostUrls} must be a non-empty string."
-
-                config.zkbRedisqBaseUrl
-                |> mustBe
-                    (isNonEmptyString &&>> isUrl)
-                    $"{nameof Unchecked.defaultof<AppConfiguration>.zkbRedisqBaseUrl} must be a valid URL."
-
-                config.zkbRedisqTtwExternal
-                |> mustBe
-                    isPositiveInteger
-                    $"{nameof Unchecked.defaultof<AppConfiguration>.zkbRedisqTtwExternal} must be a positive integer."
-
-                config.zkbRedisqTtwClient
-                |> mustBe
-                    isPositiveInteger
-                    $"{nameof Unchecked.defaultof<AppConfiguration>.zkbRedisqTtwClient} must be a positive integer."
-
-                config.zkbApiUrl
-                |> mustBe
-                    (isNonEmptyString &&>> isUrl)
-                    $"{nameof Unchecked.defaultof<AppConfiguration>.zkbApiUrl} must be a valid URL."
-
-                config.redisqSessionMaxAge
-                |> mustBe
-                    isTimeSpan
-                    $"{nameof Unchecked.defaultof<AppConfiguration>.redisqSessionMaxAge} must be a valid timespan (HH:mm:ss)."
-
-                config.mongoServer
-                |> mustBe
-                    isNonEmptyString
-                    $"{nameof Unchecked.defaultof<AppConfiguration>.mongoServer} must be a non-empty string."
-
-                config.mongoDbName
-                |> mustBe
-                    isNonEmptyString
-                    $"{nameof Unchecked.defaultof<AppConfiguration>.mongoDbName} must be a non-empty string."
-
-                config.mongoUserName
-                |> mustBe
-                    isNonEmptyString
-                    $"{nameof Unchecked.defaultof<AppConfiguration>.mongoUserName} must be a non-empty string."
-
-                config.mongoPassword
-                |> mustBe
-                    isNonEmptyString
-                    $"{nameof Unchecked.defaultof<AppConfiguration>.mongoPassword} must be a non-empty string."
-            }
-            |> Option.reduceMany
-            |> Strings.toLine
+        let errors = config |> validationErrors |> Strings.toLine
 
         if errors.Length > 0 then
             failwith $"Errors found in configuration:{Environment.NewLine}{errors}"

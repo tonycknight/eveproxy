@@ -6,9 +6,8 @@ open FsCheck
 
 [<AutoOpen>]
 module TestDataGenerators =
-    let isNumeric (value: string) =
-        value |> Seq.forall Char.IsNumber
-            
+    let isNumeric (value: string) = value |> Seq.forall Char.IsNumber
+
     let isAlphaNumeric (value: string) =
         value |> Seq.forall (Char.IsLetter ||>> Char.IsNumber)
 
@@ -22,7 +21,7 @@ type AlphaNumericString =
 
     static member Generate() =
         Arb.Default.String() |> Arb.filter (isNotNullOrEmpty &&>> isAlphaNumeric)
-        
+
 type AlphaNumericStringSingletonArray =
 
     static member Generate() =
@@ -34,8 +33,6 @@ type AlphaNumericStringSingletonArray =
 type UrlString =
 
     static member Generate() =
-        Arb.Default.String() 
-            |> Arb.filter (isNotNullOrEmpty &&>> isAlphaNumeric)
-            |> Arb.mapFilter (fun s -> $"https://{s}") (fun _ -> true)
-
-       
+        Arb.Default.String()
+        |> Arb.filter (isNotNullOrEmpty &&>> isAlphaNumeric)
+        |> Arb.mapFilter (fun s -> $"https://{s}") (fun _ -> true)
