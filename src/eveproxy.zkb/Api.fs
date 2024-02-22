@@ -41,8 +41,8 @@ module Api =
         fun (_: HttpFunc) (ctx: HttpContext) ->
             ctx.SetContentType contentType
             ctx.WriteBytesAsync bytes
-    
-    let private jsonString = contentString "application/json; charset=utf-8" 
+
+    let private jsonString = contentString "application/json; charset=utf-8"
 
     let private ttw (config: AppConfiguration) (query: IQueryCollection) =
         match query.TryGetValue("ttw") with
@@ -201,7 +201,7 @@ module Api =
 
                             return
                                 match resp with
-                                | HttpOkRequestResponse(_, body, mediaType) -> 
+                                | HttpOkRequestResponse(_, body, mediaType) ->
                                     match mediaType with
                                     | Some mt -> body |> contentString mt
                                     | _ -> body |> jsonString

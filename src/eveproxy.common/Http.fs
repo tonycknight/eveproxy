@@ -45,6 +45,7 @@ module Http =
         | true, _ ->
             task {
                 let! body = body resp
+
                 let mediaType =
                     resp.Content.Headers.ContentType
                     |> Option.ofNull<Headers.MediaTypeHeaderValue>
