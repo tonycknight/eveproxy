@@ -11,6 +11,16 @@ type private SessionActorState =
       pullCount: uint64
       pushCount: uint64 }
 
+    static member bumpPull(state: SessionActorState) =
+        { state with
+            lastPull = DateTime.UtcNow
+            pullCount = state.pullCount + 1UL }
+
+    static member bumpPush(state: SessionActorState) =
+        { state with
+            lastPush = DateTime.UtcNow
+            pushCount = state.pushCount + 1UL }
+
 type SessionActor
     (
         name: string,
@@ -40,10 +50,7 @@ type SessionActor
                 with ex ->
                     log.LogError(ex, ex.Message)
 
-            return
-                { state with
-                    lastPush = DateTime.UtcNow
-                    pushCount = state.pushCount + 1UL }
+            return state |> SessionActorState.bumpPush
         }
 
     let getKill (kr: KillPackageReferenceData) =
@@ -62,20 +69,13 @@ type SessionActor
 
     let onPullNext state (rc: AsyncReplyChannel<obj>) =
         async {
-            let state =
-                { state with
-                    lastPull = DateTime.UtcNow }
 
             try
                 let! (state, package) =
-                    if state.pullCount > state.pushCount then
+                    if state.pullCount >= state.pushCount then
                         async { return (state, None) }
                     else
                         async {
-                            let state =
-                                { state with
-                                    pullCount = state.pullCount + 1UL }
-
                             sprintf "Fetching next kill reference from queue [%s]..." name |> log.LogTrace
                             let! killRef = state.kills.PullAsync() |> Async.AwaitTask
 
@@ -85,7 +85,7 @@ type SessionActor
                                 | Some kr ->
                                     async {
                                         let! km = getKill kr
-                                        return (state, km)
+                                        return (SessionActorState.bumpPull state, km)
                                     }
                         }
 
