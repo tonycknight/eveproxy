@@ -53,7 +53,7 @@ The parameters you'll need to pass are:
 | | | 
 | - | - |
 | `GET /api/zkb/stats/` | Get ZKB proxy stats |
-| `GET /api/zkb/v1/<Zkb API route>/` | Send GET traffic to the given `Zkb API route`. For example, use `/api/zkb/v1/losses/solo/` to get solo losses. |
+| `GET /api/zkb/v1/[Zkb API route]/` | Send GET traffic to the given `Zkb API route`. For example, use `/api/zkb/v1/losses/solo/` to get solo losses. |
 
 ## Copyright and disclaimers
 
