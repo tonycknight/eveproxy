@@ -10,7 +10,6 @@
     <Compile Include="Actors.fs" />
     <Compile Include="SessionActor.fs" />
     <Compile Include="SessionsActor.fs" />
-    <Compile Include="KillWriteActor.fs" />
     <Compile Include="RedisqIngestionActor.fs" />
     <Compile Include="ZkbApiPassthroughActor.fs" />
     <Compile Include="ApiStatsActor.fs" />

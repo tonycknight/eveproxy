@@ -7,9 +7,6 @@ open eveproxy
 type IRedisqIngestionActor =
     inherit IActor
 
-type IKillWriteActor =
-    inherit IActor
-
 type IApiStatsActor =
     inherit IActor
     abstract member GetApiStats: unit -> Task<(ApiStats)>
