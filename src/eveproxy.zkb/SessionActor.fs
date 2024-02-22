@@ -64,25 +64,38 @@ type SessionActor
         async {
             let state =
                 { state with
-                    lastPull = DateTime.UtcNow
-                    pullCount = state.pullCount + 1UL }
+                    lastPull = DateTime.UtcNow }
 
             try
-                sprintf "Fetching next kill reference from queue [%s]..." name |> log.LogTrace
-                let! killRef = state.kills.PullAsync() |> Async.AwaitTask
+                let! (state, package) =
+                    if state.pullCount > state.pushCount then
+                        async { return (state, None) }
+                    else
+                        async {
+                            let state =
+                                { state with
+                                    pullCount = state.pullCount + 1UL }
 
-                let! package =
-                    match killRef with
-                    | None -> async { return None }
-                    | Some kr -> getKill kr
+                            sprintf "Fetching next kill reference from queue [%s]..." name |> log.LogTrace
+                            let! killRef = state.kills.PullAsync() |> Async.AwaitTask
+
+                            return!
+                                match killRef with
+                                | None -> async { return (state, None) }
+                                | Some kr ->
+                                    async {
+                                        let! km = getKill kr
+                                        return (state, km)
+                                    }
+                        }
 
                 let package = package |> Option.defaultValue KillPackageData.empty
                 package :> obj |> ActorMessage.Entity |> rc.Reply
+                return state
             with ex ->
                 log.LogError(ex, ex.Message)
                 KillPackageData.empty :> obj |> ActorMessage.Entity |> rc.Reply
-
-            return state
+                return state
         }
 
     let storageStats (state: SessionActorState) =
@@ -134,11 +147,15 @@ type SessionActor
                     return! loop state
                 }
 
-            { SessionActorState.kills = queueFactory.Create name
+            let queue = queueFactory.Create name
+
+            let count = uint64 (queue.GetCountAsync().Result)
+
+            { SessionActorState.kills = queue
               lastPull = DateTime.MinValue
               lastPush = DateTime.MinValue
               pullCount = 0UL
-              pushCount = 0UL }
+              pushCount = count }
             |> loop)
 
     interface ISessionActor with

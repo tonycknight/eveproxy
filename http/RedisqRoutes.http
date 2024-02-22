@@ -12,15 +12,15 @@ GET http://localhost:8080/api/redisq/v1/kills/session/DeFAULT/?ttw=1
 Accept: application/json
 
 ### next kill - test1
-GET http://localhost:8080/api/redisq/v1/kills/session/test1/?ttw=1
+GET http://localhost:8080/api/redisq/v1/kills/session/test1/?ttw=10
 Accept: application/json
 
 ### next kill - test2
-GET http://localhost:8080/api/redisq/v1/kills/session/test2/?ttw=1
+GET http://localhost:8080/api/redisq/v1/kills/session/test2/?ttw=1?ttw=10
 Accept: application/json
 
 ### next kill - test3
-GET http://localhost:8080/api/redisq/v1/kills/session/test3/?ttw=1
+GET http://localhost:8080/api/redisq/v1/kills/session/test3/?ttw=10
 Accept: application/json
 
 ### null kill
