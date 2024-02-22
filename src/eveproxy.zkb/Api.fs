@@ -17,7 +17,6 @@ module ApiStartup =
             .AddSingleton<IKillmailReferenceQueueFactory, KillmailReferenceQueueFactory<MongoKillmailReferenceQueue>>()
             .AddSingleton<IKillmailWriter, KillmailWriter>()
             .AddSingleton<IKillmailReader, KillmailReader>()
-            .AddSingleton<IKillWriteActor, KillWriteActor>()
             .AddSingleton<IZkbApiPassthroughActor, ZkbApiPassthroughActor>()
 
 
@@ -128,12 +127,11 @@ module Api =
                 let! kmCount = kmRepo.GetCountAsync()
 
                 let! ingestActorStats = ctx.GetService<IRedisqIngestionActor>().GetStats()
-                let! writeActorStats = ctx.GetService<IKillWriteActor>().GetStats()
                 let! sessionsActorStats = sessionsActor.GetStats()
                 let! sessionStorageStats = sessionsActor.GetStorageStats()
 
                 let result =
-                    {| actors = [| statsActorStats; ingestActorStats; writeActorStats; sessionsActorStats |]
+                    {| actors = [| statsActorStats; ingestActorStats; sessionsActorStats |]
                        stats =
                         {| ingestion = apiStats.ingestion
                            distribution = apiStats.distribution
