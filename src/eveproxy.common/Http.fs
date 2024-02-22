@@ -7,14 +7,14 @@ open System.Net
 open System.Net.Http
 
 type HttpRequestResponse =
-    | HttpOkRequestResponse of status: HttpStatusCode * body: string
+    | HttpOkRequestResponse of status: HttpStatusCode * body: string * contentType: string option
     | HttpTooManyRequestsResponse of status: HttpStatusCode
     | HttpErrorRequestResponse of status: HttpStatusCode * body: string
     | HttpExceptionRequestResponse of ex: Exception
 
     static member status(response: HttpRequestResponse) =
         match response with
-        | HttpOkRequestResponse(status, _) -> status
+        | HttpOkRequestResponse(status, _, _) -> status
         | HttpTooManyRequestsResponse(status) -> status
         | HttpErrorRequestResponse(status, _) -> status
         | HttpExceptionRequestResponse _ -> HttpStatusCode.InternalServerError
@@ -45,7 +45,12 @@ module Http =
         | true, _ ->
             task {
                 let! body = body resp
-                return HttpOkRequestResponse(resp.StatusCode, body)
+                let mediaType =
+                    resp.Content.Headers.ContentType
+                    |> Option.ofNull<Headers.MediaTypeHeaderValue>
+                    |> Option.map _.MediaType
+
+                return HttpOkRequestResponse(resp.StatusCode, body, mediaType)
             }
         | false, HttpStatusCode.TooManyRequests ->
             HttpTooManyRequestsResponse(resp.StatusCode) |> eveproxy.Threading.toTaskResult

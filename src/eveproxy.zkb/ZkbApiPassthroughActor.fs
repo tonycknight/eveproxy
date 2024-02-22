@@ -37,7 +37,9 @@ type ZkbApiPassthroughActor
 
                 $"GET [{url}] iteration #{count}..." |> log.LogTrace
                 let! resp = hc.GetAsync url
-                $"GET {HttpRequestResponse.loggable resp} received from [{url}]." |> log.LogTrace
+
+                $"GET {HttpRequestResponse.loggable resp} received from [{url}]."
+                |> log.LogTrace
 
                 return!
                     match resp with
@@ -80,7 +82,7 @@ type ZkbApiPassthroughActor
 
     interface IZkbApiPassthroughActor with
         member this.GetStats() =
-            task {                
+            task {
                 return
                     { ActorStats.name = (typedefof<ZkbApiPassthroughActor>).FullName
                       queueCount = actor.CurrentQueueLength

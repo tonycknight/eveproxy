@@ -29,7 +29,7 @@ type RedisqIngestionActor
 
             return
                 match rep with
-                | HttpOkRequestResponse(_, body) ->
+                | HttpOkRequestResponse(_, body, _) ->
                     match parse body with
                     | Some package -> Choice1Of3 package
                     | _ -> Choice3Of3 None
