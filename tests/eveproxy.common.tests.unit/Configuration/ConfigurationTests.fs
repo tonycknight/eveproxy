@@ -98,3 +98,27 @@ module ConfigurationTests =
             false
         with ex ->
             true
+
+
+    [<Property(Arbitrary = [| typeof<AlphaNumericString> |], Verbose = true)>]
+    let ``applyKeyValues - apply zkbRedisqQueueId from key values`` (value: string) =
+        let kvp = new MemoryKeyValueProvider() :> IKeyValueProvider
+        kvp.SetValue "zkbRedisqQueueId" value
+
+        let config = AppConfiguration.emptyConfig |> Configuration.applyKeyValues kvp
+
+        config.zkbRedisqQueueId = value
+
+
+    [<Property(Arbitrary = [| typeof<AlphaNumericString> |], Verbose = true)>]
+    let ``applyKeyValues - zkbRedisqQueueId is set as a key value`` (value: string) =
+        let kvp = new MemoryKeyValueProvider() :> IKeyValueProvider
+
+        let config =
+            { AppConfiguration.emptyConfig with
+                zkbRedisqQueueId = value }
+            |> Configuration.applyKeyValues kvp
+
+        let persistedValue = kvp.GetValue "zkbRedisqQueueId"
+
+        persistedValue = (Some value)
