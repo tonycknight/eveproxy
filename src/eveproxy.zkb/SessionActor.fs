@@ -7,7 +7,9 @@ open Microsoft.Extensions.Logging
 type private SessionActorState =
     { kills: IKillmailReferenceQueue
       lastPull: DateTime
-      lastPush: DateTime}
+      lastPush: DateTime
+      pullCount: uint64
+      pushCount: uint64 }
 
 type SessionActor
     (
@@ -38,8 +40,12 @@ type SessionActor
                 with ex ->
                     log.LogError(ex, ex.Message)
 
-            return { state with lastPush = DateTime.UtcNow }
+            return
+                { state with
+                    lastPush = DateTime.UtcNow
+                    pushCount = state.pushCount + 1UL }
         }
+
     let getKill (kr: KillPackageReferenceData) =
         async {
             sprintf "Fetching kill [%s] by reference from queue [%s]..." kr.killmailId name
@@ -58,7 +64,8 @@ type SessionActor
         async {
             let state =
                 { state with
-                    lastPull = DateTime.UtcNow }
+                    lastPull = DateTime.UtcNow
+                    pullCount = state.pullCount + 1UL }
 
             try
                 sprintf "Fetching next kill reference from queue [%s]..." name |> log.LogTrace
@@ -129,7 +136,9 @@ type SessionActor
 
             { SessionActorState.kills = queueFactory.Create name
               lastPull = DateTime.MinValue
-              lastPush = DateTime.MinValue}
+              lastPush = DateTime.MinValue
+              pullCount = 0UL
+              pushCount = 0UL }
             |> loop)
 
     interface ISessionActor with
