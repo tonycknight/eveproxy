@@ -47,47 +47,54 @@ module ConfigurationTests =
 
 
     [<Property(MaxTest = 1)>]
-    let ``validate on empty throws exception`` () =
+    let ``validationErrors - empty returns errors`` () =
         let config = AppConfiguration.emptyConfig
+        let r = Configuration.validationErrors config |> Array.ofSeq
 
-        try
-            Configuration.validate config |> ignore
-            false
-        with ex ->
-            true
-
+        r <> Array.empty
 
 
     [<Property(MaxTest = 1)>]
-    let ``validate on default throws exception`` () =
+    let ``validationErrors - default returns errors`` () =
         let config = AppConfiguration.defaultConfig
+        let r = Configuration.validationErrors config |> Array.ofSeq
 
-        try
-            Configuration.validate config |> ignore
-            false
-        with ex ->
-            true
+        r <> Array.empty
 
     [<Property(Arbitrary = [| typeof<AlphaNumericString> |], Verbose = true)>]
-    let ``validate on default with mongo details throws no exception`` (mongoUserName: string) (mongoPassword: string) =
+    let ``validationErrors - default with mongo details returns no errors``
+        (mongoUserName: string)
+        (mongoPassword: string)
+        =
 
         let config =
             { AppConfiguration.defaultConfig with
                 mongoUserName = mongoUserName
                 mongoPassword = mongoPassword }
 
-        Configuration.validate config |> ignore
+        let r = Configuration.validationErrors config |> Array.ofSeq
 
-        true
+        r = Array.empty
 
     [<Property(Arbitrary = [| typeof<NullEmptyWhitespaceString> |], Verbose = true)>]
-    let ``validate - invalid hostUrls throws exception`` (hostUrls: string) =
+    let ``validationErrors - invalid hostUrls returns errors`` (hostUrls: string) =
         let config =
             { minimumValidConfig with
                 hostUrls = hostUrls }
 
+        let r = Configuration.validationErrors config |> Array.ofSeq
+
+        r <> Array.empty
+
+    [<Property(MaxTest = 1)>]
+    let ``validate - minimumValidConfig throws no exception`` () =
+        minimumValidConfig |> Configuration.validate |> ignore
+        true
+
+    [<Property(MaxTest = 1)>]
+    let ``validate - empty config throws exception`` () =
         try
-            Configuration.validate config |> ignore
+            AppConfiguration.emptyConfig |> Configuration.validate |> ignore
             false
         with ex ->
             true
