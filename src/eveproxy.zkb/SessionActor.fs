@@ -6,7 +6,20 @@ open Microsoft.Extensions.Logging
 
 type private SessionActorState =
     { kills: IKillmailReferenceQueue
-      lastPull: DateTime }
+      lastPull: DateTime
+      lastPush: DateTime
+      pullCount: uint64
+      pushCount: uint64 }
+
+    static member bumpPull(state: SessionActorState) =
+        { state with
+            lastPull = DateTime.UtcNow
+            pullCount = state.pullCount + 1UL }
+
+    static member bumpPush(state: SessionActorState) =
+        { state with
+            lastPush = DateTime.UtcNow
+            pushCount = state.pushCount + 1UL }
 
 type SessionActor
     (
@@ -37,44 +50,52 @@ type SessionActor
                 with ex ->
                     log.LogError(ex, ex.Message)
 
-            return state
+            return state |> SessionActorState.bumpPush
+        }
+
+    let getKill (kr: KillPackageReferenceData) =
+        async {
+            sprintf "Fetching kill [%s] by reference from queue [%s]..." kr.killmailId name
+            |> log.LogTrace
+
+            let! km = kr.killmailId |> killReader.ReadAsync |> Async.AwaitTask
+
+            if km |> Option.isSome then
+                sprintf "Fetched kill [%s] by reference from queue [%s]." kr.killmailId name
+                |> log.LogTrace
+
+            return km
         }
 
     let onPullNext state (rc: AsyncReplyChannel<obj>) =
         async {
-            let state =
-                { state with
-                    lastPull = DateTime.UtcNow }
 
             try
-                sprintf "Fetching next kill reference from queue [%s]..." name |> log.LogTrace
-                let! killRef = state.kills.PullAsync() |> Async.AwaitTask
-
-                let! package =
-                    match killRef with
-                    | None -> async { return None }
-                    | Some kr ->
+                let! (state, package) =
+                    if state.pullCount >= state.pushCount then
+                        async { return (state, None) }
+                    else
                         async {
-                            sprintf "Fetching kill [%s] by reference from queue [%s]..." kr.killmailId name
-                            |> log.LogTrace
+                            sprintf "Fetching next kill reference from queue [%s]..." name |> log.LogTrace
+                            let! killRef = state.kills.PullAsync() |> Async.AwaitTask
 
-                            let! km = kr.killmailId |> killReader.ReadAsync |> Async.AwaitTask
-
-                            if km |> Option.isSome then
-                                sprintf "Fetched kill [%s] by reference from queue [%s]." kr.killmailId name
-                                |> log.LogTrace
-
-                            return km
+                            return!
+                                match killRef with
+                                | None -> async { return (state, None) }
+                                | Some kr ->
+                                    async {
+                                        let! km = getKill kr
+                                        return (SessionActorState.bumpPull state, km)
+                                    }
                         }
-
 
                 let package = package |> Option.defaultValue KillPackageData.empty
                 package :> obj |> ActorMessage.Entity |> rc.Reply
+                return state
             with ex ->
                 log.LogError(ex, ex.Message)
                 KillPackageData.empty :> obj |> ActorMessage.Entity |> rc.Reply
-
-            return state
+                return state
         }
 
     let storageStats (state: SessionActorState) =
@@ -126,8 +147,15 @@ type SessionActor
                     return! loop state
                 }
 
-            { SessionActorState.kills = queueFactory.Create name
-              lastPull = DateTime.MinValue }
+            let queue = queueFactory.Create name
+
+            let count = uint64 (queue.GetCountAsync().Result)
+
+            { SessionActorState.kills = queue
+              lastPull = DateTime.MinValue
+              lastPush = DateTime.MinValue
+              pullCount = 0UL
+              pushCount = count }
             |> loop)
 
     interface ISessionActor with
