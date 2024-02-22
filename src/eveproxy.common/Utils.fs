@@ -60,6 +60,19 @@ module Strings =
         use reader = new System.IO.StreamReader(outStream)
         reader.ReadToEnd()
 
+    let toGzip (value: string) =
+        let bytes = System.Text.Encoding.UTF8.GetBytes(value)
+        use outStream = new System.IO.MemoryStream()
+
+        use comp =
+            new System.IO.Compression.GZipStream(outStream, System.IO.Compression.CompressionMode.Compress)
+
+        comp.Write(bytes)
+        comp.Flush()
+        outStream.Seek(0, System.IO.SeekOrigin.Begin) |> ignore
+        outStream.ToArray()
+
+
     let (|NullOrWhitespace|_|) value =
         if String.IsNullOrWhiteSpace value then Some value else None
 
@@ -84,6 +97,25 @@ module Threading =
         System.Threading.Tasks.Task.WhenAll(tasks)
 
 module Validators =
+    let isUrl value =
+        try
+            new Uri(value) |> ignore
+            true
+        with ex ->
+            false
+
+    let isNonEmptyString = String.IsNullOrWhiteSpace >> not
+
+    let isPositiveInteger (value: string) =
+        match Int32.TryParse value with
+        | true, x when x >= 0 -> true
+        | _ -> false
+
+    let isTimeSpan (value: string) =
+        match TimeSpan.TryParse value with
+        | true, _ -> true
+        | _ -> false
+
     let mustBe (validate: string -> bool) (error: string) (value) =
         if value |> validate |> not then Some error else None
 

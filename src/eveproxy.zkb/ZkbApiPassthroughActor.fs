@@ -47,7 +47,7 @@ type ZkbApiPassthroughActor
                     | HttpOkRequestResponse _
                     | HttpErrorRequestResponse _
                     | HttpExceptionRequestResponse _ -> resp |> Threading.toTaskResult
-                    | HttpTooManyRequestsResponse _ -> getZkbApiIterate lastPoll (count - 1) url
+                    | HttpTooManyRequestsResponse _ -> getZkbApiIterate DateTime.UtcNow (count - 1) url
             with ex ->
                 log.LogError(ex.Message, ex)
                 return HttpErrorRequestResponse(Net.HttpStatusCode.InternalServerError, "")
