@@ -8,7 +8,7 @@
     <Content Include="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Compile Include="Api.fs" />
+    <Compile Include="ApiStartup.fs" />
     <Compile Include="WebApp.fs" />
     <Compile Include="Program.fs" />
     <None Include="paket.references" />
