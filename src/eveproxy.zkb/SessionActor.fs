@@ -40,6 +40,19 @@ type SessionActor
 
             return { state with lastPush = DateTime.UtcNow }
         }
+    let getKill (kr: KillPackageReferenceData) =
+        async {
+            sprintf "Fetching kill [%s] by reference from queue [%s]..." kr.killmailId name
+            |> log.LogTrace
+
+            let! km = kr.killmailId |> killReader.ReadAsync |> Async.AwaitTask
+
+            if km |> Option.isSome then
+                sprintf "Fetched kill [%s] by reference from queue [%s]." kr.killmailId name
+                |> log.LogTrace
+
+            return km
+        }
 
     let onPullNext state (rc: AsyncReplyChannel<obj>) =
         async {
@@ -54,20 +67,7 @@ type SessionActor
                 let! package =
                     match killRef with
                     | None -> async { return None }
-                    | Some kr ->
-                        async {
-                            sprintf "Fetching kill [%s] by reference from queue [%s]..." kr.killmailId name
-                            |> log.LogTrace
-
-                            let! km = kr.killmailId |> killReader.ReadAsync |> Async.AwaitTask
-
-                            if km |> Option.isSome then
-                                sprintf "Fetched kill [%s] by reference from queue [%s]." kr.killmailId name
-                                |> log.LogTrace
-
-                            return km
-                        }
-
+                    | Some kr -> getKill kr
 
                 let package = package |> Option.defaultValue KillPackageData.empty
                 package :> obj |> ActorMessage.Entity |> rc.Reply
