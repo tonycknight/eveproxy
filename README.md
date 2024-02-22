@@ -24,22 +24,18 @@ You'll also need a MongoDB database installed, available and protected. _Please 
 Start the container:
 
 ```
-docker run -it --rm --publish 8080:8080 eveproxy:<tag> --mongoServer "<host name>" --mongoDbName "<database name>" --mongoUserName "<user nanme>" --mongoPassword "<secret password!>" --zkbRedisqQueueId "<your own unique redisq identifier>"
+docker run -it --rm --publish 8080:8080 eveproxy:<tag> --mongoServer "<host name>" --mongoDbName "<database name>" --mongoUserName "<user nanme>" --mongoPassword "<secret password!>" "
 ```
 
 The parameters you'll need to pass are:
 
 | | |
 | - | - |
-| `zkbRedisqQueueId` | A unique identifier against Redisq. |
 | `mongoServer` | The Mongo host name or IP address. |
 | `mongoDbName` | The name of the database within the Mongo installation. |
 | `monguUserName` | The Mongo account to access the database. | 
 | `mongoPassword` | The password for `monguUserName`. |
 
-### A note on `zkbRedisqQueueId`
-
-This value uniquely identifies the container with Redisq. This mandatory requirement was recently introduced by Redisq itself. A guid, or similar random value, is perfectly sufficient. If you don't provide one, the container will create new random ones on every start. Work to generate only once and hide this requirement is in the roadmap.
 
 ## The endpoints
 
