@@ -104,75 +104,58 @@ module Configuration =
         configCtor.Invoke(paramValues) :?> AppConfiguration
 
     let validate (config: AppConfiguration) =
-        let validUrl value =
-            try
-                new Uri(value) |> ignore
-                true
-            with ex ->
-                false
-
-        let nonEmptyString = String.IsNullOrWhiteSpace >> not
-
-        let positiveInteger (value: string) =
-            match Int32.TryParse value with
-            | true, x when x >= 0 -> true
-            | _ -> false
-
-        let timeSpan (value: string) =
-            match TimeSpan.TryParse value with
-            | true, _ -> true
-            | _ -> false
+        
 
         let errors =
             seq {
                 config.hostUrls
                 |> mustBe
-                    nonEmptyString
+                    isNonEmptyString
                     $"{nameof Unchecked.defaultof<AppConfiguration>.hostUrls} must be a non-empty string."
 
                 config.zkbRedisqBaseUrl
                 |> mustBe
-                    (nonEmptyString &&>> validUrl)
-                    $"{nameof Unchecked.defaultof<AppConfiguration>.zkbRedisqBaseUrl} must be a non-empty string."
+                    (isNonEmptyString &&>> isUrl)
+                    $"{nameof Unchecked.defaultof<AppConfiguration>.zkbRedisqBaseUrl} must be a valid URL."
 
                 config.zkbRedisqTtwExternal
                 |> mustBe
-                    positiveInteger
+                    isPositiveInteger
                     $"{nameof Unchecked.defaultof<AppConfiguration>.zkbRedisqTtwExternal} must be a positive integer."
 
                 config.zkbRedisqTtwClient
                 |> mustBe
-                    positiveInteger
+                    isPositiveInteger
                     $"{nameof Unchecked.defaultof<AppConfiguration>.zkbRedisqTtwClient} must be a positive integer."
 
                 config.zkbApiUrl
                 |> mustBe
-                    (nonEmptyString &&>> validUrl)
+                    (isNonEmptyString &&>> isUrl)
                     $"{nameof Unchecked.defaultof<AppConfiguration>.zkbApiUrl} must be a valid URL."
 
                 config.redisqSessionMaxAge
                 |> mustBe
-                    timeSpan
+                    isTimeSpan
                     $"{nameof Unchecked.defaultof<AppConfiguration>.redisqSessionMaxAge} must be a valid timespan (HH:mm:ss)."
 
                 config.mongoServer
                 |> mustBe
-                    nonEmptyString
+                    isNonEmptyString
                     $"{nameof Unchecked.defaultof<AppConfiguration>.mongoServer} must be a non-empty string."
 
                 config.mongoDbName
                 |> mustBe
-                    nonEmptyString
+                    isNonEmptyString
                     $"{nameof Unchecked.defaultof<AppConfiguration>.mongoDbName} must be a non-empty string."
 
                 config.mongoUserName
                 |> mustBe
-                    nonEmptyString
+                    isNonEmptyString
                     $"{nameof Unchecked.defaultof<AppConfiguration>.mongoUserName} must be a non-empty string."
 
                 config.mongoPassword
                 |> mustBe
-                    nonEmptyString
+                    isNonEmptyString
                     $"{nameof Unchecked.defaultof<AppConfiguration>.mongoPassword} must be a non-empty string."
             }
             |> Option.reduceMany
