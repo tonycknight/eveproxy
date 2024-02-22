@@ -32,3 +32,12 @@ module StringsTests =
         let result = value |> Strings.leftSnippet len
 
         result = expected
+
+    [<Property>]
+    let ``fromGzip and toGzip are symmetric``(value: NonEmptyString) =
+        
+        let bytes = Strings.toGzip value.Get
+        use comp = new System.IO.MemoryStream(bytes)
+        let decomp = comp |> Strings.fromGzip
+
+        decomp = value.Get
