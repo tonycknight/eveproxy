@@ -5,11 +5,39 @@ open System.Threading.Tasks
 open eveproxy
 open Microsoft.Extensions.Logging
 
-type private RedisqIngestionActorState = { receivedKills: int64 }
+type private RedisqIngestionActorState = { receivedKills: uint64 }
 
 type RedisqIngestionActor
-    (hc: IExternalHttpClient, write: IKillWriteActor, stats: IApiStatsActor, logFactory: ILoggerFactory) =
+    (
+        hc: IExternalHttpClient,
+        stats: IApiStatsActor,
+        logFactory: ILoggerFactory,
+        writer: IKillmailWriter,
+        sessions: ISessionsActor
+    ) =
     let log = logFactory.CreateLogger<RedisqIngestionActor>()
+
+    let logKmReceipt (kp: KillPackageData) =
+        kp
+        |> KillPackageData.killmailId
+        |> Option.defaultValue ""
+        |> sprintf "--> Received kill [%s]."
+        |> log.LogInformation
+
+        kp
+
+    let logKmCompletion (kill: Task<KillPackageData>) =
+        task {
+            let! kill = kill
+
+            kill
+            |> KillPackageData.killmailId
+            |> Option.defaultValue ""
+            |> sprintf "--> Finished processing kill [%s]."
+            |> log.LogTrace
+
+            return kill
+        }
 
     let parse body =
         try
@@ -37,13 +65,48 @@ type RedisqIngestionActor
                 | _ -> Choice3Of3 None
         }
 
-    let forwardKill (state: RedisqIngestionActorState) (kill: KillPackageData) =
-        task {
-            if kill <> KillPackageData.empty then
-                kill :> obj |> ActorMessage.Entity |> write.Post
-                { ReceivedKills.count = 1 } :> obj |> ActorMessage.Entity |> stats.Post
+    let countKillReceipt (kill: KillPackageData) =
+        { ReceivedKills.count = 1 } :> obj |> ActorMessage.Entity |> stats.Post
+        kill
 
-            return state
+    let countKillWrite (kill: Task<KillPackageData>) =
+        task {
+            let! kill = kill
+            { WrittenKills.count = 1 } :> obj |> ActorMessage.Entity |> stats.Post
+            return kill
+        }
+
+    let broadcastKill (kill: Task<KillPackageData>) =
+        task {
+            let! kill = kill
+
+            kill
+            |> KillPackageData.killmailId
+            |> Option.defaultValue ""
+            |> sprintf "--> Broadcasting kill [%s]."
+            |> log.LogTrace
+
+            kill :> obj |> ActorMessage.Entity |> sessions.Post
+            return kill
+        }
+
+    let handleKill (state: RedisqIngestionActorState) (kill: KillPackageData) =
+        task {
+            if (kill |> KillPackageData.killmailId |> Option.isNone) then
+                log.LogWarning "Killmail received without a killmailID."
+            else
+                let! kill =
+                    kill
+                    |> countKillReceipt
+                    |> logKmReceipt
+                    |> writer.WriteAsync
+                    |> countKillWrite
+                    |> broadcastKill
+                    |> logKmCompletion
+
+                ignore kill
+
+            return { RedisqIngestionActorState.receivedKills = state.receivedKills + 1UL }
         }
 
     let wait state (ts: TimeSpan) =
@@ -69,14 +132,7 @@ type RedisqIngestionActor
                                     | Choice1Of3 kp when kp = KillPackageData.empty ->
                                         "Empty package received." |> log.LogTrace
                                         async { return state }
-                                    | Choice1Of3 kp ->
-                                        kp
-                                        |> KillPackageData.killmailId
-                                        |> Option.defaultValue ""
-                                        |> sprintf "--> Received kill [%s]."
-                                        |> log.LogInformation
-
-                                        forwardKill state kp |> Async.AwaitTask
+                                    | Choice1Of3 kp -> kp |> handleKill state |> Async.AwaitTask
                                     | Choice2Of3 ts -> wait state ts |> Async.AwaitTask
                                     | _ -> wait state TimeSpan.Zero |> Async.AwaitTask
 
@@ -89,7 +145,7 @@ type RedisqIngestionActor
                     return! loop state
                 }
 
-            { RedisqIngestionActorState.receivedKills = 0L } |> loop)
+            { RedisqIngestionActorState.receivedKills = 0UL } |> loop)
 
     interface IRedisqIngestionActor with
         member this.GetStats() =
