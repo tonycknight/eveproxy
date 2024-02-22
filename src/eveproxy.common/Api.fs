@@ -29,3 +29,13 @@ module Api =
     let isAuthorised (sp: System.IServiceProvider) : HttpHandler =
         let keyValues = sp.GetRequiredService<IKeyValueProvider>()
         requiresValidIp >=> requiresApiKey keyValues
+
+    let contentString (contentType: string) (value: string) : HttpHandler =
+        let bytes = System.Text.Encoding.UTF8.GetBytes value
+
+        fun (_: HttpFunc) (ctx: HttpContext) ->
+            ctx.SetContentType contentType
+            ctx.WriteBytesAsync bytes
+
+    let jsonString (value: string) =
+        value |> contentString "application/json; charset=utf-8"

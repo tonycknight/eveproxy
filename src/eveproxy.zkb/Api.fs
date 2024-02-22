@@ -35,15 +35,6 @@ type KillPackage =
 
 module Api =
 
-    let private contentString (contentType: string) (value: string) : HttpHandler =
-        let bytes = System.Text.Encoding.UTF8.GetBytes value
-
-        fun (_: HttpFunc) (ctx: HttpContext) ->
-            ctx.SetContentType contentType
-            ctx.WriteBytesAsync bytes
-
-    let private jsonString = contentString "application/json; charset=utf-8"
-
     let private ttw (config: AppConfiguration) (query: IQueryCollection) =
         match query.TryGetValue("ttw") with
         | true, x -> x |> Seq.head |> Strings.toInt (config.ClientRedisqTtw())
@@ -203,8 +194,8 @@ module Api =
                                 match resp with
                                 | HttpOkRequestResponse(_, body, mediaType) ->
                                     match mediaType with
-                                    | Some mt -> body |> contentString mt
-                                    | _ -> body |> jsonString
+                                    | Some mt -> body |> eveproxy.Api.contentString mt
+                                    | _ -> body |> eveproxy.Api.jsonString
                                 | HttpTooManyRequestsResponse _ -> RequestErrors.tooManyRequests (text "")
                                 | HttpExceptionRequestResponse _ -> ServerErrors.internalError (text "")
                                 | HttpErrorRequestResponse(rc, _) when rc = System.Net.HttpStatusCode.NotFound ->
