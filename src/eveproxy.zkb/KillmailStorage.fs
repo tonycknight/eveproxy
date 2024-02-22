@@ -208,6 +208,7 @@ type MongoKillmailReferenceQueue(config: eveproxy.AppConfiguration, logFactory: 
         member this.PullAsync() =
             eveproxy.Mongo.pullSingletonFromQueue<KillPackageReferenceData> mongoCol
 
+[<ExcludeFromCodeCoverage>]
 type MongoKillmailReferenceQueueFinder(config: eveproxy.AppConfiguration) =
     interface IKillmailReferenceQueueFinder with
         member this.GetNames() =
