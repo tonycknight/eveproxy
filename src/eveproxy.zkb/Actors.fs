@@ -25,3 +25,7 @@ type ISessionsActor =
     inherit IActor
     abstract member GetNext: name: string -> Task<KillPackageData>
     abstract member GetStorageStats: unit -> Task<StorageStats[]>
+
+type IZkbApiPassthroughActor =
+    inherit IActor
+    abstract member Get: url: string -> Task<HttpRequestResponse>

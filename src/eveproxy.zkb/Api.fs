@@ -18,6 +18,7 @@ module ApiStartup =
             .AddSingleton<IKillmailWriter, KillmailWriter>()
             .AddSingleton<IKillmailReader, KillmailReader>()
             .AddSingleton<IKillWriteActor, KillWriteActor>()
+            .AddSingleton<IZkbApiPassthroughActor, ZkbApiPassthroughActor>()
 
 
     let start (sp: IServiceProvider) =
@@ -33,6 +34,16 @@ type KillPackage =
     static member ofKillPackageData(value: KillPackageData) = { KillPackage.package = value.package }
 
 module Api =
+
+    let private contentString (contentType: string) (value: string) : HttpHandler =
+        let bytes = System.Text.Encoding.UTF8.GetBytes value
+
+        fun (_: HttpFunc) (ctx: HttpContext) ->
+            ctx.SetContentType contentType
+            ctx.WriteBytesAsync bytes
+
+    let private jsonString = contentString "application/json; charset=utf-8"
+
     let private ttw (config: AppConfiguration) (query: IQueryCollection) =
         match query.TryGetValue("ttw") with
         | true, x -> x |> Seq.head |> Strings.toInt (config.ClientRedisqTtw())
@@ -152,12 +163,64 @@ module Api =
                 let! statsActorStats = statsActor.GetStats()
                 let! apiStats = statsActor.GetApiStats()
 
+                let! passthruStats = ctx.GetService<IZkbApiPassthroughActor>().GetStats()
+
                 let result =
-                    {| actors = [| statsActorStats |]
+                    {| actors = [| statsActorStats; passthruStats |]
                        routes = apiStats.routes |> Map.values |> Seq.sortByDescending (fun rs -> rs.count) |}
 
                 return! Successful.OK result next ctx
             }
+
+    let private getZkbApiRoute (routePrefix: string) (request: HttpRequest) =
+        let path = request.Path
+
+        let path =
+            match path.HasValue with
+            | true -> Some path.Value
+            | _ -> None
+
+        path
+        |> Option.map (fun p -> $"{p.Substring(routePrefix.Length)}{request.QueryString}" |> Strings.trim)
+
+
+    let private getZkbApi (routePrefix: string) =
+        fun (next: HttpFunc) (ctx: HttpContext) ->
+            task {
+                let route = ctx.Request |> getZkbApiRoute routePrefix
+                let notFound = RequestErrors.notFound (text "")
+                let badRequest = RequestErrors.badRequest (text "")
+
+                let! result =
+                    match route with
+                    | None -> task { return notFound }
+                    | Some route when route = "" -> task { return notFound }
+                    | Some route ->
+                        task {
+                            let! resp = ctx.GetService<IZkbApiPassthroughActor>().Get route
+
+                            return
+                                match resp with
+                                | HttpOkRequestResponse(_, body, mediaType) ->
+                                    match mediaType with
+                                    | Some mt -> body |> contentString mt
+                                    | _ -> body |> jsonString
+                                | HttpTooManyRequestsResponse _ -> RequestErrors.tooManyRequests (text "")
+                                | HttpExceptionRequestResponse _ -> ServerErrors.internalError (text "")
+                                | HttpErrorRequestResponse(rc, _) when rc = System.Net.HttpStatusCode.NotFound ->
+                                    notFound
+                                | HttpErrorRequestResponse(rc, _) when rc = System.Net.HttpStatusCode.BadRequest ->
+                                    badRequest
+                                | HttpErrorRequestResponse(rc, _) when
+                                    rc = System.Net.HttpStatusCode.InternalServerError
+                                    ->
+                                    ServerErrors.internalError (text "")
+                                | _ -> badRequest
+                        }
+
+                return! result next ctx
+            }
+
 
     let redisqWebRoutes () =
         subRouteCi
@@ -183,4 +246,6 @@ module Api =
              >=> countRouteFetch
              >=> ResponseCaching.noResponseCaching
              >=> (setContentType "application/json")
-             >=> choose [ route "/stats/" >=> getZkbStats ])
+             >=> choose
+                     [ route "/stats/" >=> getZkbStats
+                       subRouteCi "/v1" (choose [ routeStartsWithCi "/" >=> (getZkbApi "/api/zkb/v1/") ]) ])

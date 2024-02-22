@@ -7,24 +7,57 @@ open System.Net
 open System.Net.Http
 
 type HttpRequestResponse =
-    | HttpOkRequestResponse of status: HttpStatusCode * body: string
+    | HttpOkRequestResponse of status: HttpStatusCode * body: string * contentType: string option
     | HttpTooManyRequestsResponse of status: HttpStatusCode
     | HttpErrorRequestResponse of status: HttpStatusCode * body: string
     | HttpExceptionRequestResponse of ex: Exception
 
+    static member status(response: HttpRequestResponse) =
+        match response with
+        | HttpOkRequestResponse(status, _, _) -> status
+        | HttpTooManyRequestsResponse(status) -> status
+        | HttpErrorRequestResponse(status, _) -> status
+        | HttpExceptionRequestResponse _ -> HttpStatusCode.InternalServerError
+
+    static member loggable(response: HttpRequestResponse) =
+        let status = HttpRequestResponse.status response
+        $"{response.GetType().Name} {status}"
+
 [<ExcludeFromCodeCoverage>]
 module Http =
 
+    let body (resp: HttpResponseMessage) =
+        task {
+            let! body =
+                match resp.Content.Headers.ContentEncoding |> Seq.tryHead with
+                | Some x when x = "gzip" ->
+                    task {
+                        use s = resp.Content.ReadAsStream(System.Threading.CancellationToken.None)
+                        return Strings.fromGzip s
+                    }
+                | _ -> resp.Content.ReadAsStringAsync()
+
+            return body
+        }
+
     let parse (resp: HttpResponseMessage) =
-        match resp.IsSuccessStatusCode with
-        | true ->
+        match resp.IsSuccessStatusCode, resp.StatusCode with
+        | true, _ ->
             task {
-                let! body = resp.Content.ReadAsStringAsync()
-                return HttpOkRequestResponse(resp.StatusCode, body)
+                let! body = body resp
+
+                let mediaType =
+                    resp.Content.Headers.ContentType
+                    |> Option.ofNull<Headers.MediaTypeHeaderValue>
+                    |> Option.map _.MediaType
+
+                return HttpOkRequestResponse(resp.StatusCode, body, mediaType)
             }
-        | false ->
+        | false, HttpStatusCode.TooManyRequests ->
+            HttpTooManyRequestsResponse(resp.StatusCode) |> eveproxy.Threading.toTaskResult
+        | false, _ ->
             task {
-                let! body = resp.Content.ReadAsStringAsync()
+                let! body = body resp
                 return HttpErrorRequestResponse(resp.StatusCode, body)
             }
 
@@ -81,6 +114,7 @@ type ExternalHttpClient(httpClient: HttpClient, config: AppConfiguration) =
     let req (url: string) =
         let req = new HttpRequestMessage(HttpMethod.Get, url)
         req.Headers.Add("User-Agent", "eveproxy")
+        req.Headers.Add("Accept-Encoding", "gzip")
         req
 
     interface IExternalHttpClient with
