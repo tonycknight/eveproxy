@@ -84,7 +84,7 @@ module ConfigurationTests =
 
         let r = Configuration.validationErrors config |> Array.ofSeq
 
-        r <> Array.empty
+        r <> Array.empty && r |> Array.exists (fun s -> s.IndexOf("hostUrls") >= 0)
 
     [<Property(MaxTest = 1)>]
     let ``validate - minimumValidConfig throws no exception`` () =
