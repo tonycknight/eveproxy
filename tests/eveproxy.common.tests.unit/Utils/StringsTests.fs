@@ -34,13 +34,13 @@ module StringsTests =
         result = expected
 
     [<Property>]
-    let ``toLower``(value: NonEmptyString) =
+    let ``toLower`` (value: NonEmptyString) =
         let expected = value.Get.ToLower()
 
         expected = Strings.toLower value.Get
 
     [<Property>]
-    let ``toBool``(value: bool) =
+    let ``toBool`` (value: bool) =
         let v = value.ToString()
 
         let r = v |> Strings.toBool true
@@ -48,17 +48,17 @@ module StringsTests =
         r = value
 
     [<Property>]
-    let ``toBool invalid boolean``(defaultValue: bool) (value: int)=
+    let ``toBool invalid boolean`` (defaultValue: bool) (value: int) =
         let v = value.ToString()
 
         let r = v |> Strings.toBool defaultValue
 
         r = defaultValue
-        
+
 
     [<Property>]
-    let ``fromGzip and toGzip are symmetric``(value: NonEmptyString) =
-        
+    let ``fromGzip and toGzip are symmetric`` (value: NonEmptyString) =
+
         let bytes = Strings.toGzip value.Get
         use comp = new System.IO.MemoryStream(bytes)
         let decomp = comp |> Strings.fromGzip

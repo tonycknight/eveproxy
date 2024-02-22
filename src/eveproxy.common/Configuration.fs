@@ -132,7 +132,7 @@ module Configuration =
 
                 config.zkbRedisqBaseUrl
                 |> mustBe
-                    (nonEmptyString >&&> validUrl)
+                    (nonEmptyString &&>> validUrl)
                     $"{nameof Unchecked.defaultof<AppConfiguration>.zkbRedisqBaseUrl} must be a non-empty string."
 
                 config.zkbRedisqTtwExternal
@@ -147,7 +147,7 @@ module Configuration =
 
                 config.zkbApiUrl
                 |> mustBe
-                    (nonEmptyString >&&> validUrl)
+                    (nonEmptyString &&>> validUrl)
                     $"{nameof Unchecked.defaultof<AppConfiguration>.zkbApiUrl} must be a valid URL."
 
                 config.redisqSessionMaxAge

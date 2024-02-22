@@ -71,7 +71,7 @@ module Strings =
         comp.Flush()
         outStream.Seek(0, System.IO.SeekOrigin.Begin) |> ignore
         outStream.ToArray()
-        
+
 
     let (|NullOrWhitespace|_|) value =
         if String.IsNullOrWhiteSpace value then Some value else None

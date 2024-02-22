@@ -24,7 +24,7 @@ module Api =
     let private requiresValidIp: HttpHandler = authorizeRequest isHomeIp forbidden
 
     let private requiresApiKey keyValues : HttpHandler =
-        authorizeRequest (isValidApiKey keyValues >||> isHomeIp) accessDenied
+        authorizeRequest (isValidApiKey keyValues ||>> isHomeIp) accessDenied
 
     let isAuthorised (sp: System.IServiceProvider) : HttpHandler =
         let keyValues = sp.GetRequiredService<IKeyValueProvider>()

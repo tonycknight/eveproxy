@@ -11,7 +11,7 @@ module CombinatorsTests =
         let fx = fun (_) -> x
         let fy = fun (_) -> y
 
-        let f = fx >&&> fy
+        let f = fx &&>> fy
 
         (f "") = (x && y)
 
@@ -21,6 +21,6 @@ module CombinatorsTests =
         let fx = fun (_) -> x
         let fy = fun (_) -> y
 
-        let f = fx >||> fy
+        let f = fx ||>> fy
 
         (f "") = (x || y)
