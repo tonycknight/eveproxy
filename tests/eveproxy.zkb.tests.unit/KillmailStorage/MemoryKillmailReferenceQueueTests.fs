@@ -44,6 +44,7 @@ module MemoryKillmailReferenceQueueTests =
     let ``GetCountAsync - returns count`` (ids: NonEmptyString[]) =
         let config = eveproxy.AppConfiguration.emptyConfig
         let logger = Substitute.For<ILoggerFactory>()
+
         let queue =
             new MemoryKillmailReferenceQueue(config, logger, "") :> IKillmailReferenceQueue
 
@@ -69,6 +70,7 @@ module MemoryKillmailReferenceQueueTests =
     let ``Clear - clears queue`` (ids: NonEmptyString[]) =
         let config = eveproxy.AppConfiguration.emptyConfig
         let logger = Substitute.For<ILoggerFactory>()
+
         let queue =
             new MemoryKillmailReferenceQueue(config, logger, "") :> IKillmailReferenceQueue
 
