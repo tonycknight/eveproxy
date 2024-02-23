@@ -5,6 +5,7 @@ open System.Diagnostics.CodeAnalysis
 open System.Threading.Tasks
 open Microsoft.Extensions.Logging
 open eveproxy.Threading
+open Microsoft.Extensions.Caching.Memory
 
 type KillmailWriteResult =
     | Noop
@@ -45,7 +46,7 @@ type MemoryKillmailRepository() =
         member this.GetCountAsync() = task { return cache.Count }
 
 [<ExcludeFromCodeCoverage>]
-type MongoKillmailRepository(config: eveproxy.AppConfiguration) =
+type MongoKillmailRepository(config: eveproxy.AppConfiguration, cache: IMemoryCache) =
 
     [<Literal>]
     let collectionName = "killmails"
@@ -53,17 +54,39 @@ type MongoKillmailRepository(config: eveproxy.AppConfiguration) =
     let mongoCol =
         eveproxy.Mongo.initCollection "" config.mongoDbName collectionName config.mongoConnection
 
+    let cacheOptions =
+        let options = new MemoryCacheEntryOptions()
+        options.SlidingExpiration <- config.KillmailMemoryCacheAge()
+        options
+
+    let cacheKey =
+        let prefix = typeof<MongoKillmailRepository>.Name
+        let typeName = typeof<KillPackageData>.Name
+        fun id -> $"{prefix}:{typeName}:{id}"
+
     let setId id (kill: KillPackageData) =
         if Object.ReferenceEquals(kill._id, null) then
             kill._id <- id
 
         kill
 
-    let getAsync id =
+    let getDbAsync id =
         sprintf "{'_id': '%s' }" id
         |> eveproxy.Mongo.getSingle<KillPackageData> mongoCol
 
-    let setAsync (id: string, kill: KillPackageData) =
+    let getCache id =
+        let key = cacheKey id
+
+        match cache.TryGetValue(key) with
+        | true, x -> x :?> KillPackageData |> Some
+        | _ -> None
+
+    let getAsync id =
+        match getCache id with
+        | None -> getDbAsync id
+        | x -> task { return x }
+
+    let setDbAsync (id: string, kill: KillPackageData) =
         task {
             let! r =
                 kill
@@ -78,12 +101,26 @@ type MongoKillmailRepository(config: eveproxy.AppConfiguration) =
                 | _, _ -> KillmailWriteResult.Noop
         }
 
+    let setCacheAsync (id: string, kill: KillPackageData) =
+        let key = cacheKey id
+        cache.Set(key, kill, cacheOptions)
+
+    let setAsync (id: string, kill: KillPackageData) =
+        task {
+            let! writeResult = setDbAsync (id, kill)
+
+            return
+                match writeResult with
+                | KillmailWriteResult.Noop -> writeResult
+                | KillmailWriteResult.Inserted kp -> setCacheAsync (id, kp) |> KillmailWriteResult.Inserted
+                | KillmailWriteResult.Updated kp -> setCacheAsync (id, kp) |> KillmailWriteResult.Updated
+        }
+
     interface IKillmailRepository with
         member this.SetAsync(kill) =
             match KillPackageData.killmailId kill with
             | Some id -> setAsync (id, kill)
             | None -> task { return KillmailWriteResult.Noop }
-
 
         member this.GetAsync(id) = getAsync id
 

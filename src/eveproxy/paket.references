@@ -1,3 +1,4 @@
 group Main
 FSharp.Core
 Giraffe
+Microsoft.Extensions.Caching.Memory

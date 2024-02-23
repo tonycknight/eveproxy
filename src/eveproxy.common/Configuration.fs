@@ -22,6 +22,7 @@ type AppConfiguration =
       zkbRedisqTtwClient: string
       zkbApiUrl: string
       redisqSessionMaxAge: string
+      killmailMemoryCacheAge: string
       mongoDbName: string
       mongoConnection: string }
 
@@ -34,6 +35,9 @@ type AppConfiguration =
     member this.RedisqSessionMaxAge() =
         this.redisqSessionMaxAge |> Strings.toTimeSpan (TimeSpan.FromHours 3)
 
+    member this.KillmailMemoryCacheAge() =
+        this.killmailMemoryCacheAge |> Strings.toTimeSpan (TimeSpan.FromMinutes 15.)
+
     static member emptyConfig =
         { AppConfiguration.hostUrls = ""
           allowExternalTraffic = true.ToString()
@@ -43,6 +47,7 @@ type AppConfiguration =
           zkbRedisqTtwExternal = ""
           zkbRedisqTtwClient = ""
           redisqSessionMaxAge = ""
+          killmailMemoryCacheAge = ""
           mongoDbName = ""
           mongoConnection = "" }
 
@@ -55,6 +60,7 @@ type AppConfiguration =
           zkbRedisqTtwClient = "10"
           zkbApiUrl = "https://zkillboard.com/api/"
           redisqSessionMaxAge = TimeSpan.FromHours(3).ToString()
+          killmailMemoryCacheAge = TimeSpan.FromMinutes(15.).ToString()
           mongoDbName = "eveproxy"
           mongoConnection = "" }
 
