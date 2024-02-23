@@ -10,8 +10,7 @@ type private EvewhoApiPassthroughActorState =
     static member empty =
         { EvewhoApiPassthroughActorState.lastEvehoRequest = System.DateTime.MinValue }
 
-type EvewhoApiPassthroughActor
-    (hc: IExternalHttpClient, logFactory: ILoggerFactory, config: AppConfiguration) =
+type EvewhoApiPassthroughActor(hc: IExternalHttpClient, logFactory: ILoggerFactory, config: AppConfiguration) =
     let log = logFactory.CreateLogger<EvewhoApiPassthroughActor>()
 
     let pause (lastPoll: DateTime) =

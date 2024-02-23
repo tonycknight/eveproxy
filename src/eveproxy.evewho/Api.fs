@@ -21,7 +21,7 @@ module Api =
     let private countRouteFetch: HttpHandler =
         fun (next: HttpFunc) (ctx: HttpContext) ->
 
-            // TODO: 
+            // TODO:
 
             next ctx
 
@@ -70,5 +70,3 @@ module Api =
              >=> ResponseCaching.noResponseCaching
              >=> (setContentType "application/json")
              >=> choose [ subRouteCi "/v1" (choose [ routeStartsWithCi "/" >=> (getEvewhoApi "/api/evewho/v1/") ]) ])
-
-
