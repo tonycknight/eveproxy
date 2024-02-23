@@ -39,11 +39,17 @@ The parameters you'll need to pass are:
 
 ## The endpoints
 
+### API endpoints
+
+| | | 
+| - | - |
+| `GET /api/stats/` | Get statistics on the API's use. |
+| `GET /api/heartbeat/` | Check the API is alive |
+
 ### Redisq proxies
 
 | | | 
 | - | - |
-| `GET /api/redisq/stats/` | Get ingress, egress and workload statistics for the proxy. |
 | `GET /api/redisq/v1/kills/` | Get the next-in-sequence killmail. |
 | `GET /api/redisq/v1/kills/id/[id]/` | Get the killmail of `id` if it's been cached. |
 | `GET /api/redisq/v1/kills/session/[session]/` | Sessions are analogous to queues. To split kills into different sessions, just give an arbitrary name for `session`. |
@@ -52,7 +58,6 @@ The parameters you'll need to pass are:
 
 | | | 
 | - | - |
-| `GET /api/zkb/stats/` | Get ZKB proxy stats |
 | `GET /api/zkb/v1/[Zkb API route]/` | Send GET traffic to the given `Zkb API route`. For example, use `/api/zkb/v1/losses/solo/` to get solo losses. |
 
 ## Copyright and disclaimers
