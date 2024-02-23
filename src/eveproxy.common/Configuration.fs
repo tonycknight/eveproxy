@@ -25,7 +25,8 @@ type AppConfiguration =
       mongoServer: string
       mongoDbName: string
       mongoUserName: string
-      mongoPassword: string }
+      mongoPassword: string
+      mongoConnection: string }
 
     member this.ZkbRedisqUrl() =
         sprintf "%s?queueID=%s&ttw=%s" this.zkbRedisqBaseUrl this.zkbRedisqQueueId this.zkbRedisqTtwExternal
@@ -48,7 +49,8 @@ type AppConfiguration =
           mongoServer = ""
           mongoDbName = ""
           mongoUserName = ""
-          mongoPassword = "" }
+          mongoPassword = ""
+          mongoConnection = "" }
 
     static member defaultConfig =
         { AppConfiguration.hostUrls = "http://+:8080"
@@ -62,7 +64,8 @@ type AppConfiguration =
           mongoServer = "127.0.0.1"
           mongoDbName = "eveproxy"
           mongoUserName = ""
-          mongoPassword = "" }
+          mongoPassword = ""
+          mongoConnection = "" }
 
 module Configuration =
     open System.Reflection
@@ -154,6 +157,11 @@ module Configuration =
             |> mustBe
                 isNonEmptyString
                 $"{nameof Unchecked.defaultof<AppConfiguration>.mongoPassword} must be a non-empty string."
+
+            config.mongoConnection
+            |> mustBe
+                isNonEmptyString
+                $"{nameof Unchecked.defaultof<AppConfiguration>.mongoConnection} must be a non-empty string."
         }
         |> Option.reduceMany
 
