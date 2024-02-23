@@ -50,6 +50,10 @@ type MongoKillmailRepository(config: eveproxy.AppConfiguration) =
 
         kill
 
+    let getAsync id =
+        sprintf "{'_id': '%s' }" id
+        |> eveproxy.Mongo.getSingle<KillPackageData> mongoCol
+
     interface IKillmailRepository with
         member this.SetAsync(kill) =
             task {
@@ -68,9 +72,7 @@ type MongoKillmailRepository(config: eveproxy.AppConfiguration) =
                     | None -> task { return None }
             }
 
-        member this.GetAsync(id) =
-            sprintf "{'_id': '%s' }" id
-            |> eveproxy.Mongo.getSingle<KillPackageData> mongoCol
+        member this.GetAsync(id) = getAsync id
 
         member this.GetCountAsync() = eveproxy.Mongo.count mongoCol
 
