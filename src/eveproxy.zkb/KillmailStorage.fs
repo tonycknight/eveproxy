@@ -104,7 +104,7 @@ type KillmailWriter(logFactory: ILoggerFactory, repo: IKillmailRepository) =
                 task {
                     id |> sprintf "--> Writing kill [%s]..." |> log.LogTrace
                     let! kr = repo.SetAsync kill
-                    
+
                     match kr with
                     | KillmailWriteResult.Noop -> id |> sprintf "--> Kill [%s] not written." |> log.LogWarning
                     | KillmailWriteResult.Inserted k -> id |> sprintf "--> Inserted kill [%s]." |> log.LogTrace

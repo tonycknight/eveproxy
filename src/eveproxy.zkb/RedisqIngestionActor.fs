@@ -23,22 +23,21 @@ type RedisqIngestionActor
         |> Option.defaultValue ""
         |> sprintf format
         |> logger
+
         kill
 
-    let logKmReceipt =
-        logKmIdAction "--> Received kill [%s]." log.LogInformation
+    let logKmReceipt = logKmIdAction "--> Received kill [%s]." log.LogInformation
 
     let logKmNoop =
         logKmIdAction "--> No write of kill [%s] - no further action." log.LogTrace
 
     let logKmCompletion =
         logKmIdAction "--> Finished processing kill [%s]." log.LogTrace
-            
+
     let logKmDeduplication =
         logKmIdAction "--> Ignoring kill [%s] as duplicate." log.LogTrace
 
-    let logKmBroadcast = 
-        logKmIdAction "--> Broadcasting kill [%s]." log.LogTrace
+    let logKmBroadcast = logKmIdAction "--> Broadcasting kill [%s]." log.LogTrace
 
     let parse body =
         try
@@ -76,7 +75,7 @@ type RedisqIngestionActor
         { WrittenKills.count = 1 } :> obj |> ActorMessage.Entity |> stats.Post
         kill
 
-    let broadcastKill (kill: KillPackageData) =        
+    let broadcastKill (kill: KillPackageData) =
         kill :> obj |> ActorMessage.Entity |> sessions.Post
         kill
 
@@ -85,13 +84,15 @@ type RedisqIngestionActor
             if (kill |> KillPackageData.killmailId |> Option.isNone) then
                 log.LogWarning "Killmail received without a killmailID."
             else
-                let! writeResult = kill |> countKillReceipt |> constructKill |> logKmReceipt |> writer.WriteAsync
-                
-                match writeResult with
-                | KillmailWriteResult.Noop -> kill |> logKmNoop |> ignore
-                | KillmailWriteResult.Inserted kill ->
-                    kill |> countKillWrite |> logKmBroadcast |> broadcastKill |> logKmCompletion |> ignore
-                | KillmailWriteResult.Updated kill -> kill |> logKmDeduplication |> logKmCompletion |> ignore
+                let! writeResult = kill |> logKmReceipt |> constructKill |> countKillReceipt |> writer.WriteAsync
+
+                let kill =
+                    match writeResult with
+                    | KillmailWriteResult.Noop -> kill |> logKmNoop
+                    | KillmailWriteResult.Inserted kill -> kill |> countKillWrite |> logKmBroadcast |> broadcastKill
+                    | KillmailWriteResult.Updated kill -> kill |> countKillWrite |> logKmDeduplication
+
+                kill |> logKmCompletion |> ignore
 
             return { RedisqIngestionActorState.receivedKills = state.receivedKills + 1UL }
         }
