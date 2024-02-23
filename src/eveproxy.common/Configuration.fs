@@ -23,8 +23,6 @@ type AppConfiguration =
       zkbApiUrl: string
       redisqSessionMaxAge: string
       mongoDbName: string
-      mongoUserName: string
-      mongoPassword: string
       mongoConnection: string }
 
     member this.ZkbRedisqUrl() =
@@ -46,8 +44,6 @@ type AppConfiguration =
           zkbRedisqTtwClient = ""
           redisqSessionMaxAge = ""
           mongoDbName = ""
-          mongoUserName = ""
-          mongoPassword = ""
           mongoConnection = "" }
 
     static member defaultConfig =
@@ -60,8 +56,6 @@ type AppConfiguration =
           zkbApiUrl = "https://zkillboard.com/api/"
           redisqSessionMaxAge = TimeSpan.FromHours(3).ToString()
           mongoDbName = "eveproxy"
-          mongoUserName = ""
-          mongoPassword = ""
           mongoConnection = "" }
 
 module Configuration =
@@ -139,16 +133,6 @@ module Configuration =
             |> mustBe
                 isNonEmptyString
                 $"{nameof Unchecked.defaultof<AppConfiguration>.mongoDbName} must be a non-empty string."
-
-            config.mongoUserName
-            |> mustBe
-                isNonEmptyString
-                $"{nameof Unchecked.defaultof<AppConfiguration>.mongoUserName} must be a non-empty string."
-
-            config.mongoPassword
-            |> mustBe
-                isNonEmptyString
-                $"{nameof Unchecked.defaultof<AppConfiguration>.mongoPassword} must be a non-empty string."
 
             config.mongoConnection
             |> mustBe

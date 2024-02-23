@@ -9,8 +9,6 @@ module ConfigurationTests =
 
     let minimumValidConfig =
         { AppConfiguration.defaultConfig with
-            mongoUserName = "aaa"
-            mongoPassword = "aaa"
             mongoConnection = "aaa" }
 
     [<Property>]
@@ -40,8 +38,6 @@ module ConfigurationTests =
               zkbApiUrl = apply config.zkbApiUrl defaultConfig.zkbApiUrl
               redisqSessionMaxAge = apply config.redisqSessionMaxAge defaultConfig.redisqSessionMaxAge
               mongoDbName = apply config.mongoDbName defaultConfig.mongoDbName
-              mongoUserName = apply config.mongoUserName defaultConfig.mongoUserName
-              mongoPassword = apply config.mongoPassword defaultConfig.mongoPassword
               mongoConnection = apply config.mongoConnection defaultConfig.mongoConnection }
 
         result = expected
@@ -64,15 +60,11 @@ module ConfigurationTests =
 
     [<Property(Arbitrary = [| typeof<AlphaNumericString> |], Verbose = true)>]
     let ``validationErrors - default with mongo details returns no errors``
-        (mongoUserName: string)
-        (mongoPassword: string)
         (mongoConnection: string)
         =
 
         let config =
             { AppConfiguration.defaultConfig with
-                mongoUserName = mongoUserName
-                mongoPassword = mongoPassword
                 mongoConnection = mongoConnection }
 
         let r = Configuration.validationErrors config |> Array.ofSeq
