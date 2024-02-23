@@ -41,7 +41,8 @@ type RedisqIngestionActor
 
     let parse body =
         try
-            body |> Newtonsoft.Json.JsonConvert.DeserializeObject<KillPackageData> |> Some
+            let kp = body |> Newtonsoft.Json.JsonConvert.DeserializeObject<KillPackageData>
+            Some { kp with created = DateTime.UtcNow }
         with ex ->
             body
             |> Strings.leftSnippet 20
