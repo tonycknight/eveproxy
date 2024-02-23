@@ -5,6 +5,5 @@ open Microsoft.Extensions.DependencyInjection
 module ApiStartup =
     
     let addServices (sc: IServiceCollection) =
-        // TODO: 
-        sc
+        sc.AddSingleton<IEvewhoApiPassthroughActor, EvewhoApiPassthroughActor>()
 

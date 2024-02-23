@@ -7,8 +7,8 @@ GET http://localhost:8080/api/evewho/v1/character/1633218082
 Accept: application/json
 
 ### pass through 2
-GET http://localhost:8080/api/zkb/v1/corplist/98330748
+GET http://localhost:8080/api/evewho/v1/corplist/98330748
 
 ### pass through 3
-GET http://localhost:8080/api/zkb/v1/allilist/99006319
+GET http://localhost:8080/api/evewho/v1/allilist/99006319
 Accept: application/json

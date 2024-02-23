@@ -29,8 +29,37 @@ module Api =
         fun (next: HttpFunc) (ctx: HttpContext) ->
             task {
                 let route = ctx.Request |> getEvewhoApiRoute routePrefix
-                
-                return! Successful.ok (text "WIP") next ctx
+                let notFound = RequestErrors.notFound (text "")
+                let badRequest = RequestErrors.badRequest (text "")
+
+                let! result =
+                    match route with
+                    | None -> task { return notFound }
+                    | Some route when route = "" -> task { return notFound }
+                    | Some route ->
+                        task {
+                            let! resp = ctx.GetService<IEvewhoApiPassthroughActor>().Get route
+
+                            return
+                                match resp with
+                                | HttpOkRequestResponse(_, body, mediaType) ->
+                                    match mediaType with
+                                    | Some mt -> body |> eveproxy.Api.contentString mt
+                                    | _ -> body |> eveproxy.Api.jsonString
+                                | HttpTooManyRequestsResponse _ -> RequestErrors.tooManyRequests (text "")
+                                | HttpExceptionRequestResponse _ -> ServerErrors.internalError (text "")
+                                | HttpErrorRequestResponse(rc, _) when rc = System.Net.HttpStatusCode.NotFound ->
+                                    notFound
+                                | HttpErrorRequestResponse(rc, _) when rc = System.Net.HttpStatusCode.BadRequest ->
+                                    badRequest
+                                | HttpErrorRequestResponse(rc, _) when
+                                    rc = System.Net.HttpStatusCode.InternalServerError
+                                    ->
+                                    ServerErrors.internalError (text "")
+                                | _ -> badRequest
+                        }
+
+                return! result next ctx
             }
 
     let evewhoWebRoutes () =
