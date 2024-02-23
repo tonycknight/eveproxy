@@ -66,13 +66,11 @@ type MongoKillmailRepository(config: eveproxy.AppConfiguration) =
         }
 
     interface IKillmailRepository with
-        member this.SetAsync(kill) =
-            task {
-                return!
-                    match KillPackageData.killmailId kill with
-                    | Some id -> setAsync (id, kill)
-                    | None -> task { return None }
-            }
+        member this.SetAsync(kill) =            
+            match KillPackageData.killmailId kill with
+            | Some id -> setAsync (id, kill)
+            | None -> task { return None }
+            
 
         member this.GetAsync(id) = getAsync id
 
