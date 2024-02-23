@@ -24,17 +24,16 @@ You'll also need a MongoDB database installed, available and protected. _Please 
 Start the container:
 
 ```
-docker run -it --rm --publish 8080:8080 eveproxy:<tag> --mongoServer "<host name>" --mongoDbName "<database name>" --mongoUserName "<user nanme>" --mongoPassword "<secret password!>" "
+docker run -it --rm --publish 8080:8080 eveproxy:<tag> --mongoDbName "<database name>" --mongoConnection "<connection string>" 
 ```
 
 The parameters you'll need to pass are:
 
 | | |
 | - | - |
-| `mongoServer` | The Mongo host name or IP address. |
 | `mongoDbName` | The name of the database within the Mongo installation. |
-| `monguUserName` | The Mongo account to access the database. | 
-| `mongoPassword` | The password for `monguUserName`. |
+| `mongoConnection` | The connection string to the Mongo DB. | 
+
 
 
 ## The endpoints

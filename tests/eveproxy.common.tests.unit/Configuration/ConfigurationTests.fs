@@ -9,8 +9,7 @@ module ConfigurationTests =
 
     let minimumValidConfig =
         { AppConfiguration.defaultConfig with
-            mongoUserName = "aaa"
-            mongoPassword = "aaa" }
+            mongoConnection = "aaa" }
 
     [<Property>]
     let ``mergeDefaults merges empty to default values`` () =
@@ -38,10 +37,8 @@ module ConfigurationTests =
               zkbRedisqTtwClient = apply config.zkbRedisqTtwClient defaultConfig.zkbRedisqTtwClient
               zkbApiUrl = apply config.zkbApiUrl defaultConfig.zkbApiUrl
               redisqSessionMaxAge = apply config.redisqSessionMaxAge defaultConfig.redisqSessionMaxAge
-              mongoServer = apply config.mongoServer defaultConfig.mongoServer
               mongoDbName = apply config.mongoDbName defaultConfig.mongoDbName
-              mongoUserName = apply config.mongoUserName defaultConfig.mongoUserName
-              mongoPassword = apply config.mongoPassword defaultConfig.mongoPassword }
+              mongoConnection = apply config.mongoConnection defaultConfig.mongoConnection }
 
         result = expected
 
@@ -62,15 +59,11 @@ module ConfigurationTests =
         r <> Array.empty
 
     [<Property(Arbitrary = [| typeof<AlphaNumericString> |], Verbose = true)>]
-    let ``validationErrors - default with mongo details returns no errors``
-        (mongoUserName: string)
-        (mongoPassword: string)
-        =
+    let ``validationErrors - default with mongo details returns no errors`` (mongoConnection: string) =
 
         let config =
             { AppConfiguration.defaultConfig with
-                mongoUserName = mongoUserName
-                mongoPassword = mongoPassword }
+                mongoConnection = mongoConnection }
 
         let r = Configuration.validationErrors config |> Array.ofSeq
 

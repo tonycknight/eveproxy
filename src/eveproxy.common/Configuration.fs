@@ -22,10 +22,8 @@ type AppConfiguration =
       zkbRedisqTtwClient: string
       zkbApiUrl: string
       redisqSessionMaxAge: string
-      mongoServer: string
       mongoDbName: string
-      mongoUserName: string
-      mongoPassword: string }
+      mongoConnection: string }
 
     member this.ZkbRedisqUrl() =
         sprintf "%s?queueID=%s&ttw=%s" this.zkbRedisqBaseUrl this.zkbRedisqQueueId this.zkbRedisqTtwExternal
@@ -45,10 +43,8 @@ type AppConfiguration =
           zkbRedisqTtwExternal = ""
           zkbRedisqTtwClient = ""
           redisqSessionMaxAge = ""
-          mongoServer = ""
           mongoDbName = ""
-          mongoUserName = ""
-          mongoPassword = "" }
+          mongoConnection = "" }
 
     static member defaultConfig =
         { AppConfiguration.hostUrls = "http://+:8080"
@@ -59,10 +55,8 @@ type AppConfiguration =
           zkbRedisqTtwClient = "10"
           zkbApiUrl = "https://zkillboard.com/api/"
           redisqSessionMaxAge = TimeSpan.FromHours(3).ToString()
-          mongoServer = "127.0.0.1"
           mongoDbName = "eveproxy"
-          mongoUserName = ""
-          mongoPassword = "" }
+          mongoConnection = "" }
 
 module Configuration =
     open System.Reflection
@@ -135,25 +129,15 @@ module Configuration =
                 isTimeSpan
                 $"{nameof Unchecked.defaultof<AppConfiguration>.redisqSessionMaxAge} must be a valid timespan (HH:mm:ss)."
 
-            config.mongoServer
-            |> mustBe
-                isNonEmptyString
-                $"{nameof Unchecked.defaultof<AppConfiguration>.mongoServer} must be a non-empty string."
-
             config.mongoDbName
             |> mustBe
                 isNonEmptyString
                 $"{nameof Unchecked.defaultof<AppConfiguration>.mongoDbName} must be a non-empty string."
 
-            config.mongoUserName
+            config.mongoConnection
             |> mustBe
                 isNonEmptyString
-                $"{nameof Unchecked.defaultof<AppConfiguration>.mongoUserName} must be a non-empty string."
-
-            config.mongoPassword
-            |> mustBe
-                isNonEmptyString
-                $"{nameof Unchecked.defaultof<AppConfiguration>.mongoPassword} must be a non-empty string."
+                $"{nameof Unchecked.defaultof<AppConfiguration>.mongoConnection} must be a non-empty string."
         }
         |> Option.reduceMany
 
@@ -210,12 +194,7 @@ type MongoKeyValueProvider(logger: ILoggerFactory, config: AppConfiguration) =
     let logger = logger.CreateLogger<MongoKeyValueProvider>()
 
     let mongoCol =
-        eveproxy.Mongo.initCollection
-            ""
-            config.mongoServer
-            config.mongoDbName
-            collectionName
-            (config.mongoUserName, config.mongoPassword)
+        eveproxy.Mongo.initCollection "" config.mongoDbName collectionName config.mongoConnection
 
 
     let getValue name =
