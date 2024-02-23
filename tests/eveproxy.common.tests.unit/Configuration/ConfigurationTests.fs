@@ -59,9 +59,7 @@ module ConfigurationTests =
         r <> Array.empty
 
     [<Property(Arbitrary = [| typeof<AlphaNumericString> |], Verbose = true)>]
-    let ``validationErrors - default with mongo details returns no errors``
-        (mongoConnection: string)
-        =
+    let ``validationErrors - default with mongo details returns no errors`` (mongoConnection: string) =
 
         let config =
             { AppConfiguration.defaultConfig with

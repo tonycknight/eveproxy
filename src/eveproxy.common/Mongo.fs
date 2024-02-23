@@ -42,23 +42,7 @@ module MongoBson =
 
 [<ExcludeFromCodeCoverage>]
 module Mongo =
-    let private defaultMongoPort = 27017
-    let private isMongoAtlas (server: string) = server.EndsWith(".mongodb.net")
     let private idFilter id = sprintf @"{ _id: ""%s"" }" id
-
-    let private appendPort server =
-        match server |> Strings.split ":" with
-        | [| name; port |] -> server
-        | [| x |] when isMongoAtlas x -> x
-        | _ -> sprintf "%s:%i" server defaultMongoPort
-
-    let connectionString (userName, password) server =
-        let server = appendPort server
-        let modifier = if isMongoAtlas server then "+srv" else ""
-
-        match userName with
-        | Strings.NullOrWhitespace _ -> sprintf "mongodb%s://%s" modifier server
-        | name -> sprintf "mongodb%s://%s:%s@%s" modifier name password server
 
     let setDbConnection dbName (connectionString: string) =
         match dbName with
@@ -89,8 +73,6 @@ module Mongo =
         collection
 
     let getCollection colName (db: IMongoDatabase) = db.GetCollection(colName)
-
-
 
     let initCollection indexPath dbName collectionName connectionString =
         let col =

@@ -41,7 +41,7 @@ type RedisqIngestionActor
 
     let parse body =
         try
-            body |> Newtonsoft.Json.JsonConvert.DeserializeObject<KillPackageData> |> Some            
+            body |> Newtonsoft.Json.JsonConvert.DeserializeObject<KillPackageData> |> Some
         with ex ->
             body
             |> Strings.leftSnippet 20
@@ -69,8 +69,7 @@ type RedisqIngestionActor
         { ReceivedKills.count = 1 } :> obj |> ActorMessage.Entity |> stats.Post
         kill
 
-    let constructKill (kill: KillPackageData) =
-        { kill with created = DateTime.UtcNow }
+    let constructKill (kill: KillPackageData) = { kill with created = DateTime.UtcNow }
 
     let countKillWrite (kill: Task<KillPackageData>) =
         task {
@@ -101,7 +100,7 @@ type RedisqIngestionActor
                 let! kill =
                     kill
                     |> countKillReceipt
-                    |> constructKill                    
+                    |> constructKill
                     |> logKmReceipt
                     |> writer.WriteAsync
                     |> countKillWrite
