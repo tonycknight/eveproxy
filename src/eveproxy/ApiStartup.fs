@@ -10,7 +10,7 @@ module ApiStartup =
     open Microsoft.AspNetCore.HttpLogging
 
     let addCommonInfrastructure (services: IServiceCollection) =
-        services.AddSingleton<ITimeProvider, eveproxy.TimeProvider>()
+        services.AddSingleton<ITimeProvider, eveproxy.TimeProvider>().AddMemoryCache()
 
     let addApiLogging (services: IServiceCollection) =
         services
