@@ -54,21 +54,23 @@ type MongoKillmailRepository(config: eveproxy.AppConfiguration) =
         sprintf "{'_id': '%s' }" id
         |> eveproxy.Mongo.getSingle<KillPackageData> mongoCol
 
+    let setAsync (id: string, kill: KillPackageData) =
+        task {
+            let! r =
+                kill
+                |> setId id
+                |> eveproxy.MongoBson.ofObject
+                |> eveproxy.Mongo.upsert mongoCol
+
+            return Some kill
+        }
+
     interface IKillmailRepository with
         member this.SetAsync(kill) =
             task {
                 return!
                     match KillPackageData.killmailId kill with
-                    | Some id ->
-                        task {
-                            let! r =
-                                kill
-                                |> setId id
-                                |> eveproxy.MongoBson.ofObject
-                                |> eveproxy.Mongo.upsert mongoCol
-
-                            return Some kill
-                        }
+                    | Some id -> setAsync (id, kill)
                     | None -> task { return None }
             }
 
