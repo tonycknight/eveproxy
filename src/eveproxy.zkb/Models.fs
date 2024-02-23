@@ -13,11 +13,13 @@ type KillPackageReferenceData =
 [<CLIMutable>]
 type KillPackageData =
     { mutable _id: obj
-      package: obj }
+      package: obj
+      created: DateTime }
 
     static member empty =
         { KillPackageData.package = null
-          _id = null }
+          _id = null
+          created = DateTime.MinValue }
 
     static member killmail(value: KillPackageData) =
         match value.package |> Option.nullToOption with
