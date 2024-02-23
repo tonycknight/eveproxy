@@ -60,11 +60,10 @@ module Mongo =
         | Strings.NullOrWhitespace _ -> sprintf "mongodb%s://%s" modifier server
         | name -> sprintf "mongodb%s://%s:%s@%s" modifier name password server
 
-    let setDbConnection dbName connectionString =
+    let setDbConnection dbName (connectionString: string) =
         match dbName with
         | Strings.NullOrWhitespace _ -> connectionString
-        | x -> sprintf "%s/%s" connectionString dbName
-
+        | x -> $"""{connectionString |> Strings.appendIfMissing "/"}{dbName}"""
 
     let initDb dbName (connection: string) =
         let client = MongoClient(connection)
@@ -93,20 +92,18 @@ module Mongo =
 
 
 
-    let initCollection indexPath server dbName collectionName (userName, password) =
+    let initCollection indexPath dbName collectionName connectionString =
         let col =
-            server
-            |> connectionString (userName, password)
+            connectionString
             |> setDbConnection dbName
             |> initDb dbName
             |> getCollection collectionName
 
         if indexPath <> "" then col |> setIndex indexPath else col
 
-    let findCollectionNames server dbName (userName, password) =
+    let findCollectionNames dbName connectionString =
         use colNames =
-            server
-            |> connectionString (userName, password)
+            connectionString
             |> setDbConnection dbName
             |> initDb dbName
             |> (fun db -> db.ListCollectionNames())

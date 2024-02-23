@@ -72,6 +72,11 @@ module Strings =
         outStream.Seek(0, System.IO.SeekOrigin.Begin) |> ignore
         outStream.ToArray()
 
+    let appendIfMissing (suffix: string) (value: string) =
+        if value.EndsWith(suffix) |> not then
+            $"{value}{suffix}"
+        else
+            value
 
     let (|NullOrWhitespace|_|) value =
         if String.IsNullOrWhiteSpace value then Some value else None

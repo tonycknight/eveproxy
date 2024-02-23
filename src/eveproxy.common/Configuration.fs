@@ -218,12 +218,7 @@ type MongoKeyValueProvider(logger: ILoggerFactory, config: AppConfiguration) =
     let logger = logger.CreateLogger<MongoKeyValueProvider>()
 
     let mongoCol =
-        eveproxy.Mongo.initCollection
-            ""
-            config.mongoServer
-            config.mongoDbName
-            collectionName
-            (config.mongoUserName, config.mongoPassword)
+        eveproxy.Mongo.initCollection "" config.mongoDbName collectionName config.mongoConnection
 
 
     let getValue name =

@@ -42,12 +42,7 @@ type MongoKillmailRepository(config: eveproxy.AppConfiguration) =
     let collectionName = "killmails"
 
     let mongoCol =
-        eveproxy.Mongo.initCollection
-            ""
-            config.mongoServer
-            config.mongoDbName
-            collectionName
-            (config.mongoUserName, config.mongoPassword)
+        eveproxy.Mongo.initCollection "" config.mongoDbName collectionName config.mongoConnection
 
     let setId id (kill: KillPackageData) =
         if Object.ReferenceEquals(kill._id, null) then
@@ -173,12 +168,7 @@ type MongoKillmailReferenceQueue(config: eveproxy.AppConfiguration, logFactory: 
     let logger = logFactory.CreateLogger<MongoKillmailReferenceQueue>()
 
     let mongoCol =
-        eveproxy.Mongo.initCollection
-            ""
-            config.mongoServer
-            config.mongoDbName
-            collectionName
-            (config.mongoUserName, config.mongoPassword)
+        eveproxy.Mongo.initCollection "" config.mongoDbName collectionName config.mongoConnection
 
     interface IKillmailReferenceQueue with
         member this.Name = name
@@ -214,10 +204,7 @@ type MongoKillmailReferenceQueueFinder(config: eveproxy.AppConfiguration) =
         member this.GetNames() =
 
             let colNames =
-                eveproxy.Mongo.findCollectionNames
-                    config.mongoServer
-                    config.mongoDbName
-                    (config.mongoUserName, config.mongoPassword)
+                eveproxy.Mongo.findCollectionNames config.mongoDbName config.mongoConnection
 
             colNames
             |> Array.filter (fun n -> n.StartsWith(KillmailReferenceQueues.queueNamePrefix))
