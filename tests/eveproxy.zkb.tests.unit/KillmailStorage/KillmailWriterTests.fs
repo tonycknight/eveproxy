@@ -23,11 +23,10 @@ module KillmailWriterTests =
 
         let result = writer.WriteAsync(kill).Result
 
-        result = KillPackageData.empty
-
+        result = KillmailWriteResult.Noop
 
     [<Property>]
-    let ``WriteAsync with kill returns kill`` (id: Guid) =
+    let ``WriteAsync with new kill returns kill`` (id: Guid) =
         let logger = Substitute.For<ILoggerFactory>()
         let repo = new MemoryKillmailRepository()
 
@@ -37,4 +36,19 @@ module KillmailWriterTests =
 
         let result = writer.WriteAsync(kill).Result
 
-        result = kill
+        result = KillmailWriteResult.Inserted kill
+
+    [<Property>]
+    let ``WriteAsync with existing kill returns kill`` (id: Guid) =
+        let logger = Substitute.For<ILoggerFactory>()
+        let repo = new MemoryKillmailRepository()
+
+        let writer = new KillmailWriter(logger, repo) :> IKillmailWriter
+
+        let kill = Utils.kill id
+
+        let result = writer.WriteAsync(kill).Result
+        let result2 = writer.WriteAsync(kill).Result
+
+        result = KillmailWriteResult.Inserted kill
+        && result2 = KillmailWriteResult.Updated kill

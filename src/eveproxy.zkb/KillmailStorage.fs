@@ -90,7 +90,7 @@ type MongoKillmailRepository(config: eveproxy.AppConfiguration) =
         member this.GetCountAsync() = eveproxy.Mongo.count mongoCol
 
 type IKillmailWriter =
-    abstract member WriteAsync: kill: KillPackageData -> Task<KillPackageData>
+    abstract member WriteAsync: kill: KillPackageData -> Task<KillmailWriteResult>
 
 
 type KillmailWriter(logFactory: ILoggerFactory, repo: IKillmailRepository) =
@@ -98,20 +98,27 @@ type KillmailWriter(logFactory: ILoggerFactory, repo: IKillmailRepository) =
 
     interface IKillmailWriter with
         member this.WriteAsync(kill: KillPackageData) =
-            task {
-                match kill |> KillPackageData.killmailId with
-                | Some id ->
+
+            match kill |> KillPackageData.killmailId with
+            | Some id ->
+                task {
                     id |> sprintf "--> Writing kill [%s]..." |> log.LogTrace
                     let! kr = repo.SetAsync kill
-
+                    
                     match kr with
                     | KillmailWriteResult.Noop -> id |> sprintf "--> Kill [%s] not written." |> log.LogWarning
                     | KillmailWriteResult.Inserted k -> id |> sprintf "--> Inserted kill [%s]." |> log.LogTrace
                     | KillmailWriteResult.Updated k -> id |> sprintf "--> Updated kill [%s]." |> log.LogTrace
-                | _ -> "--> Received kill without killmailID - ignoring." |> log.LogWarning
 
-                return kill
-            }
+                    return kr
+                }
+            | _ ->
+                task {
+                    "--> Received kill without killmailID - ignoring." |> log.LogWarning
+                    return KillmailWriteResult.Noop
+                }
+
+
 
 
 
