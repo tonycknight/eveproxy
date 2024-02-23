@@ -6,8 +6,13 @@ open System.Threading.Tasks
 open Microsoft.Extensions.Logging
 open eveproxy.Threading
 
+type KillmailWriteResult =
+    | Noop
+    | Inserted of killmail: KillPackageData
+    | Updated of killmail: KillPackageData
+
 type IKillmailRepository =
-    abstract member SetAsync: kill: KillPackageData -> Task<KillPackageData option>
+    abstract member SetAsync: kill: KillPackageData -> Task<KillmailWriteResult>
     abstract member GetAsync: id: string -> Task<KillPackageData option>
     abstract member GetCountAsync: unit -> Task<int64>
 
@@ -23,9 +28,13 @@ type MemoryKillmailRepository() =
 
             match key with
             | Some k ->
-                cache.[k] <- kill
-                kill |> Some |> toTaskResult
-            | _ -> None |> toTaskResult
+                if cache.ContainsKey k then
+                    cache.[k] <- kill
+                    KillmailWriteResult.Updated kill |> toTaskResult
+                else
+                    cache.[k] <- kill
+                    KillmailWriteResult.Inserted kill |> toTaskResult
+            | _ -> KillmailWriteResult.Noop |> toTaskResult
 
         member this.GetAsync(id) =
             (match cache.TryGetValue id with
@@ -50,32 +59,38 @@ type MongoKillmailRepository(config: eveproxy.AppConfiguration) =
 
         kill
 
+    let getAsync id =
+        sprintf "{'_id': '%s' }" id
+        |> eveproxy.Mongo.getSingle<KillPackageData> mongoCol
+
+    let setAsync (id: string, kill: KillPackageData) =
+        task {
+            let! r =
+                kill
+                |> setId id
+                |> eveproxy.MongoBson.ofObject
+                |> eveproxy.Mongo.upsert mongoCol
+
+            return
+                match r.MatchedCount, r.ModifiedCount with
+                | 0L, _ when Object.ReferenceEquals(r.UpsertedId, null) |> not -> KillmailWriteResult.Inserted kill
+                | x, y when x > 0 && y > 0 -> KillmailWriteResult.Updated kill
+                | _, _ -> KillmailWriteResult.Noop
+        }
+
     interface IKillmailRepository with
         member this.SetAsync(kill) =
-            task {
-                return!
-                    match KillPackageData.killmailId kill with
-                    | Some id ->
-                        task {
-                            let! r =
-                                kill
-                                |> setId id
-                                |> eveproxy.MongoBson.ofObject
-                                |> eveproxy.Mongo.upsert mongoCol
+            match KillPackageData.killmailId kill with
+            | Some id -> setAsync (id, kill)
+            | None -> task { return KillmailWriteResult.Noop }
 
-                            return Some kill
-                        }
-                    | None -> task { return None }
-            }
 
-        member this.GetAsync(id) =
-            sprintf "{'_id': '%s' }" id
-            |> eveproxy.Mongo.getSingle<KillPackageData> mongoCol
+        member this.GetAsync(id) = getAsync id
 
         member this.GetCountAsync() = eveproxy.Mongo.count mongoCol
 
 type IKillmailWriter =
-    abstract member WriteAsync: kill: KillPackageData -> Task<KillPackageData>
+    abstract member WriteAsync: kill: KillPackageData -> Task<KillmailWriteResult>
 
 
 type KillmailWriter(logFactory: ILoggerFactory, repo: IKillmailRepository) =
@@ -83,20 +98,27 @@ type KillmailWriter(logFactory: ILoggerFactory, repo: IKillmailRepository) =
 
     interface IKillmailWriter with
         member this.WriteAsync(kill: KillPackageData) =
-            task {
-                match kill |> KillPackageData.killmailId with
-                | Some id ->
+
+            match kill |> KillPackageData.killmailId with
+            | Some id ->
+                task {
                     id |> sprintf "--> Writing kill [%s]..." |> log.LogTrace
-                    let! kill = repo.SetAsync kill
+                    let! kr = repo.SetAsync kill
 
-                    if kill |> Option.isNone then
-                        id |> sprintf "--> Kill [%s] not written." |> log.LogTrace
-                    else
-                        id |> sprintf "--> Written kill [%s]." |> log.LogTrace
-                | _ -> "--> Received kill without killmailID - ignoring." |> log.LogWarning
+                    match kr with
+                    | KillmailWriteResult.Noop -> id |> sprintf "--> Kill [%s] not written." |> log.LogWarning
+                    | KillmailWriteResult.Inserted k -> id |> sprintf "--> Inserted kill [%s]." |> log.LogTrace
+                    | KillmailWriteResult.Updated k -> id |> sprintf "--> Updated kill [%s]." |> log.LogTrace
 
-                return kill
-            }
+                    return kr
+                }
+            | _ ->
+                task {
+                    "--> Received kill without killmailID - ignoring." |> log.LogWarning
+                    return KillmailWriteResult.Noop
+                }
+
+
 
 
 

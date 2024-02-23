@@ -17,27 +17,27 @@ type RedisqIngestionActor
     ) =
     let log = logFactory.CreateLogger<RedisqIngestionActor>()
 
-    let logKmReceipt (kp: KillPackageData) =
-        kp
+    let logKmIdAction format logger (kill: KillPackageData) =
+        kill
         |> KillPackageData.killmailId
         |> Option.defaultValue ""
-        |> sprintf "--> Received kill [%s]."
-        |> log.LogInformation
+        |> sprintf format
+        |> logger
 
-        kp
+        kill
 
-    let logKmCompletion (kill: Task<KillPackageData>) =
-        task {
-            let! kill = kill
+    let logKmReceipt = logKmIdAction "--> Received kill [%s]." log.LogInformation
 
-            kill
-            |> KillPackageData.killmailId
-            |> Option.defaultValue ""
-            |> sprintf "--> Finished processing kill [%s]."
-            |> log.LogTrace
+    let logKmNoop =
+        logKmIdAction "--> No write of kill [%s] - no further action." log.LogTrace
 
-            return kill
-        }
+    let logKmCompletion =
+        logKmIdAction "--> Finished processing kill [%s]." log.LogTrace
+
+    let logKmDeduplication =
+        logKmIdAction "--> Ignoring kill [%s] as duplicate." log.LogTrace
+
+    let logKmBroadcast = logKmIdAction "--> Broadcasting kill [%s]." log.LogTrace
 
     let parse body =
         try
@@ -52,7 +52,7 @@ type RedisqIngestionActor
 
     let getNext url =
         task {
-            log.LogTrace("Getting next kill package...")
+            log.LogTrace "Getting next kill package..."
             let! rep = hc.GetAsync url
 
             return
@@ -71,43 +71,28 @@ type RedisqIngestionActor
 
     let constructKill (kill: KillPackageData) = { kill with created = DateTime.UtcNow }
 
-    let countKillWrite (kill: Task<KillPackageData>) =
-        task {
-            let! kill = kill
-            { WrittenKills.count = 1 } :> obj |> ActorMessage.Entity |> stats.Post
-            return kill
-        }
+    let countKillWrite (kill: KillPackageData) =
+        { WrittenKills.count = 1 } :> obj |> ActorMessage.Entity |> stats.Post
+        kill
 
-    let broadcastKill (kill: Task<KillPackageData>) =
-        task {
-            let! kill = kill
-
-            kill
-            |> KillPackageData.killmailId
-            |> Option.defaultValue ""
-            |> sprintf "--> Broadcasting kill [%s]."
-            |> log.LogTrace
-
-            kill :> obj |> ActorMessage.Entity |> sessions.Post
-            return kill
-        }
+    let broadcastKill (kill: KillPackageData) =
+        kill :> obj |> ActorMessage.Entity |> sessions.Post
+        kill
 
     let handleKill (state: RedisqIngestionActorState) (kill: KillPackageData) =
         task {
             if (kill |> KillPackageData.killmailId |> Option.isNone) then
                 log.LogWarning "Killmail received without a killmailID."
             else
-                let! kill =
-                    kill
-                    |> countKillReceipt
-                    |> constructKill
-                    |> logKmReceipt
-                    |> writer.WriteAsync
-                    |> countKillWrite
-                    |> broadcastKill
-                    |> logKmCompletion
+                let! writeResult = kill |> logKmReceipt |> constructKill |> countKillReceipt |> writer.WriteAsync
 
-                ignore kill
+                let kill =
+                    match writeResult with
+                    | KillmailWriteResult.Noop -> kill |> logKmNoop
+                    | KillmailWriteResult.Inserted kill -> kill |> countKillWrite |> logKmBroadcast |> broadcastKill
+                    | KillmailWriteResult.Updated kill -> kill |> countKillWrite |> logKmDeduplication
+
+                kill |> logKmCompletion |> ignore
 
             return { RedisqIngestionActorState.receivedKills = state.receivedKills + 1UL }
         }

@@ -25,7 +25,7 @@ Accept: application/json
 
 
 ### Get Kill by ID
-@killId = 114990548
+@killId = 115749306
 
 GET http://localhost:8080/api/redisq/v1/kills/id/{{killId}}/ HTTP/1.1
 Accept: application/json    

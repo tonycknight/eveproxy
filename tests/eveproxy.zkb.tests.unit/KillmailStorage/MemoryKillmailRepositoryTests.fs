@@ -4,7 +4,6 @@ open System
 open FsCheck
 open FsCheck.Xunit
 open eveproxy.zkb
-open Newtonsoft.Json.Linq
 
 module MemoryKillmailRepositoryTests =
 
@@ -16,18 +15,30 @@ module MemoryKillmailRepositoryTests =
 
         let result = repo.SetAsync kp
 
-        result.Result = None
+        result.Result = KillmailWriteResult.Noop
 
 
     [<Property>]
-    let ``SetAsync with valid ID returns kill`` (k: Guid) =
+    let ``SetAsync with valid unknown ID returns kill`` (k: Guid) =
         let kp = Utils.kill k
 
         let repo = new MemoryKillmailRepository() :> IKillmailRepository
 
         let result = repo.SetAsync kp
 
-        result.Result = Some kp
+        result.Result = KillmailWriteResult.Inserted kp
+
+    [<Property>]
+    let ``SetAsync with valid known ID returns kill`` (k: Guid) =
+        let kp = Utils.kill k
+
+        let repo = new MemoryKillmailRepository() :> IKillmailRepository
+
+        let result = repo.SetAsync kp
+        let result2 = repo.SetAsync kp
+
+        result.Result = KillmailWriteResult.Inserted kp
+        && result2.Result = KillmailWriteResult.Updated kp
 
 
     [<Property>]
