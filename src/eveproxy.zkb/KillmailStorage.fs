@@ -53,10 +53,10 @@ type MongoKillmailRepository(config: eveproxy.AppConfiguration, cache: IMemoryCa
 
     let mongoCol =
         eveproxy.Mongo.initCollection "" config.mongoDbName collectionName config.mongoConnection
-                
+
     let cacheOptions =
         let options = new MemoryCacheEntryOptions()
-        options.SlidingExpiration <- TimeSpan.FromMinutes(1.) // TODO: config?
+        options.SlidingExpiration <- TimeSpan.FromMinutes(15.) // TODO: config?
         options
 
     let cacheKey =
@@ -70,9 +70,21 @@ type MongoKillmailRepository(config: eveproxy.AppConfiguration, cache: IMemoryCa
 
         kill
 
-    let getAsync id =
+    let getDbAsync id =
         sprintf "{'_id': '%s' }" id
         |> eveproxy.Mongo.getSingle<KillPackageData> mongoCol
+
+    let getCache id =
+        let key = cacheKey id
+
+        match cache.TryGetValue(key) with
+        | true, x -> x :?> KillPackageData |> Some
+        | _ -> None
+
+    let getAsync id =
+        match getCache id with
+        | None -> getDbAsync id
+        | x -> task { return x }
 
     let setDbAsync (id: string, kill: KillPackageData) =
         task {
@@ -89,13 +101,13 @@ type MongoKillmailRepository(config: eveproxy.AppConfiguration, cache: IMemoryCa
                 | _, _ -> KillmailWriteResult.Noop
         }
 
-    let setCacheAsync(id: string, kill: KillPackageData) =
+    let setCacheAsync (id: string, kill: KillPackageData) =
         let key = cacheKey id
         cache.Set(key, kill, cacheOptions)
 
     let setAsync (id: string, kill: KillPackageData) =
         task {
-            let! writeResult = setDbAsync(id, kill)
+            let! writeResult = setDbAsync (id, kill)
 
             return
                 match writeResult with
@@ -109,7 +121,6 @@ type MongoKillmailRepository(config: eveproxy.AppConfiguration, cache: IMemoryCa
             match KillPackageData.killmailId kill with
             | Some id -> setAsync (id, kill)
             | None -> task { return KillmailWriteResult.Noop }
-
 
         member this.GetAsync(id) = getAsync id
 
