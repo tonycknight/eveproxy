@@ -37,6 +37,7 @@ module ConfigurationTests =
               zkbRedisqTtwClient = apply config.zkbRedisqTtwClient defaultConfig.zkbRedisqTtwClient
               zkbApiUrl = apply config.zkbApiUrl defaultConfig.zkbApiUrl
               redisqSessionMaxAge = apply config.redisqSessionMaxAge defaultConfig.redisqSessionMaxAge
+              killmailMemoryCacheAge = apply config.killmailMemoryCacheAge defaultConfig.killmailMemoryCacheAge
               mongoDbName = apply config.mongoDbName defaultConfig.mongoDbName
               mongoConnection = apply config.mongoConnection defaultConfig.mongoConnection }
 

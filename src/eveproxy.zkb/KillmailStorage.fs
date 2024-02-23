@@ -56,7 +56,7 @@ type MongoKillmailRepository(config: eveproxy.AppConfiguration, cache: IMemoryCa
 
     let cacheOptions =
         let options = new MemoryCacheEntryOptions()
-        options.SlidingExpiration <- TimeSpan.FromMinutes(15.) // TODO: config?
+        options.SlidingExpiration <- config.KillmailMemoryCacheAge()
         options
 
     let cacheKey =
