@@ -9,7 +9,8 @@ group Main
     nuget giraffe
     nuget MongoDB.Driver
     nuget Newtonsoft.Json
-    
+    nuget Microsoft.Extensions.Caching.Memory
+
 // [ FAKE GROUP ]
 group Tests
     storage: none
