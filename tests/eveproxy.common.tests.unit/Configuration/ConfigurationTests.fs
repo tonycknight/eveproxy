@@ -39,7 +39,6 @@ module ConfigurationTests =
               zkbRedisqTtwClient = apply config.zkbRedisqTtwClient defaultConfig.zkbRedisqTtwClient
               zkbApiUrl = apply config.zkbApiUrl defaultConfig.zkbApiUrl
               redisqSessionMaxAge = apply config.redisqSessionMaxAge defaultConfig.redisqSessionMaxAge
-              mongoServer = apply config.mongoServer defaultConfig.mongoServer
               mongoDbName = apply config.mongoDbName defaultConfig.mongoDbName
               mongoUserName = apply config.mongoUserName defaultConfig.mongoUserName
               mongoPassword = apply config.mongoPassword defaultConfig.mongoPassword
