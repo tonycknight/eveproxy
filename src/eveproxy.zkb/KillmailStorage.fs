@@ -6,6 +6,11 @@ open System.Threading.Tasks
 open Microsoft.Extensions.Logging
 open eveproxy.Threading
 
+type KillmailWriteResult =
+    | Noop
+    | Inserted of killmail: KillPackageData
+    | Updated of killmail: KillPackageData
+
 type IKillmailRepository =
     abstract member SetAsync: kill: KillPackageData -> Task<KillPackageData option>
     abstract member GetAsync: id: string -> Task<KillPackageData option>
