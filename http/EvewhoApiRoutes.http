@@ -1,0 +1,14 @@
+### test 1 - bad result
+GET http://localhost:8080/api/evewho/v1/stuff?test=a
+Accept: application/json
+
+### pass through
+GET http://localhost:8080/api/evewho/v1/character/1633218082
+Accept: application/json
+
+### pass through 2
+GET http://localhost:8080/api/zkb/v1/corplist/98330748
+
+### pass through 3
+GET http://localhost:8080/api/zkb/v1/allilist/99006319
+Accept: application/json

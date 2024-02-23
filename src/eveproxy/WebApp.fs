@@ -61,4 +61,6 @@ module WebApp =
                                     [ heartbeat
                                       route "/stats/" >=> stats
                                       eveproxy.zkb.Api.redisqWebRoutes ()
-                                      eveproxy.zkb.Api.zkbWebRoutes () ] ]) ]
+                                      eveproxy.zkb.Api.zkbWebRoutes () 
+                                      eveproxy.evewho.Api.evewhoWebRoutes ()
+                                      ] ]) ]

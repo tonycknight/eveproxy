@@ -11,7 +11,7 @@ open Microsoft.Extensions.DependencyInjection
 
 type Startup() =
     member _.ConfigureServices(services: IServiceCollection) =
-        services |> ApiStartup.addApi |> zkb.ApiStartup.addServices |> ignore
+        services |> ApiStartup.addApi |> zkb.ApiStartup.addServices |> evewho.ApiStartup.addServices |> ignore
 
     member _.Configure (app: IApplicationBuilder) (env: IHostEnvironment) (loggerFactory: ILoggerFactory) =
         app.UseHttpLogging().UseGiraffe(WebApp.webApp app.ApplicationServices)
