@@ -1,7 +1,3 @@
-### Stats
-GET http://localhost:8080/api/redisq/stats/
-Accept: application/json
-
 ### next kill
 GET http://localhost:8080/api/redisq/v1/kills/?ttw=1
 Accept: application/json
