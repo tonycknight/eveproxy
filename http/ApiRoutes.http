@@ -1,3 +1,7 @@
 ### Heartbeat
-GET http://localhost:8080/api/heartbeat
+GET http://localhost:8080/api/heartbeat/
+Accept: application/json
+
+### stats
+GET http://localhost:8080/api/stats/
 Accept: application/json

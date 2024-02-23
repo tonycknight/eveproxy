@@ -113,54 +113,6 @@ module Api =
                     | _ -> RequestErrors.notFound (text "") next ctx
             }
 
-    let private getRediqStats =
-
-        fun (next: HttpFunc) (ctx: HttpContext) ->
-            task {
-                let kmRepo = ctx.GetService<IKillmailRepository>()
-                let statsActor = ctx.GetService<IApiStatsActor>()
-                let sessionsActor = ctx.GetService<ISessionsActor>()
-
-                let! statsActorStats = statsActor.GetStats()
-                let! apiStats = statsActor.GetApiStats()
-
-                let! kmCount = kmRepo.GetCountAsync()
-
-                let! ingestActorStats = ctx.GetService<IRedisqIngestionActor>().GetStats()
-                let! sessionsActorStats = sessionsActor.GetStats()
-                let! sessionStorageStats = sessionsActor.GetStorageStats()
-
-                let result =
-                    {| actors = [| statsActorStats; ingestActorStats; sessionsActorStats |]
-                       stats =
-                        {| ingestion = apiStats.ingestion
-                           distribution = apiStats.distribution
-                           storage =
-                            {| kills = kmCount
-                               sessions = sessionStorageStats |}
-                           routes = apiStats.routes |> Map.values |> Seq.sortByDescending (fun rs -> rs.count) |} |}
-
-                return! Successful.OK result next ctx
-            }
-
-    let private getZkbStats =
-
-        fun (next: HttpFunc) (ctx: HttpContext) ->
-            task {
-                let statsActor = ctx.GetService<IApiStatsActor>()
-
-                let! statsActorStats = statsActor.GetStats()
-                let! apiStats = statsActor.GetApiStats()
-
-                let! passthruStats = ctx.GetService<IZkbApiPassthroughActor>().GetStats()
-
-                let result =
-                    {| actors = [| statsActorStats; passthruStats |]
-                       routes = apiStats.routes |> Map.values |> Seq.sortByDescending (fun rs -> rs.count) |}
-
-                return! Successful.OK result next ctx
-            }
-
     let private getZkbApiRoute (routePrefix: string) (request: HttpRequest) =
         let path = request.Path
 
@@ -219,8 +171,7 @@ module Api =
              >=> ResponseCaching.noResponseCaching
              >=> (setContentType "application/json")
              >=> choose
-                     [ route "/stats/" >=> getRediqStats
-                       subRouteCi
+                     [ subRouteCi
                            "/v1"
                            (choose
                                [ routeCif "/kills/session/%s/" (fun session -> getNextKill session)
@@ -235,6 +186,4 @@ module Api =
              >=> countRouteFetch
              >=> ResponseCaching.noResponseCaching
              >=> (setContentType "application/json")
-             >=> choose
-                     [ route "/stats/" >=> getZkbStats
-                       subRouteCi "/v1" (choose [ routeStartsWithCi "/" >=> (getZkbApi "/api/zkb/v1/") ]) ])
+             >=> choose [ subRouteCi "/v1" (choose [ routeStartsWithCi "/" >=> (getZkbApi "/api/zkb/v1/") ]) ])

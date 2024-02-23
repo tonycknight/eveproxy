@@ -1,7 +1,3 @@
-### stats
-GET http://localhost:8080/api/zkb/stats/
-Accept: application/json
-
 ### test 1 - bad result
 GET http://localhost:8080/api/zkb/v1/stuff?test=a
 Accept: application/json
