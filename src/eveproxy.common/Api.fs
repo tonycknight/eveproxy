@@ -46,6 +46,6 @@ module Api =
             if ctx.Request.Path.HasValue then
                 let stats = ctx.GetService<IStatsActor>()
                 let route = ctx.Request.Path.Value |> Strings.toLower
-                ActorMessage.RouteFetch(route, 1) |> stats.Post
+                ActorMessage.RouteFetch(ctx.Request.Method, route, 1) |> stats.Post
 
             next ctx

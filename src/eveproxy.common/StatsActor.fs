@@ -1,20 +1,18 @@
 ﻿namespace eveproxy
 
-open System
-open System.Threading.Tasks
-
 
 type StatsActor() =
 
-    let bumpRouteFetch (state: ApiRouteStatistics) url count =
+    let bumpRouteFetch (state: ApiRouteStatistics) (method, url, count) =
+        let key = $"{method} {url}"
         let route =
-            match state.routes |> Map.tryFind url with
+            match state.routes |> Map.tryFind key with
             | Some rs -> { rs with count = rs.count + count }
             | None ->
-                { RouteStatistics.route = url
+                { RouteStatistics.route = key
                   count = count }
 
-        { ApiRouteStatistics.routes = state.routes |> Map.add url route }
+        { ApiRouteStatistics.routes = state.routes |> Map.add key route }
 
     let actor =
         MailboxProcessor<ActorMessage>.Start(fun inbox ->
@@ -24,7 +22,7 @@ type StatsActor() =
 
                     let state =
                         match msg with
-                        | ActorMessage.RouteFetch(url, count) -> bumpRouteFetch state (url |> Strings.toLower) count
+                        | ActorMessage.RouteFetch(method, url, count) -> bumpRouteFetch state (method, Strings.toLower url, count)
                         | ActorMessage.PullReply(e, rc) ->
                             (state :> obj) |> rc.Reply
                             state
