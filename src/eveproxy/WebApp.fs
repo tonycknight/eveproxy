@@ -23,11 +23,14 @@ module WebApp =
 
         fun (next: HttpFunc) (ctx: HttpContext) ->
             task {
-                let statsActor = ctx.GetService<IApiStatsActor>()
+                let statsActor = ctx.GetService<IStatsActor>()
+                let zkbStatsActor = ctx.GetService<IApiStatsActor>()
                 let sessionsActor = ctx.GetService<ISessionsActor>()
 
-                let! statsActorStats = statsActor.GetStats()
-                let! apiStats = statsActor.GetApiStats()
+                let! apiStats = statsActor.GetApiStats()                
+
+                let! zkbStatsActorStats = zkbStatsActor.GetStats()
+                let! zkbApiStats = zkbStatsActor.GetApiStats()
 
                 let! ingestActorStats = ctx.GetService<IRedisqIngestionActor>().GetStats()
                 let! sessionsActorStats = sessionsActor.GetStats()
@@ -37,13 +40,13 @@ module WebApp =
                 let! sessionStorageStats = sessionsActor.GetStorageStats()
 
                 let result =
-                    {| actors = [| statsActorStats; ingestActorStats; sessionsActorStats; passthruStats |]
+                    {| actors = [| zkbStatsActorStats; ingestActorStats; sessionsActorStats; passthruStats |]
                        killmails =
-                        {| ingestion = apiStats.ingestion
-                           distribution = apiStats.distribution
+                        {| ingestion = zkbApiStats.ingestion
+                           distribution = zkbApiStats.distribution
                            storage =
                             {| kills = kmCount
-                               sessions = sessionStorageStats |} |}
+                               sessions = sessionStorageStats |} |}                       
                        routes = apiStats.routes |> Map.values |> Seq.sortByDescending (fun rs -> rs.count) |}
 
                 return! Successful.OK result next ctx

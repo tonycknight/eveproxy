@@ -27,6 +27,9 @@ module ApiStartup =
 
                 lo.CombineLogs <- true)
 
+    let addStats (services: IServiceCollection) =
+        services.AddSingleton<IStatsActor, StatsActor>()
+
     let addApiConfig (services: IServiceCollection) =
         let sp = services.BuildServiceProvider()
         let lf = sp.GetRequiredService<ILoggerFactory>()
@@ -52,6 +55,7 @@ module ApiStartup =
         addCommonInfrastructure
         >> addApiLogging
         >> addApiConfig
+        >> addStats
         >> addApiHttp
         >> addWebFramework
         >> addContentNegotiation

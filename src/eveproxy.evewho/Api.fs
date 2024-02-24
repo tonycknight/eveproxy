@@ -21,7 +21,10 @@ module Api =
     let private countRouteFetch: HttpHandler =
         fun (next: HttpFunc) (ctx: HttpContext) ->
 
-            // TODO:
+            if ctx.Request.Path.HasValue then
+                let stats = ctx.GetService<IStatsActor>()
+                let route = ctx.Request.Path.Value |> Strings.toLower
+                ActorMessage.RouteFetch(route, 1) |> stats.Post
 
             next ctx
 
