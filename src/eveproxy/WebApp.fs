@@ -24,7 +24,7 @@ module WebApp =
         fun (next: HttpFunc) (ctx: HttpContext) ->
             task {
                 let statsActor = ctx.GetService<IStatsActor>()
-                let zkbStatsActor = ctx.GetService<IApiStatsActor>()
+                let zkbStatsActor = ctx.GetService<IZkbStatsActor>()
                 let sessionsActor = ctx.GetService<ISessionsActor>()
 
                 let! apiStats = statsActor.GetApiStats()                

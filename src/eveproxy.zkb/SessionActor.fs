@@ -25,7 +25,7 @@ type SessionActor
     (
         name: string,
         logFactory: ILoggerFactory,
-        stats: IApiStatsActor,
+        stats: IZkbStatsActor,
         killReader: IKillmailReader,
         queueFactory: IKillmailReferenceQueueFactory
     ) =

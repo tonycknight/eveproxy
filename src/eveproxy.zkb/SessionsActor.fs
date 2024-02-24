@@ -9,7 +9,7 @@ type private SessionsActorState =
 
 type SessionsActor
     (
-        stats: IApiStatsActor,
+        stats: IZkbStatsActor,
         config: AppConfiguration,
         logFactory: ILoggerFactory,
         killReader: IKillmailReader,

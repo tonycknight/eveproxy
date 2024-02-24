@@ -4,7 +4,7 @@ open System
 open eveproxy
 
 
-type ApiStatsActor() =
+type ZkbStatsActor() =
 
     let bumpReceived state (count: ReceivedKills) =
         let ingestion =
@@ -32,7 +32,7 @@ type ApiStatsActor() =
                   sessionDistributedKills =
                     state.distribution.sessionDistributedKills |> Map.add count.session sessionCount } }
 
-    let bumpRouteFetch (state: ApiStats) url count =
+    let bumpRouteFetch (state: ZkbStats) url count =
         let route =
             match state.routes |> Map.tryFind url with
             | Some rs -> { rs with count = rs.count + count }
@@ -45,7 +45,7 @@ type ApiStatsActor() =
 
     let actor =
         MailboxProcessor<ActorMessage>.Start(fun inbox ->
-            let rec loop (state: ApiStats) =
+            let rec loop (state: ZkbStats) =
                 async {
                     let! msg = inbox.Receive()
 
@@ -66,7 +66,7 @@ type ApiStatsActor() =
                 }
 
             let state =
-                { ApiStats.ingestion =
+                { ZkbStats.ingestion =
                     { IngestionStats.receivedKills = 0
                       writtenKills = 0 }
                   distribution =
@@ -76,11 +76,11 @@ type ApiStatsActor() =
 
             state |> loop)
 
-    interface IApiStatsActor with
+    interface IZkbStatsActor with
         member this.GetStats() =
             task {
                 return
-                    { ActorStats.name = (typedefof<ApiStatsActor>).FullName
+                    { ActorStats.name = (typedefof<ZkbStatsActor>).FullName
                       queueCount = actor.CurrentQueueLength
                       childStats = [] }
             }
@@ -91,5 +91,5 @@ type ApiStatsActor() =
             task {
                 let! r = actor.PostAndAsyncReply(fun rc -> ActorMessage.PullReply("", rc))
 
-                return r :?> ApiStats
+                return r :?> ZkbStats
             }

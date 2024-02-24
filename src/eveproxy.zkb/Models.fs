@@ -49,7 +49,7 @@ type DistributionStats =
     { totalDistributedKills: int64
       sessionDistributedKills: Map<string, int64> }
 
-type ApiStats =
+type ZkbStats =
     { ingestion: IngestionStats
       distribution: DistributionStats
       routes: Map<string, RouteStatistics> }

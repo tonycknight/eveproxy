@@ -10,7 +10,7 @@ type private RedisqIngestionActorState = { receivedKills: uint64 }
 type RedisqIngestionActor
     (
         hc: IExternalHttpClient,
-        stats: IApiStatsActor,
+        stats: IZkbStatsActor,
         logFactory: ILoggerFactory,
         writer: IKillmailWriter,
         sessions: ISessionsActor

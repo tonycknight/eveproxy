@@ -9,7 +9,7 @@ open Microsoft.Extensions.DependencyInjection
 module ApiStartup =
     let addServices (sc: IServiceCollection) =
         sc
-            .AddSingleton<IApiStatsActor, ApiStatsActor>()
+            .AddSingleton<IZkbStatsActor, ZkbStatsActor>()
             .AddSingleton<ISessionsActor, SessionsActor>()
             .AddSingleton<IRedisqIngestionActor, RedisqIngestionActor>()
             .AddSingleton<IKillmailRepository, MongoKillmailRepository>()
@@ -40,7 +40,7 @@ module Api =
         | _ -> config.ClientRedisqTtw()
 
     let private countSessionKillFetch (ctx: HttpContext) sessionId =
-        let stats = ctx.GetService<IApiStatsActor>()
+        let stats = ctx.GetService<IZkbStatsActor>()
 
         { DistributedKills.count = 1
           session = sessionId }
@@ -53,7 +53,7 @@ module Api =
         fun (next: HttpFunc) (ctx: HttpContext) ->
 
             if ctx.Request.Path.HasValue then
-                let stats = ctx.GetService<IApiStatsActor>()
+                let stats = ctx.GetService<IZkbStatsActor>()
                 let route = ctx.Request.Path.Value |> Strings.toLower
                 ActorMessage.RouteFetch(route, 1) |> stats.Post
 
