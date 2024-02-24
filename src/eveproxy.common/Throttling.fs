@@ -6,7 +6,7 @@ type WindowThrottlingCounts = Map<DateTime, int>
 
 module Throttling =
 
-    let windowThrottling (window: int) (maxCount: int) (counts: WindowThrottlingCounts)  (current: DateTime) =
+    let windowThrottling (window: int) (maxCount: int) (counts: WindowThrottlingCounts) (current: DateTime) =
         if window < 1 || window > 60 then
             invalidArg "window" "window out of range."
 
