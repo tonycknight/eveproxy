@@ -5,6 +5,7 @@ type StatsActor() =
 
     let bumpRouteFetch (state: ApiRouteStatistics) (method, url, count) =
         let key = $"{method} {url}"
+
         let route =
             match state.routes |> Map.tryFind key with
             | Some rs -> { rs with count = rs.count + count }
@@ -22,7 +23,8 @@ type StatsActor() =
 
                     let state =
                         match msg with
-                        | ActorMessage.RouteFetch(method, url, count) -> bumpRouteFetch state (method, Strings.toLower url, count)
+                        | ActorMessage.RouteFetch(method, url, count) ->
+                            bumpRouteFetch state (method, Strings.toLower url, count)
                         | ActorMessage.PullReply(e, rc) ->
                             (state :> obj) |> rc.Reply
                             state

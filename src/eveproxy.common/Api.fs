@@ -40,7 +40,7 @@ module Api =
     let jsonString (value: string) =
         value |> contentString "application/json; charset=utf-8"
 
-    let countRouteFetch: HttpHandler =
+    let countRouteInvoke: HttpHandler =
         fun (next: HttpFunc) (ctx: HttpContext) ->
 
             if ctx.Request.Path.HasValue then
