@@ -30,7 +30,7 @@ module WebApp =
 
                 let! apiStats = statsActor.GetApiStats()
 
-                let! zkbStatsActorStats = zkbStatsActor.GetStats()
+                let! zkbActorStats = zkbStatsActor.GetStats()
                 let! zkbApiStats = zkbStatsActor.GetApiStats()
 
                 let! ingestActorStats = ctx.GetService<IRedisqIngestionActor>().GetStats()
@@ -43,7 +43,7 @@ module WebApp =
 
                 let result =
                     {| actors =
-                        [| zkbStatsActorStats
+                        [| zkbActorStats
                            ingestActorStats
                            sessionsActorStats
                            zkbPassthruStats
