@@ -90,3 +90,22 @@ module WindowThrottlingTests =
 
             let delta = window - sec
             wait = TimeSpan.FromSeconds delta)
+
+    [<Property(Verbose = true)>]
+    let ``windowThrottling breaching max counts returns variable wait with second bucket`` () =
+        let window = 30
+        let secs = Gen.elements [ window..59 ] |> Arb.fromGen
+        let deltaMultiplier = 60 / window
+
+        Prop.forAll secs (fun sec ->
+            let maxCount = 10
+
+            let currentTime = new TimeOnly(0, 0, sec) |> dateTime
+            let key = new TimeOnly(0, 0, window) |> dateTime
+            let counts = Map.empty |> Map.add key maxCount
+            let throttle = Throttling.windowThrottling window maxCount
+
+            let (c, wait) = throttle counts currentTime
+
+            let delta = (window * deltaMultiplier) - sec
+            wait = TimeSpan.FromSeconds delta)

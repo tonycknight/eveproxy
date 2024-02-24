@@ -6,10 +6,11 @@ open Microsoft.Extensions.Logging
 
 type private EvewhoApiPassthroughActorState =
     { lastEvehoRequest: System.DateTime // TODO: not needed
-      thrrottling: Map<DateTime, int>}
+      thrrottling: Map<DateTime, int> }
 
     static member empty =
-        { EvewhoApiPassthroughActorState.lastEvehoRequest = System.DateTime.MinValue; thrrottling = Map.empty }
+        { EvewhoApiPassthroughActorState.lastEvehoRequest = System.DateTime.MinValue
+          thrrottling = Map.empty }
 
 type EvewhoApiPassthroughActor(hc: IExternalHttpClient, logFactory: ILoggerFactory, config: AppConfiguration) =
     let log = logFactory.CreateLogger<EvewhoApiPassthroughActor>()
@@ -23,12 +24,12 @@ type EvewhoApiPassthroughActor(hc: IExternalHttpClient, logFactory: ILoggerFacto
             return newCounts
         }
 
-    
+
     let rec getEvewhoApiIterate throttling count url =
         task {
             try
                 let! newThrottling = checkThrottling throttling
-                
+
                 $"GET [{url}] iteration #{count}..." |> log.LogTrace
                 let! resp = hc.GetAsync url
 
