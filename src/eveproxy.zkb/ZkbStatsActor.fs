@@ -31,18 +31,7 @@ type ZkbStatsActor() =
                 { DistributionStats.totalDistributedKills = state.distribution.totalDistributedKills + count.count
                   sessionDistributedKills =
                     state.distribution.sessionDistributedKills |> Map.add count.session sessionCount } }
-
-    let bumpRouteFetch (state: ZkbStats) url count =
-        let route =
-            match state.routes |> Map.tryFind url with
-            | Some rs -> { rs with count = rs.count + count }
-            | None ->
-                { RouteStatistics.route = url
-                  count = count }
-
-        { state with
-            routes = state.routes |> Map.add url route }
-
+    
     let actor =
         MailboxProcessor<ActorMessage>.Start(fun inbox ->
             let rec loop (state: ZkbStats) =
@@ -56,7 +45,6 @@ type ZkbStatsActor() =
                         | ActorMessage.Entity e when (e :? WrittenKills) -> (e :?> WrittenKills) |> bumpWritten state
                         | ActorMessage.Entity e when (e :? DistributedKills) ->
                             (e :?> DistributedKills) |> bumpDistrubuted state
-                        | ActorMessage.RouteFetch(url, count) -> bumpRouteFetch state url count
                         | ActorMessage.PullReply(e, rc) ->
                             (state :> obj) |> rc.Reply
                             state
@@ -71,8 +59,7 @@ type ZkbStatsActor() =
                       writtenKills = 0 }
                   distribution =
                     { DistributionStats.totalDistributedKills = 0
-                      sessionDistributedKills = Map.empty }
-                  routes = Map.empty }
+                      sessionDistributedKills = Map.empty } }
 
             state |> loop)
 

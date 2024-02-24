@@ -51,5 +51,4 @@ type DistributionStats =
 
 type ZkbStats =
     { ingestion: IngestionStats
-      distribution: DistributionStats
-      routes: Map<string, RouteStatistics> }
+      distribution: DistributionStats }
