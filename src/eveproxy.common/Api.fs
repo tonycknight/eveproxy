@@ -39,3 +39,13 @@ module Api =
 
     let jsonString (value: string) =
         value |> contentString "application/json; charset=utf-8"
+            
+    let countRouteFetch: HttpHandler =
+        fun (next: HttpFunc) (ctx: HttpContext) ->
+
+            if ctx.Request.Path.HasValue then
+                let stats = ctx.GetService<IStatsActor>()
+                let route = ctx.Request.Path.Value |> Strings.toLower
+                ActorMessage.RouteFetch(route, 1) |> stats.Post
+
+            next ctx

@@ -48,17 +48,6 @@ module Api =
         |> ActorMessage.Entity
         |> stats.Post
 
-
-    let private countRouteFetch: HttpHandler =
-        fun (next: HttpFunc) (ctx: HttpContext) ->
-
-            if ctx.Request.Path.HasValue then
-                let stats = ctx.GetService<IZkbStatsActor>()
-                let route = ctx.Request.Path.Value |> Strings.toLower
-                ActorMessage.RouteFetch(route, 1) |> stats.Post
-
-            next ctx
-
     let private getNullKill =
         fun (next: HttpFunc) (ctx: HttpContext) ->
             task { return! Successful.OK (KillPackageData.empty |> KillPackage.ofKillPackageData) next ctx }
@@ -167,7 +156,7 @@ module Api =
         subRouteCi
             "/redisq"
             (GET
-             >=> countRouteFetch
+             >=> eveproxy.Api.countRouteFetch
              >=> ResponseCaching.noResponseCaching
              >=> (setContentType "application/json")
              >=> choose
@@ -183,7 +172,7 @@ module Api =
         subRouteCi
             "/zkb"
             (GET
-             >=> countRouteFetch
+             >=> eveproxy.Api.countRouteFetch
              >=> ResponseCaching.noResponseCaching
              >=> (setContentType "application/json")
              >=> choose [ subRouteCi "/v1" (choose [ routeStartsWithCi "/" >=> (getZkbApi "/api/zkb/v1/") ]) ])

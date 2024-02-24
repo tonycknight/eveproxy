@@ -11,8 +11,8 @@
     <Compile Include="Configuration.fs" />
     <Compile Include="ApiModels.fs" />
     <Compile Include="Http.fs" />
-    <Compile Include="Api.fs" />
     <Compile Include="Actors.fs" />
+    <Compile Include="Api.fs" />
     <Compile Include="StatsActor.fs" />
     <None Include="paket.references" />
   </ItemGroup>

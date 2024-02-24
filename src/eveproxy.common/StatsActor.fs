@@ -3,9 +3,6 @@
 open System
 open System.Threading.Tasks
 
-type IStatsActor =
-    inherit IActor
-    abstract member GetApiStats: unit -> Task<(ApiRouteStatistics)>
 
 type StatsActor() =
     

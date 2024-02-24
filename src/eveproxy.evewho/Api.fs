@@ -18,16 +18,6 @@ module Api =
         path
         |> Option.map (fun p -> $"{p.Substring(routePrefix.Length)}{request.QueryString}" |> Strings.trim)
 
-    let private countRouteFetch: HttpHandler =
-        fun (next: HttpFunc) (ctx: HttpContext) ->
-
-            if ctx.Request.Path.HasValue then
-                let stats = ctx.GetService<IStatsActor>()
-                let route = ctx.Request.Path.Value |> Strings.toLower
-                ActorMessage.RouteFetch(route, 1) |> stats.Post
-
-            next ctx
-
     let private getEvewhoApi (routePrefix: string) =
         fun (next: HttpFunc) (ctx: HttpContext) ->
             task {
@@ -69,7 +59,7 @@ module Api =
         subRouteCi
             "/evewho"
             (GET
-             >=> countRouteFetch
+             >=> eveproxy.Api.countRouteFetch
              >=> ResponseCaching.noResponseCaching
              >=> (setContentType "application/json")
              >=> choose [ subRouteCi "/v1" (choose [ routeStartsWithCi "/" >=> (getEvewhoApi "/api/evewho/v1/") ]) ])
