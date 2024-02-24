@@ -59,7 +59,6 @@ module Api =
         subRouteCi
             "/evewho"
             (GET
-             >=> eveproxy.Api.countRouteFetch
              >=> ResponseCaching.noResponseCaching
              >=> (setContentType "application/json")
              >=> choose [ subRouteCi "/v1" (choose [ routeStartsWithCi "/" >=> (getEvewhoApi "/api/evewho/v1/") ]) ])

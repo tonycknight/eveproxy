@@ -156,7 +156,6 @@ module Api =
         subRouteCi
             "/redisq"
             (GET
-             >=> eveproxy.Api.countRouteFetch
              >=> ResponseCaching.noResponseCaching
              >=> (setContentType "application/json")
              >=> choose
@@ -172,7 +171,6 @@ module Api =
         subRouteCi
             "/zkb"
             (GET
-             >=> eveproxy.Api.countRouteFetch
              >=> ResponseCaching.noResponseCaching
              >=> (setContentType "application/json")
              >=> choose [ subRouteCi "/v1" (choose [ routeStartsWithCi "/" >=> (getZkbApi "/api/zkb/v1/") ]) ])
