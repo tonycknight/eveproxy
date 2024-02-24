@@ -13,8 +13,9 @@ module WindowThrottlingTests =
     [<Property(Verbose = true)>]
     let ``windowThrottling accepts only times in a specific window`` (window: int) =
         let currentTime = new TimeOnly(0, 0, 0) |> dateTime
+        let throttle = Throttling.windowThrottling window 10
 
-        let f = fun () -> Throttling.windowThrottling Map.empty window 10 currentTime
+        let f = fun () -> throttle Map.empty currentTime
 
         if (window < 1 || window > 60) || (60 % window > 0) then
             try
@@ -31,16 +32,19 @@ module WindowThrottlingTests =
         let currentTime = new TimeOnly(0, 0, 0) |> dateTime
 
         try
-            Throttling.windowThrottling Map.empty 30 count.Get currentTime |> ignore
+            let throttle = Throttling.windowThrottling 30 count.Get
+            throttle Map.empty currentTime |> ignore
             false
-        with ex -> true
+        with ex ->
+            true
 
     [<Property(MaxTest = 1)>]
     let ``windowThrottling on empty counts returns no wait`` () =
         let counts = Map.empty
         let currentTime = new TimeOnly(0, 0, 0) |> dateTime
+        let throttle = Throttling.windowThrottling 30 10
 
-        let (c, wait) = Throttling.windowThrottling counts 30 10 currentTime
+        let (c, wait) = throttle counts currentTime
 
         wait = TimeSpan.Zero && c |> Map.count = 1
 
@@ -48,21 +52,23 @@ module WindowThrottlingTests =
     let ``windowThrottling on single counts returns no wait`` () =
         let currentTime = new TimeOnly(0, 0, 0) |> dateTime
         let counts = Map.empty |> Map.add currentTime 1
+        let throttle = Throttling.windowThrottling 30 10
 
-        let (c, wait) = Throttling.windowThrottling counts 30 10 currentTime
+        let (c, wait) = throttle counts currentTime
 
         wait = TimeSpan.Zero && c |> Map.count = 1
 
     [<Property(Verbose = true)>]
     let ``windowThrottling on max counts returns wait`` () =
         let window = 30
-        let counts = Gen.elements [ 1..10 ] |> Arb.fromGen
+        let maxCounts = Gen.elements [ 1..10 ] |> Arb.fromGen
 
-        Prop.forAll counts (fun maxCount ->
+        Prop.forAll maxCounts (fun maxCount ->
             let currentTime = new TimeOnly(0, 0, 0) |> dateTime
             let counts = Map.empty |> Map.add currentTime maxCount
+            let throttle = Throttling.windowThrottling 30 maxCount
 
-            let (c, wait) = Throttling.windowThrottling counts window maxCount currentTime
+            let (c, wait) = throttle counts currentTime
 
             wait = TimeSpan.FromSeconds window)
 
@@ -78,8 +84,9 @@ module WindowThrottlingTests =
             let currentTime = new TimeOnly(0, 0, sec) |> dateTime
             let key = new TimeOnly(0, 0, 0) |> dateTime
             let counts = Map.empty |> Map.add key maxCount
+            let throttle = Throttling.windowThrottling window maxCount
 
-            let (c, wait) = Throttling.windowThrottling counts window maxCount currentTime
+            let (c, wait) = throttle counts currentTime
 
             let delta = window - sec
             wait = TimeSpan.FromSeconds delta)
