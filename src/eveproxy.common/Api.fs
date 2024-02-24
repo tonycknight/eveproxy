@@ -39,7 +39,7 @@ module Api =
 
     let jsonString (value: string) =
         value |> contentString "application/json; charset=utf-8"
-            
+
     let countRouteFetch: HttpHandler =
         fun (next: HttpFunc) (ctx: HttpContext) ->
 

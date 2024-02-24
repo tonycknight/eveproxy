@@ -5,7 +5,7 @@ open System.Threading.Tasks
 
 
 type StatsActor() =
-    
+
     let bumpRouteFetch (state: ApiRouteStatistics) url count =
         let route =
             match state.routes |> Map.tryFind url with
@@ -33,8 +33,7 @@ type StatsActor() =
                     return! loop state
                 }
 
-            let state =
-                { routes = Map.empty }
+            let state = { routes = Map.empty }
 
             state |> loop)
 
@@ -55,5 +54,3 @@ type StatsActor() =
 
                 return r :?> ApiRouteStatistics
             }
-        
-

@@ -31,7 +31,7 @@ type ZkbStatsActor() =
                 { DistributionStats.totalDistributedKills = state.distribution.totalDistributedKills + count.count
                   sessionDistributedKills =
                     state.distribution.sessionDistributedKills |> Map.add count.session sessionCount } }
-    
+
     let actor =
         MailboxProcessor<ActorMessage>.Start(fun inbox ->
             let rec loop (state: ZkbStats) =

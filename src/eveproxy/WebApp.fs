@@ -28,7 +28,7 @@ module WebApp =
                 let zkbStatsActor = ctx.GetService<IZkbStatsActor>()
                 let sessionsActor = ctx.GetService<ISessionsActor>()
 
-                let! apiStats = statsActor.GetApiStats()                
+                let! apiStats = statsActor.GetApiStats()
 
                 let! zkbStatsActorStats = zkbStatsActor.GetStats()
                 let! zkbApiStats = zkbStatsActor.GetApiStats()
@@ -42,13 +42,18 @@ module WebApp =
                 let! sessionStorageStats = sessionsActor.GetStorageStats()
 
                 let result =
-                    {| actors = [| zkbStatsActorStats; ingestActorStats; sessionsActorStats; zkbPassthruStats; evewhoPassthruStats |]
+                    {| actors =
+                        [| zkbStatsActorStats
+                           ingestActorStats
+                           sessionsActorStats
+                           zkbPassthruStats
+                           evewhoPassthruStats |]
                        killmails =
                         {| ingestion = zkbApiStats.ingestion
                            distribution = zkbApiStats.distribution
                            storage =
                             {| kills = kmCount
-                               sessions = sessionStorageStats |} |}                       
+                               sessions = sessionStorageStats |} |}
                        routes = apiStats.routes |> Map.values |> Seq.sortByDescending (fun rs -> rs.count) |}
 
                 return! Successful.OK result next ctx
