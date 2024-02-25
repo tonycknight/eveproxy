@@ -7,8 +7,7 @@ open Microsoft.Extensions.Logging
 type private EvewhoApiPassthroughActorState =
     { throttling: Map<DateTime, int> }
 
-    static member empty =
-        { EvewhoApiPassthroughActorState.throttling = Map.empty }
+    static member empty = { EvewhoApiPassthroughActorState.throttling = Map.empty }
 
 type EvewhoApiPassthroughActor(hc: IExternalHttpClient, logFactory: ILoggerFactory, config: AppConfiguration) =
     let log = logFactory.CreateLogger<EvewhoApiPassthroughActor>()

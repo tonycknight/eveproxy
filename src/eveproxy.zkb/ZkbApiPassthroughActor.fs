@@ -7,8 +7,7 @@ open Microsoft.Extensions.Logging
 type private ZkbApiPassthroughActorState =
     { throttling: Map<DateTime, int> }
 
-    static member empty =
-        { ZkbApiPassthroughActorState.throttling = Map.empty}
+    static member empty = { ZkbApiPassthroughActorState.throttling = Map.empty }
 
 type ZkbApiPassthroughActor
     (hc: IExternalHttpClient, stats: IZkbStatsActor, logFactory: ILoggerFactory, config: AppConfiguration) =
