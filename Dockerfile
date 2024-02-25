@@ -23,7 +23,7 @@ RUN dotnet build "eveproxy.fsproj" -c Release -o /app/build /p:AssemblyInformati
 
 FROM build AS publish
 ARG BuildVersion
-RUN dotnet publish "eveproxy.fsproj" -c Release -o /app/publish /p:UseAppHost=false /p:AssemblyInformationalVersion=${BuildVersion} /p:AssemblyFileVersion=${BuildVersion} /p:Version=${BuildVersion}
+RUN dotnet publish "eveproxy.fsproj" -c Release -o /app/publish /p:UseAppHost=false /p:AssemblyInformationalVersion=${BuildVersion} /p:AssemblyFileVersion=${BuildVersion} /p:Version=${BuildVersion}  --os linux --arch x64 --self-contained
 
 FROM base AS final
 WORKDIR /app
