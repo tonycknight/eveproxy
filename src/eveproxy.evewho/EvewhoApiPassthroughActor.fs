@@ -20,8 +20,10 @@ type EvewhoApiPassthroughActor(hc: IExternalHttpClient, logFactory: ILoggerFacto
     let checkThrottling (counts: Map<DateTime, int>) =
         task {
             let (newCounts, wait) = throttle counts DateTime.UtcNow
+
             if wait > TimeSpan.Zero then
                 $"Waiting {wait} before next request to Evewho" |> log.LogTrace
+
             do! System.Threading.Tasks.Task.Delay wait
             return newCounts
         }
