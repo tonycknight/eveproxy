@@ -5,12 +5,9 @@ open eveproxy
 open Microsoft.Extensions.Logging
 
 type private EvewhoApiPassthroughActorState =
-    { lastEvehoRequest: System.DateTime // TODO: not needed
-      thrrottling: Map<DateTime, int> }
+    { throttling: Map<DateTime, int> }
 
-    static member empty =
-        { EvewhoApiPassthroughActorState.lastEvehoRequest = System.DateTime.MinValue
-          thrrottling = Map.empty }
+    static member empty = { EvewhoApiPassthroughActorState.throttling = Map.empty }
 
 type EvewhoApiPassthroughActor(hc: IExternalHttpClient, logFactory: ILoggerFactory, config: AppConfiguration) =
     let log = logFactory.CreateLogger<EvewhoApiPassthroughActor>()
@@ -66,10 +63,10 @@ type EvewhoApiPassthroughActor(hc: IExternalHttpClient, logFactory: ILoggerFacto
                         match msg with
                         | ActorMessage.PullReply(route, rc) ->
                             task {
-                                let! (throttling, resp) = getEvewhoApi state.thrrottling route
+                                let! (throttling, resp) = getEvewhoApi state.throttling route
                                 (resp :> obj) |> rc.Reply
 
-                                return { state with thrrottling = throttling }
+                                return { EvewhoApiPassthroughActorState.throttling = throttling }
                             }
                             |> Async.AwaitTask
                         | _ -> async { return state }
