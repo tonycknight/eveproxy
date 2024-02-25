@@ -5,35 +5,32 @@ open eveproxy
 open Microsoft.Extensions.Logging
 
 type private ZkbApiPassthroughActorState =
-    { lastZkbRequest: System.DateTime }
+    { throttling: Map<DateTime, int> }
 
     static member empty =
-        { ZkbApiPassthroughActorState.lastZkbRequest = System.DateTime.MinValue }
+        { ZkbApiPassthroughActorState.throttling = Map.empty}
 
 type ZkbApiPassthroughActor
     (hc: IExternalHttpClient, stats: IZkbStatsActor, logFactory: ILoggerFactory, config: AppConfiguration) =
     let log = logFactory.CreateLogger<ZkbApiPassthroughActor>()
 
-    let pause (lastPoll: DateTime) =
+    let throttle = Throttling.windowThrottling 1 1
+
+    let checkThrottling (counts: Map<DateTime, int>) =
         task {
-            let limit = TimeSpan.FromSeconds(1.)
-            let diff = DateTime.UtcNow - lastPoll
+            let (newCounts, wait) = throttle counts DateTime.UtcNow
 
-            let duration =
-                if diff < limit then limit
-                else if diff > limit then TimeSpan.Zero
-                else diff
+            if wait > TimeSpan.Zero then
+                $"Waiting {wait} before next request to Zkb" |> log.LogTrace
 
-            if duration > TimeSpan.Zero then
-                log.LogTrace $"Waiting {duration} for Zkb API..."
-                do! System.Threading.Tasks.Task.Delay duration
+            do! System.Threading.Tasks.Task.Delay wait
+            return newCounts
         }
 
-
-    let rec getZkbApiIterate lastPoll count url =
+    let rec getZkbApiIterate throttling count url =
         task {
             try
-                do! pause lastPoll
+                let! newThrottling = checkThrottling throttling
 
                 $"GET [{url}] iteration #{count}..." |> log.LogTrace
                 let! resp = hc.GetAsync url
@@ -43,19 +40,19 @@ type ZkbApiPassthroughActor
 
                 return!
                     match resp with
-                    | HttpTooManyRequestsResponse _ when count <= 0 -> resp |> Threading.toTaskResult
+                    | HttpTooManyRequestsResponse _ when count <= 0 -> (newThrottling, resp) |> Threading.toTaskResult
                     | HttpOkRequestResponse _
                     | HttpErrorRequestResponse _
-                    | HttpExceptionRequestResponse _ -> resp |> Threading.toTaskResult
-                    | HttpTooManyRequestsResponse _ -> getZkbApiIterate DateTime.UtcNow (count - 1) url
+                    | HttpExceptionRequestResponse _ -> (newThrottling, resp) |> Threading.toTaskResult
+                    | HttpTooManyRequestsResponse _ -> getZkbApiIterate throttling (count - 1) url
             with ex ->
                 log.LogError(ex.Message, ex)
-                return HttpErrorRequestResponse(Net.HttpStatusCode.InternalServerError, "")
+                return (throttling, HttpErrorRequestResponse(Net.HttpStatusCode.InternalServerError, ""))
         }
 
-    let getZkbApi lastPoll route =
+    let getZkbApi throttling route =
         let url = $"{config.zkbApiUrl}{route}"
-        getZkbApiIterate lastPoll 10 url
+        getZkbApiIterate throttling 10 url
 
     let actor =
         MailboxProcessor<ActorMessage>.Start(fun inbox ->
@@ -67,10 +64,10 @@ type ZkbApiPassthroughActor
                         match msg with
                         | ActorMessage.PullReply(route, rc) ->
                             task {
-                                let! resp = getZkbApi state.lastZkbRequest route
+                                let! (throttling, resp) = getZkbApi state.throttling route
                                 (resp :> obj) |> rc.Reply
 
-                                return { ZkbApiPassthroughActorState.lastZkbRequest = System.DateTime.UtcNow }
+                                return { ZkbApiPassthroughActorState.throttling = throttling }
                             }
                             |> Async.AwaitTask
                         | _ -> async { return state }

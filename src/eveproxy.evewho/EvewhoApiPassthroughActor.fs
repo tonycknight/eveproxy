@@ -67,7 +67,7 @@ type EvewhoApiPassthroughActor(hc: IExternalHttpClient, logFactory: ILoggerFacto
                                 let! (throttling, resp) = getEvewhoApi state.throttling route
                                 (resp :> obj) |> rc.Reply
 
-                                return { state with throttling = throttling }
+                                return { EvewhoApiPassthroughActorState.throttling = throttling }
                             }
                             |> Async.AwaitTask
                         | _ -> async { return state }
