@@ -21,6 +21,7 @@ type AppConfiguration =
       zkbRedisqTtwExternal: string
       zkbRedisqTtwClient: string
       zkbApiUrl: string
+      evewhoApiUrl: string
       redisqSessionMaxAge: string
       killmailMemoryCacheAge: string
       mongoDbName: string
@@ -42,6 +43,7 @@ type AppConfiguration =
         { AppConfiguration.hostUrls = ""
           allowExternalTraffic = true.ToString()
           zkbApiUrl = ""
+          evewhoApiUrl = ""
           zkbRedisqBaseUrl = ""
           zkbRedisqQueueId = ""
           zkbRedisqTtwExternal = ""
@@ -59,6 +61,7 @@ type AppConfiguration =
           zkbRedisqTtwExternal = "10"
           zkbRedisqTtwClient = "10"
           zkbApiUrl = "https://zkillboard.com/api/"
+          evewhoApiUrl = "https://evewho.com/api/"
           redisqSessionMaxAge = TimeSpan.FromHours(3).ToString()
           killmailMemoryCacheAge = TimeSpan.FromMinutes(15.).ToString()
           mongoDbName = "eveproxy"
@@ -129,6 +132,11 @@ module Configuration =
             |> mustBe
                 (isNonEmptyString &&>> isUrl)
                 $"{nameof Unchecked.defaultof<AppConfiguration>.zkbApiUrl} must be a valid URL."
+
+            config.evewhoApiUrl
+            |> mustBe
+                (isNonEmptyString &&>> isUrl)
+                $"{nameof Unchecked.defaultof<AppConfiguration>.evewhoApiUrl} must be a valid URL."
 
             config.redisqSessionMaxAge
             |> mustBe

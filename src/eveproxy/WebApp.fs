@@ -2,6 +2,7 @@
 
 open System
 open eveproxy.zkb
+open eveproxy.evewho
 open Giraffe
 open Microsoft.AspNetCore.Http
 
@@ -23,24 +24,33 @@ module WebApp =
 
         fun (next: HttpFunc) (ctx: HttpContext) ->
             task {
-                let statsActor = ctx.GetService<IApiStatsActor>()
+                let statsActor = ctx.GetService<IStatsActor>()
+                let zkbStatsActor = ctx.GetService<IZkbStatsActor>()
                 let sessionsActor = ctx.GetService<ISessionsActor>()
 
-                let! statsActorStats = statsActor.GetStats()
                 let! apiStats = statsActor.GetApiStats()
+
+                let! zkbActorStats = zkbStatsActor.GetStats()
+                let! zkbApiStats = zkbStatsActor.GetApiStats()
 
                 let! ingestActorStats = ctx.GetService<IRedisqIngestionActor>().GetStats()
                 let! sessionsActorStats = sessionsActor.GetStats()
-                let! passthruStats = ctx.GetService<IZkbApiPassthroughActor>().GetStats()
+                let! zkbPassthruStats = ctx.GetService<IZkbApiPassthroughActor>().GetStats()
+                let! evewhoPassthruStats = ctx.GetService<IEvewhoApiPassthroughActor>().GetStats()
 
                 let! kmCount = ctx.GetService<IKillmailRepository>().GetCountAsync()
                 let! sessionStorageStats = sessionsActor.GetStorageStats()
 
                 let result =
-                    {| actors = [| statsActorStats; ingestActorStats; sessionsActorStats; passthruStats |]
+                    {| actors =
+                        [| zkbActorStats
+                           ingestActorStats
+                           sessionsActorStats
+                           zkbPassthruStats
+                           evewhoPassthruStats |]
                        killmails =
-                        {| ingestion = apiStats.ingestion
-                           distribution = apiStats.distribution
+                        {| ingestion = zkbApiStats.ingestion
+                           distribution = zkbApiStats.distribution
                            storage =
                             {| kills = kmCount
                                sessions = sessionStorageStats |} |}
@@ -54,6 +64,7 @@ module WebApp =
         >=> choose
                 [ favicon
                   GET
+                  >=> Api.countRouteInvoke
                   >=> subRouteCi
                           "/api"
                           (choose
@@ -61,4 +72,5 @@ module WebApp =
                                     [ heartbeat
                                       route "/stats/" >=> stats
                                       eveproxy.zkb.Api.redisqWebRoutes ()
-                                      eveproxy.zkb.Api.zkbWebRoutes () ] ]) ]
+                                      eveproxy.zkb.Api.zkbWebRoutes ()
+                                      eveproxy.evewho.Api.evewhoWebRoutes () ] ]) ]

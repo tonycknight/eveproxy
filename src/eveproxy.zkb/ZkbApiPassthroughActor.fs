@@ -11,7 +11,7 @@ type private ZkbApiPassthroughActorState =
         { ZkbApiPassthroughActorState.lastZkbRequest = System.DateTime.MinValue }
 
 type ZkbApiPassthroughActor
-    (hc: IExternalHttpClient, stats: IApiStatsActor, logFactory: ILoggerFactory, config: AppConfiguration) =
+    (hc: IExternalHttpClient, stats: IZkbStatsActor, logFactory: ILoggerFactory, config: AppConfiguration) =
     let log = logFactory.CreateLogger<ZkbApiPassthroughActor>()
 
     let pause (lastPoll: DateTime) =

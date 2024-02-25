@@ -13,6 +13,7 @@
     <Compile Include="Utils\OptionTests.fs" />
     <Compile Include="Utils\CombinatorsTests.fs" />
     <Compile Include="Utils\ValidatorsTests.fs" />
+    <Compile Include="Throttling\WindowThrottlingTests.fs" />
     <None Include="paket.references" />
     <Compile Include="Program.fs" />
   </ItemGroup>

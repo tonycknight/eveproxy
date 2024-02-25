@@ -9,7 +9,7 @@ open Microsoft.Extensions.DependencyInjection
 module ApiStartup =
     let addServices (sc: IServiceCollection) =
         sc
-            .AddSingleton<IApiStatsActor, ApiStatsActor>()
+            .AddSingleton<IZkbStatsActor, ZkbStatsActor>()
             .AddSingleton<ISessionsActor, SessionsActor>()
             .AddSingleton<IRedisqIngestionActor, RedisqIngestionActor>()
             .AddSingleton<IKillmailRepository, MongoKillmailRepository>()
@@ -40,24 +40,13 @@ module Api =
         | _ -> config.ClientRedisqTtw()
 
     let private countSessionKillFetch (ctx: HttpContext) sessionId =
-        let stats = ctx.GetService<IApiStatsActor>()
+        let stats = ctx.GetService<IZkbStatsActor>()
 
         { DistributedKills.count = 1
           session = sessionId }
         :> obj
         |> ActorMessage.Entity
         |> stats.Post
-
-
-    let private countRouteFetch: HttpHandler =
-        fun (next: HttpFunc) (ctx: HttpContext) ->
-
-            if ctx.Request.Path.HasValue then
-                let stats = ctx.GetService<IApiStatsActor>()
-                let route = ctx.Request.Path.Value |> Strings.toLower
-                ActorMessage.RouteFetch(route, 1) |> stats.Post
-
-            next ctx
 
     let private getNullKill =
         fun (next: HttpFunc) (ctx: HttpContext) ->
@@ -167,7 +156,6 @@ module Api =
         subRouteCi
             "/redisq"
             (GET
-             >=> countRouteFetch
              >=> ResponseCaching.noResponseCaching
              >=> (setContentType "application/json")
              >=> choose
@@ -183,7 +171,6 @@ module Api =
         subRouteCi
             "/zkb"
             (GET
-             >=> countRouteFetch
              >=> ResponseCaching.noResponseCaching
              >=> (setContentType "application/json")
              >=> choose [ subRouteCi "/v1" (choose [ routeStartsWithCi "/" >=> (getZkbApi "/api/zkb/v1/") ]) ])

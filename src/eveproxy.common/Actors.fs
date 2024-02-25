@@ -21,7 +21,7 @@ type ActorMessage =
     | Start
     | ScheduledMaintenance
     | Destroy of name: string
-    | RouteFetch of url: string * count: int
+    | RouteFetch of method: string * url: string * count: int
     | Entity of entity: obj
     | Pull of url: string
     | PullReply of url: string * rc: AsyncReplyChannel<obj>
@@ -32,3 +32,8 @@ type ActorMessage =
 type IActor =
     abstract member Post: ActorMessage -> unit
     abstract member GetStats: unit -> Task<ActorStats>
+
+
+type IStatsActor =
+    inherit IActor
+    abstract member GetApiStats: unit -> Task<(ApiRouteStatistics)>
