@@ -31,9 +31,6 @@ type AppConfiguration =
       mongoDbName: string
       mongoConnection: string }
 
-    member this.ZkbRedisqUrl() =
-        sprintf "%s?queueID=%s&ttw=%s" this.zkbRedisqBaseUrl this.zkbRedisqQueueId this.zkbRedisqTtwExternal
-
     member this.ZkbThrottling() =
         let secs = this.zkbThrottlingSeconds |> Strings.toInt 1
         let reqs = this.zkbThrottlingRequests |> Strings.toInt 1
@@ -47,11 +44,17 @@ type AppConfiguration =
     member this.ClientRedisqTtw() =
         this.zkbRedisqTtwClient |> Strings.toInt 10
 
+    member this.ExternalRedisqTtw() =
+        this.zkbRedisqTtwExternal |> Strings.toInt 10
+
     member this.RedisqSessionMaxAge() =
         this.redisqSessionMaxAge |> Strings.toTimeSpan (TimeSpan.FromHours 3)
 
     member this.KillmailMemoryCacheAge() =
         this.killmailMemoryCacheAge |> Strings.toTimeSpan (TimeSpan.FromMinutes 15.)
+            
+    member this.ZkbRedisqUrl() =
+        $"{this.zkbRedisqBaseUrl}?queueID={this.zkbRedisqQueueId}&ttw={this.ExternalRedisqTtw ()}"
 
     static member emptyConfig =
         { AppConfiguration.hostUrls = ""
@@ -76,7 +79,7 @@ type AppConfiguration =
           allowExternalTraffic = true.ToString()
           zkbRedisqBaseUrl = "https://redisq.zkillboard.com/listen.php"
           zkbRedisqQueueId = (System.Guid.NewGuid() |> sprintf "eveProxy%A")
-          zkbRedisqTtwExternal = "10"
+          zkbRedisqTtwExternal = ""
           zkbRedisqTtwClient = ""
           zkbApiUrl = "https://zkillboard.com/api/"
           zkbThrottlingRequests = ""
@@ -142,7 +145,7 @@ module Configuration =
 
             config.zkbRedisqTtwExternal
             |> mustBe
-                isPositiveInteger
+                (isEmptyString ||>> isPositiveInteger)
                 $"{nameof Unchecked.defaultof<AppConfiguration>.zkbRedisqTtwExternal} must be a positive integer."
 
             config.zkbRedisqTtwClient
