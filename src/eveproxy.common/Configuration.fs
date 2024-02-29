@@ -21,7 +21,11 @@ type AppConfiguration =
       zkbRedisqTtwExternal: string
       zkbRedisqTtwClient: string
       zkbApiUrl: string
+      zkbThrottlingRequests: string
+      zkbThrottlingSeconds: string
       evewhoApiUrl: string
+      evewhoThrottlingRequests: string
+      evewhoThrottlingSeconds: string
       redisqSessionMaxAge: string
       killmailMemoryCacheAge: string
       mongoDbName: string
@@ -29,6 +33,16 @@ type AppConfiguration =
 
     member this.ZkbRedisqUrl() =
         sprintf "%s?queueID=%s&ttw=%s" this.zkbRedisqBaseUrl this.zkbRedisqQueueId this.zkbRedisqTtwExternal
+
+    member this.ZkbThrottling() =
+        let secs = this.zkbThrottlingSeconds |> Strings.toInt 1
+        let reqs = this.zkbThrottlingRequests |> Strings.toInt 1
+        (secs, reqs)
+
+    member this.EveWhoThrottling() =
+        let secs = this.evewhoThrottlingSeconds |> Strings.toInt 30
+        let reqs = this.evewhoThrottlingRequests |> Strings.toInt 10
+        (secs, reqs)
 
     member this.ClientRedisqTtw() =
         this.zkbRedisqTtwClient |> Strings.toInt 10
@@ -43,7 +57,11 @@ type AppConfiguration =
         { AppConfiguration.hostUrls = ""
           allowExternalTraffic = true.ToString()
           zkbApiUrl = ""
+          zkbThrottlingRequests = ""
+          zkbThrottlingSeconds = ""
           evewhoApiUrl = ""
+          evewhoThrottlingRequests = ""
+          evewhoThrottlingSeconds = ""
           zkbRedisqBaseUrl = ""
           zkbRedisqQueueId = ""
           zkbRedisqTtwExternal = ""
@@ -59,9 +77,13 @@ type AppConfiguration =
           zkbRedisqBaseUrl = "https://redisq.zkillboard.com/listen.php"
           zkbRedisqQueueId = (System.Guid.NewGuid() |> sprintf "eveProxy%A")
           zkbRedisqTtwExternal = "10"
-          zkbRedisqTtwClient = "10"
+          zkbRedisqTtwClient = ""
           zkbApiUrl = "https://zkillboard.com/api/"
+          zkbThrottlingRequests = ""
+          zkbThrottlingSeconds = "" 
           evewhoApiUrl = "https://evewho.com/api/"
+          evewhoThrottlingRequests = ""
+          evewhoThrottlingSeconds = ""
           redisqSessionMaxAge = TimeSpan.FromHours(3).ToString()
           killmailMemoryCacheAge = TimeSpan.FromMinutes(15.).ToString()
           mongoDbName = "eveproxy"
@@ -105,7 +127,7 @@ module Configuration =
                 v :> obj)
 
         configCtor.Invoke(paramValues) :?> AppConfiguration
-
+            
     let validationErrors (config: AppConfiguration) =
         seq {
             config.hostUrls
@@ -125,7 +147,7 @@ module Configuration =
 
             config.zkbRedisqTtwClient
             |> mustBe
-                isPositiveInteger
+                (isEmptyString ||>> isPositiveInteger)
                 $"{nameof Unchecked.defaultof<AppConfiguration>.zkbRedisqTtwClient} must be a positive integer."
 
             config.zkbApiUrl
@@ -133,10 +155,30 @@ module Configuration =
                 (isNonEmptyString &&>> isUrl)
                 $"{nameof Unchecked.defaultof<AppConfiguration>.zkbApiUrl} must be a valid URL."
 
+            config.zkbThrottlingSeconds
+            |> mustBe
+                (isEmptyString ||>> isPositiveInteger)
+                $"{nameof Unchecked.defaultof<AppConfiguration>.zkbThrottlingSeconds} must be a positive integer."
+
+            config.zkbThrottlingRequests
+            |> mustBe
+                (isEmptyString ||>> isPositiveInteger)
+                $"{nameof Unchecked.defaultof<AppConfiguration>.zkbThrottlingRequests} must be a positive integer."
+
             config.evewhoApiUrl
             |> mustBe
                 (isNonEmptyString &&>> isUrl)
                 $"{nameof Unchecked.defaultof<AppConfiguration>.evewhoApiUrl} must be a valid URL."
+
+            config.evewhoThrottlingSeconds
+            |> mustBe
+                (isEmptyString ||>> isPositiveInteger)
+                $"{nameof Unchecked.defaultof<AppConfiguration>.evewhoThrottlingSeconds} must be a positive integer."
+
+            config.evewhoThrottlingRequests
+            |> mustBe
+                (isEmptyString ||>> isPositiveInteger)
+                $"{nameof Unchecked.defaultof<AppConfiguration>.evewhoThrottlingRequests} must be a positive integer."
 
             config.redisqSessionMaxAge
             |> mustBe

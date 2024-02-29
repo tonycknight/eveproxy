@@ -109,7 +109,9 @@ module Validators =
         with ex ->
             false
 
-    let isNonEmptyString = String.IsNullOrWhiteSpace >> not
+    let isEmptyString = String.IsNullOrWhiteSpace 
+
+    let isNonEmptyString = isEmptyString >> not
 
     let isPositiveInteger (value: string) =
         match Int32.TryParse value with

@@ -11,8 +11,7 @@ type private EvewhoApiPassthroughActorState =
 
 type EvewhoApiPassthroughActor(hc: IExternalHttpClient, logFactory: ILoggerFactory, config: AppConfiguration) =
     let log = logFactory.CreateLogger<EvewhoApiPassthroughActor>()
-
-    let throttle = Throttling.windowThrottling 30 10
+    let throttle = config.EveWhoThrottling () |> Throttling.windowThrottling
 
     let checkThrottling (counts: Map<DateTime, int>) =
         task {
