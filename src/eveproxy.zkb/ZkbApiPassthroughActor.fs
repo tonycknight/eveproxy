@@ -12,7 +12,7 @@ type private ZkbApiPassthroughActorState =
 type ZkbApiPassthroughActor
     (hc: IExternalHttpClient, stats: IZkbStatsActor, logFactory: ILoggerFactory, config: AppConfiguration) =
     let log = logFactory.CreateLogger<ZkbApiPassthroughActor>()
-    let throttle = config.ZkbThrottling () |> Throttling.windowThrottling
+    let throttle = config.ZkbThrottling() |> Throttling.windowThrottling
 
     let checkThrottling (counts: Map<DateTime, int>) =
         task {

@@ -109,7 +109,7 @@ module Validators =
         with ex ->
             false
 
-    let isEmptyString = String.IsNullOrWhiteSpace 
+    let isEmptyString = String.IsNullOrWhiteSpace
 
     let isNonEmptyString = isEmptyString >> not
 
@@ -119,7 +119,7 @@ module Validators =
         | _ -> false
 
     let isTimeSpan (value: string) = TimeSpan.TryParse value |> fst
-        
+
     let mustBe (validate: string -> bool) (error: string) (value) =
         if value |> validate |> not then Some error else None
 

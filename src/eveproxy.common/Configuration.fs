@@ -52,9 +52,9 @@ type AppConfiguration =
 
     member this.KillmailMemoryCacheAge() =
         this.killmailMemoryCacheAge |> Strings.toTimeSpan (TimeSpan.FromMinutes 15.)
-            
+
     member this.ZkbRedisqUrl() =
-        $"{this.zkbRedisqBaseUrl}?queueID={this.zkbRedisqQueueId}&ttw={this.ExternalRedisqTtw ()}"
+        $"{this.zkbRedisqBaseUrl}?queueID={this.zkbRedisqQueueId}&ttw={this.ExternalRedisqTtw()}"
 
     static member emptyConfig =
         { AppConfiguration.hostUrls = ""
@@ -83,7 +83,7 @@ type AppConfiguration =
           zkbRedisqTtwClient = ""
           zkbApiUrl = "https://zkillboard.com/api/"
           zkbThrottlingRequests = ""
-          zkbThrottlingSeconds = "" 
+          zkbThrottlingSeconds = ""
           evewhoApiUrl = "https://evewho.com/api/"
           evewhoThrottlingRequests = ""
           evewhoThrottlingSeconds = ""
@@ -130,7 +130,7 @@ module Configuration =
                 v :> obj)
 
         configCtor.Invoke(paramValues) :?> AppConfiguration
-            
+
     let validationErrors (config: AppConfiguration) =
         seq {
             config.hostUrls
