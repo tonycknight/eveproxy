@@ -118,11 +118,8 @@ module Validators =
         | true, x when x >= minimum -> true
         | _ -> false
 
-    let isTimeSpan (value: string) =
-        match TimeSpan.TryParse value with
-        | true, _ -> true
-        | _ -> false
-
+    let isTimeSpan (value: string) = TimeSpan.TryParse value |> fst
+        
     let mustBe (validate: string -> bool) (error: string) (value) =
         if value |> validate |> not then Some error else None
 
