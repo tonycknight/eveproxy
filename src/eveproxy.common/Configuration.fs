@@ -87,8 +87,8 @@ type AppConfiguration =
           evewhoApiUrl = "https://evewho.com/api/"
           evewhoThrottlingRequests = ""
           evewhoThrottlingSeconds = ""
-          redisqSessionMaxAge = TimeSpan.FromHours(3).ToString()
-          killmailMemoryCacheAge = TimeSpan.FromMinutes(15.).ToString()
+          redisqSessionMaxAge = ""
+          killmailMemoryCacheAge = ""
           mongoDbName = "eveproxy"
           mongoConnection = "" }
 
@@ -185,8 +185,13 @@ module Configuration =
 
             config.redisqSessionMaxAge
             |> mustBe
-                isTimeSpan
+                (isEmptyString ||>> isTimeSpan)
                 $"{nameof Unchecked.defaultof<AppConfiguration>.redisqSessionMaxAge} must be a valid timespan (HH:mm:ss)."
+
+            config.killmailMemoryCacheAge
+            |> mustBe
+                (isEmptyString ||>> isTimeSpan)
+                $"{nameof Unchecked.defaultof<AppConfiguration>.killmailMemoryCacheAge} must be a valid timespan (HH:mm:ss)."
 
             config.mongoDbName
             |> mustBe
