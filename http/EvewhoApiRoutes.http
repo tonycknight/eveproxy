@@ -1,4 +1,8 @@
-### test 1 - bad result
+### test 1 - 404
+GET http://localhost:8080/api/evewho/v1/
+Accept: application/json
+
+### test 2 - 404
 GET http://localhost:8080/api/evewho/v1/stuff?test=a
 Accept: application/json
 

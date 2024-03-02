@@ -109,17 +109,16 @@ module Validators =
         with ex ->
             false
 
-    let isNonEmptyString = String.IsNullOrWhiteSpace >> not
+    let isEmptyString = String.IsNullOrWhiteSpace
 
-    let isPositiveInteger (value: string) =
+    let isNonEmptyString = isEmptyString >> not
+
+    let isMinimumValueInteger minimum (value: string) =
         match Int32.TryParse value with
-        | true, x when x >= 0 -> true
+        | true, x when x >= minimum -> true
         | _ -> false
 
-    let isTimeSpan (value: string) =
-        match TimeSpan.TryParse value with
-        | true, _ -> true
-        | _ -> false
+    let isTimeSpan (value: string) = TimeSpan.TryParse value |> fst
 
     let mustBe (validate: string -> bool) (error: string) (value) =
         if value |> validate |> not then Some error else None

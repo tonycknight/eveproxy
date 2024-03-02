@@ -21,17 +21,31 @@ type AppConfiguration =
       zkbRedisqTtwExternal: string
       zkbRedisqTtwClient: string
       zkbApiUrl: string
+      zkbThrottlingRequests: string
+      zkbThrottlingSeconds: string
       evewhoApiUrl: string
+      evewhoThrottlingRequests: string
+      evewhoThrottlingSeconds: string
       redisqSessionMaxAge: string
       killmailMemoryCacheAge: string
       mongoDbName: string
       mongoConnection: string }
 
-    member this.ZkbRedisqUrl() =
-        sprintf "%s?queueID=%s&ttw=%s" this.zkbRedisqBaseUrl this.zkbRedisqQueueId this.zkbRedisqTtwExternal
+    member this.ZkbThrottling() =
+        let secs = this.zkbThrottlingSeconds |> Strings.toInt 1
+        let reqs = this.zkbThrottlingRequests |> Strings.toInt 1
+        (secs, reqs)
+
+    member this.EveWhoThrottling() =
+        let secs = this.evewhoThrottlingSeconds |> Strings.toInt 30
+        let reqs = this.evewhoThrottlingRequests |> Strings.toInt 10
+        (secs, reqs)
 
     member this.ClientRedisqTtw() =
         this.zkbRedisqTtwClient |> Strings.toInt 10
+
+    member this.ExternalRedisqTtw() =
+        this.zkbRedisqTtwExternal |> Strings.toInt 10
 
     member this.RedisqSessionMaxAge() =
         this.redisqSessionMaxAge |> Strings.toTimeSpan (TimeSpan.FromHours 3)
@@ -39,11 +53,18 @@ type AppConfiguration =
     member this.KillmailMemoryCacheAge() =
         this.killmailMemoryCacheAge |> Strings.toTimeSpan (TimeSpan.FromMinutes 15.)
 
+    member this.ZkbRedisqUrl() =
+        $"{this.zkbRedisqBaseUrl}?queueID={this.zkbRedisqQueueId}&ttw={this.ExternalRedisqTtw()}"
+
     static member emptyConfig =
         { AppConfiguration.hostUrls = ""
           allowExternalTraffic = true.ToString()
           zkbApiUrl = ""
+          zkbThrottlingRequests = ""
+          zkbThrottlingSeconds = ""
           evewhoApiUrl = ""
+          evewhoThrottlingRequests = ""
+          evewhoThrottlingSeconds = ""
           zkbRedisqBaseUrl = ""
           zkbRedisqQueueId = ""
           zkbRedisqTtwExternal = ""
@@ -58,12 +79,16 @@ type AppConfiguration =
           allowExternalTraffic = true.ToString()
           zkbRedisqBaseUrl = "https://redisq.zkillboard.com/listen.php"
           zkbRedisqQueueId = (System.Guid.NewGuid() |> sprintf "eveProxy%A")
-          zkbRedisqTtwExternal = "10"
-          zkbRedisqTtwClient = "10"
+          zkbRedisqTtwExternal = ""
+          zkbRedisqTtwClient = ""
           zkbApiUrl = "https://zkillboard.com/api/"
+          zkbThrottlingRequests = ""
+          zkbThrottlingSeconds = ""
           evewhoApiUrl = "https://evewho.com/api/"
-          redisqSessionMaxAge = TimeSpan.FromHours(3).ToString()
-          killmailMemoryCacheAge = TimeSpan.FromMinutes(15.).ToString()
+          evewhoThrottlingRequests = ""
+          evewhoThrottlingSeconds = ""
+          redisqSessionMaxAge = ""
+          killmailMemoryCacheAge = ""
           mongoDbName = "eveproxy"
           mongoConnection = "" }
 
@@ -120,12 +145,12 @@ module Configuration =
 
             config.zkbRedisqTtwExternal
             |> mustBe
-                isPositiveInteger
+                (isEmptyString ||>> isMinimumValueInteger 0)
                 $"{nameof Unchecked.defaultof<AppConfiguration>.zkbRedisqTtwExternal} must be a positive integer."
 
             config.zkbRedisqTtwClient
             |> mustBe
-                isPositiveInteger
+                (isEmptyString ||>> isMinimumValueInteger 0)
                 $"{nameof Unchecked.defaultof<AppConfiguration>.zkbRedisqTtwClient} must be a positive integer."
 
             config.zkbApiUrl
@@ -133,15 +158,40 @@ module Configuration =
                 (isNonEmptyString &&>> isUrl)
                 $"{nameof Unchecked.defaultof<AppConfiguration>.zkbApiUrl} must be a valid URL."
 
+            config.zkbThrottlingSeconds
+            |> mustBe
+                (isEmptyString ||>> isMinimumValueInteger 1)
+                $"{nameof Unchecked.defaultof<AppConfiguration>.zkbThrottlingSeconds} must be greater than 0."
+
+            config.zkbThrottlingRequests
+            |> mustBe
+                (isEmptyString ||>> isMinimumValueInteger 1)
+                $"{nameof Unchecked.defaultof<AppConfiguration>.zkbThrottlingRequests} must be greater than 0."
+
             config.evewhoApiUrl
             |> mustBe
                 (isNonEmptyString &&>> isUrl)
                 $"{nameof Unchecked.defaultof<AppConfiguration>.evewhoApiUrl} must be a valid URL."
 
+            config.evewhoThrottlingSeconds
+            |> mustBe
+                (isEmptyString ||>> isMinimumValueInteger 1)
+                $"{nameof Unchecked.defaultof<AppConfiguration>.evewhoThrottlingSeconds} must be greater than 0."
+
+            config.evewhoThrottlingRequests
+            |> mustBe
+                (isEmptyString ||>> isMinimumValueInteger 1)
+                $"{nameof Unchecked.defaultof<AppConfiguration>.evewhoThrottlingRequests} must be greater than 0."
+
             config.redisqSessionMaxAge
             |> mustBe
-                isTimeSpan
+                (isEmptyString ||>> isTimeSpan)
                 $"{nameof Unchecked.defaultof<AppConfiguration>.redisqSessionMaxAge} must be a valid timespan (HH:mm:ss)."
+
+            config.killmailMemoryCacheAge
+            |> mustBe
+                (isEmptyString ||>> isTimeSpan)
+                $"{nameof Unchecked.defaultof<AppConfiguration>.killmailMemoryCacheAge} must be a valid timespan (HH:mm:ss)."
 
             config.mongoDbName
             |> mustBe

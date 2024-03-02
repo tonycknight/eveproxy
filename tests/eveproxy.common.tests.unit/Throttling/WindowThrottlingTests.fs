@@ -13,7 +13,7 @@ module WindowThrottlingTests =
     [<Property(Verbose = true)>]
     let ``windowThrottling accepts only times in a specific window`` (window: int) =
         let currentTime = new TimeOnly(0, 0, 0) |> dateTime
-        let throttle = Throttling.windowThrottling window 10
+        let throttle = Throttling.windowThrottling (window, 10)
 
         let f = fun () -> throttle Map.empty currentTime
 
@@ -32,7 +32,7 @@ module WindowThrottlingTests =
         let currentTime = new TimeOnly(0, 0, 0) |> dateTime
 
         try
-            let throttle = Throttling.windowThrottling 30 count.Get
+            let throttle = Throttling.windowThrottling (30, count.Get)
             throttle Map.empty currentTime |> ignore
             false
         with ex ->
@@ -42,7 +42,7 @@ module WindowThrottlingTests =
     let ``windowThrottling on empty counts returns no wait`` () =
         let counts = Map.empty
         let currentTime = new TimeOnly(0, 0, 0) |> dateTime
-        let throttle = Throttling.windowThrottling 30 10
+        let throttle = Throttling.windowThrottling (30, 10)
 
         let (c, wait) = throttle counts currentTime
 
@@ -52,7 +52,7 @@ module WindowThrottlingTests =
     let ``windowThrottling on single counts returns no wait`` () =
         let currentTime = new TimeOnly(0, 0, 0) |> dateTime
         let counts = Map.empty |> Map.add currentTime 1
-        let throttle = Throttling.windowThrottling 30 10
+        let throttle = Throttling.windowThrottling (30, 10)
 
         let (c, wait) = throttle counts currentTime
 
@@ -66,7 +66,7 @@ module WindowThrottlingTests =
         Prop.forAll maxCounts (fun maxCount ->
             let currentTime = new TimeOnly(0, 0, 0) |> dateTime
             let counts = Map.empty |> Map.add currentTime maxCount
-            let throttle = Throttling.windowThrottling 30 maxCount
+            let throttle = Throttling.windowThrottling (30, maxCount)
 
             let (c, wait) = throttle counts currentTime
 
@@ -84,7 +84,7 @@ module WindowThrottlingTests =
             let currentTime = new TimeOnly(0, 0, sec) |> dateTime
             let key = new TimeOnly(0, 0, 0) |> dateTime
             let counts = Map.empty |> Map.add key maxCount
-            let throttle = Throttling.windowThrottling window maxCount
+            let throttle = Throttling.windowThrottling (window, maxCount)
 
             let (c, wait) = throttle counts currentTime
 
@@ -103,7 +103,7 @@ module WindowThrottlingTests =
             let currentTime = new TimeOnly(0, 0, sec) |> dateTime
             let key = new TimeOnly(0, 0, window) |> dateTime
             let counts = Map.empty |> Map.add key maxCount
-            let throttle = Throttling.windowThrottling window maxCount
+            let throttle = Throttling.windowThrottling (window, maxCount)
 
             let (c, wait) = throttle counts currentTime
 
