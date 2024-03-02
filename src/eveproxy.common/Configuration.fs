@@ -145,12 +145,12 @@ module Configuration =
 
             config.zkbRedisqTtwExternal
             |> mustBe
-                (isEmptyString ||>> isPositiveInteger)
+                (isEmptyString ||>> isMinimumValueInteger 0)
                 $"{nameof Unchecked.defaultof<AppConfiguration>.zkbRedisqTtwExternal} must be a positive integer."
 
             config.zkbRedisqTtwClient
             |> mustBe
-                (isEmptyString ||>> isPositiveInteger)
+                (isEmptyString ||>> isMinimumValueInteger 0)
                 $"{nameof Unchecked.defaultof<AppConfiguration>.zkbRedisqTtwClient} must be a positive integer."
 
             config.zkbApiUrl
@@ -160,13 +160,13 @@ module Configuration =
 
             config.zkbThrottlingSeconds
             |> mustBe
-                (isEmptyString ||>> isPositiveInteger)
-                $"{nameof Unchecked.defaultof<AppConfiguration>.zkbThrottlingSeconds} must be a positive integer."
+                (isEmptyString ||>> isMinimumValueInteger 1)
+                $"{nameof Unchecked.defaultof<AppConfiguration>.zkbThrottlingSeconds} must be greater than 0."
 
             config.zkbThrottlingRequests
             |> mustBe
-                (isEmptyString ||>> isPositiveInteger)
-                $"{nameof Unchecked.defaultof<AppConfiguration>.zkbThrottlingRequests} must be a positive integer."
+                (isEmptyString ||>> isMinimumValueInteger 1)
+                $"{nameof Unchecked.defaultof<AppConfiguration>.zkbThrottlingRequests} must be greater than 0."
 
             config.evewhoApiUrl
             |> mustBe
@@ -175,13 +175,13 @@ module Configuration =
 
             config.evewhoThrottlingSeconds
             |> mustBe
-                (isEmptyString ||>> isPositiveInteger)
-                $"{nameof Unchecked.defaultof<AppConfiguration>.evewhoThrottlingSeconds} must be a positive integer."
+                (isEmptyString ||>> isMinimumValueInteger 1)
+                $"{nameof Unchecked.defaultof<AppConfiguration>.evewhoThrottlingSeconds} must be greater than 0."
 
             config.evewhoThrottlingRequests
             |> mustBe
-                (isEmptyString ||>> isPositiveInteger)
-                $"{nameof Unchecked.defaultof<AppConfiguration>.evewhoThrottlingRequests} must be a positive integer."
+                (isEmptyString ||>> isMinimumValueInteger 1)
+                $"{nameof Unchecked.defaultof<AppConfiguration>.evewhoThrottlingRequests} must be greater than 0."
 
             config.redisqSessionMaxAge
             |> mustBe

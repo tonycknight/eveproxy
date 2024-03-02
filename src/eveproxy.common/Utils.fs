@@ -113,9 +113,9 @@ module Validators =
 
     let isNonEmptyString = isEmptyString >> not
 
-    let isPositiveInteger (value: string) =
+    let isMinimumValueInteger minimum (value: string) =
         match Int32.TryParse value with
-        | true, x when x >= 0 -> true
+        | true, x when x >= minimum -> true
         | _ -> false
 
     let isTimeSpan (value: string) =
