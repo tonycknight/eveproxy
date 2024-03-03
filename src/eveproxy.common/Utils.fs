@@ -168,10 +168,13 @@ module Io =
 
 [<ExcludeFromCodeCoverage>]
 module Args =
-    
+
     let getValue prefix (args: seq<string>) =
-        let arg = args |> Seq.filter (fun a -> a.StartsWith(prefix, StringComparison.InvariantCultureIgnoreCase)) |> Seq.tryHead
+        let arg =
+            args
+            |> Seq.filter (fun a -> a.StartsWith(prefix, StringComparison.InvariantCultureIgnoreCase))
+            |> Seq.tryHead
+
         match arg with
         | Some arg -> arg.Substring(prefix.Length).Trim() |> Some
         | None -> None
-
