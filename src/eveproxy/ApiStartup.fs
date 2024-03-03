@@ -61,7 +61,17 @@ module ApiStartup =
         >> addContentNegotiation
 
     let configSource (args: string[]) (whbc: IConfigurationBuilder) =
-        whbc
-            .AddJsonFile("appsettings.json", true, false)
-            .AddEnvironmentVariables("eveproxy_")
-            .AddCommandLine(args)
+        let whbc = 
+            whbc
+                .AddJsonFile("appsettings.json", true, false)
+                .AddEnvironmentVariables("eveproxy_")
+                .AddCommandLine(args)
+
+        let configPath = args |> Args.getValue "--config=" |> Option.map (Io.toFullPath >> Io.normalise) |> Option.defaultValue ""
+        
+        if configPath <> "" then
+            if Io.fileExists configPath |> not then
+                failwithf $"{configPath} not found."
+            whbc.AddJsonFile(configPath, true, false)
+        else
+            whbc
