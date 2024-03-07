@@ -135,7 +135,7 @@ module Mongo =
         |> collection.CountDocumentsAsync
 
     let estimatedCount (collection: IMongoCollection<BsonDocument>) =
-        collection.EstimatedDocumentCountAsync ()
+        collection.EstimatedDocumentCountAsync()
 
 
     let pullSingletonFromQueue<'a> (collection: IMongoCollection<BsonDocument>) =
