@@ -232,7 +232,7 @@ type MongoKillmailReferenceQueue(config: eveproxy.AppConfiguration, logFactory: 
     interface IKillmailReferenceQueue with
         member this.Name = name
 
-        member this.GetCountAsync() = eveproxy.Mongo.count mongoCol
+        member this.GetCountAsync() = eveproxy.Mongo.estimatedCount mongoCol
 
         member this.PushAsync(value: KillPackageReferenceData) =
             task {
