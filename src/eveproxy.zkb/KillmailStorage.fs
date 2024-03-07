@@ -124,7 +124,7 @@ type MongoKillmailRepository(config: eveproxy.AppConfiguration, cache: IMemoryCa
 
         member this.GetAsync(id) = getAsync id
 
-        member this.GetCountAsync() = eveproxy.Mongo.count mongoCol
+        member this.GetCountAsync() = eveproxy.Mongo.estimatedCount mongoCol
 
 type IKillmailWriter =
     abstract member WriteAsync: kill: KillPackageData -> Task<KillmailWriteResult>
