@@ -43,6 +43,11 @@ jobs:
 
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4                
+
+      - name: Restore packages
+        run: |
+          dotnet tool restore
+          dotnet restore
   
       - name: Check Style
         run: dotnet format --verify-no-changes
