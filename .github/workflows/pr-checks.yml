@@ -31,3 +31,18 @@ jobs:
         name: Set label
         with:
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
+
+  sca:
+    uses: ./.github/workflows/sca.yml
+
+  check-style-rules:
+    runs-on: ubuntu-latest
+    name: Check Style rules
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4                
+  
+      - name: Check Style
+        run: dotnet format --verify-no-changes

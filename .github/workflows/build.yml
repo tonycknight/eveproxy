@@ -12,52 +12,7 @@ env:
   docker-image-name: ghcr.io/tonycknight/eveproxy
   
 jobs:
-  sca:
-    name: SCA
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup .NET Core SDK
-        uses: actions/setup-dotnet@v4
-              
-      - name: SCA
-        run: |
-            dotnet tool restore
-            dotnet run --project ./build/build.fsproj -t "SCA"
-
-  check-style-rules:
-    runs-on: ubuntu-latest
-    name: Check Style rules
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup .NET Core SDK
-        uses: actions/setup-dotnet@v4                
- 
-      - name: Style checks
-        if: ${{ github.event_name == 'pull_request' }}
-        run: |
-            dotnet tool restore    
-            dotnet run --project ./build/build.fsproj -t "Check Style Rules"
-
-
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup .NET Core SDK
-        uses: actions/setup-dotnet@v4
-              
-      - name: Run build
-        run: |
-            dotnet tool restore
-            dotnet run --project ./build/build.fsproj -t "Build"            
-
+  
   tests:
     name: Tests
     runs-on: ubuntu-latest
@@ -65,13 +20,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup .NET Core SDK
+      - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
-                      
-      - name: Tests
+             
+      - name: Restore packages
         run: |
-            dotnet tool restore
-            dotnet run --project ./build/build.fsproj -t "Tests"
+          dotnet tool restore
+          dotnet restore
+
+      - name: Tests
+        run: dotnet test -c Debug --logger "trx;LogFileName=test_results.trx" /p:CollectCoverage=true /p:CoverletOutput=./TestResults/coverage.info /p:CoverletOutputFormat=cobertura
 
       - name: Archive Test results
         uses: actions/upload-artifact@v4
@@ -116,7 +74,7 @@ jobs:
   build-publish-docker-image:
     name: Build & Publish docker image
     runs-on: ubuntu-latest
-    needs:   [ build, tests, sca, check-style-rules ]
+    needs:   [ tests ]
 
     steps:
       - uses: actions/checkout@v4

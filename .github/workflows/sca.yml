@@ -1,4 +1,4 @@
-name: "Scheduled SCA"
+name: "SCA"
 
 on:
   workflow_dispatch:
@@ -15,16 +15,14 @@ on:
 
 jobs:
   sca:
-    name: Scheduled SCA
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup .NET SDK
-        uses: actions/setup-dotnet@v4
-                
-      - name: SCA
-        run: |
-            dotnet tool restore
-            dotnet run --project ./build/build.fsproj -t "SCA"
+      - name: Restore packages
+        run: dotnet tool restore
+      
+      - name: Vulnereble package scan
+        uses: tonycknight/pkgchk-action@v1.0.15
+    
