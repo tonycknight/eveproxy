@@ -1,8 +1,9 @@
 ﻿namespace eveproxy
 
 open System
-open eveproxy.zkb
+open eveproxy.esi
 open eveproxy.evewho
+open eveproxy.zkb
 open Giraffe
 open Microsoft.AspNetCore.Http
 
@@ -37,6 +38,7 @@ module WebApp =
                 let! sessionsActorStats = sessionsActor.GetStats()
                 let! zkbPassthruStats = ctx.GetService<IZkbApiPassthroughActor>().GetStats()
                 let! evewhoPassthruStats = ctx.GetService<IEvewhoApiPassthroughActor>().GetStats()
+                let! esiPassthruStats = ctx.GetService<IEsiApiPassthroughActor>().GetStats()
 
                 let! kmCount = ctx.GetService<IKillmailRepository>().GetCountAsync()
                 let! sessionStorageStats = sessionsActor.GetStorageStats()
@@ -47,7 +49,8 @@ module WebApp =
                            ingestActorStats
                            sessionsActorStats
                            zkbPassthruStats
-                           evewhoPassthruStats |]
+                           evewhoPassthruStats
+                           esiPassthruStats |]
                        killmails =
                         {| ingestion = zkbApiStats.ingestion
                            distribution = zkbApiStats.distribution
