@@ -45,7 +45,7 @@ type EvewhoApiPassthroughActor(hc: IExternalHttpClient, logFactory: ILoggerFacto
                     | HttpTooManyRequestsResponse _ -> getEvewhoApiIterate newThrottling (count - 1) url
             with ex ->
                 log.LogError(ex.Message, ex)
-                return (throttling, HttpErrorRequestResponse(Net.HttpStatusCode.InternalServerError, ""))
+                return (throttling, HttpErrorRequestResponse(Net.HttpStatusCode.InternalServerError, "", []))
         }
 
     let getEvewhoApi throttling route =

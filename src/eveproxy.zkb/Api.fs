@@ -131,17 +131,17 @@ module Api =
 
                             return
                                 match resp with
-                                | HttpOkRequestResponse(_, body, mediaType) ->
+                                | HttpOkRequestResponse(_, body, mediaType, _) ->
                                     match mediaType with
                                     | Some mt -> body |> eveproxy.Api.contentString mt
                                     | _ -> body |> eveproxy.Api.jsonString
                                 | HttpTooManyRequestsResponse _ -> RequestErrors.tooManyRequests (text "")
                                 | HttpExceptionRequestResponse _ -> ServerErrors.internalError (text "")
-                                | HttpErrorRequestResponse(rc, _) when rc = System.Net.HttpStatusCode.NotFound ->
+                                | HttpErrorRequestResponse(rc, _, _) when rc = System.Net.HttpStatusCode.NotFound ->
                                     notFound
-                                | HttpErrorRequestResponse(rc, _) when rc = System.Net.HttpStatusCode.BadRequest ->
+                                | HttpErrorRequestResponse(rc, _, _) when rc = System.Net.HttpStatusCode.BadRequest ->
                                     badRequest
-                                | HttpErrorRequestResponse(rc, _) when
+                                | HttpErrorRequestResponse(rc, _, _) when
                                     rc = System.Net.HttpStatusCode.InternalServerError
                                     ->
                                     ServerErrors.internalError (text "")

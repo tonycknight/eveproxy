@@ -6,22 +6,35 @@ open System.Threading.Tasks
 open System.Net
 open System.Net.Http
 
+type HttpResponseHeaders = (string * string) list
+     
+
 type HttpRequestResponse =
-    | HttpOkRequestResponse of status: HttpStatusCode * body: string * contentType: string option
-    | HttpTooManyRequestsResponse of status: HttpStatusCode
-    | HttpErrorRequestResponse of status: HttpStatusCode * body: string
+    | HttpOkRequestResponse of status: HttpStatusCode * body: string * contentType: string option * headers: HttpResponseHeaders
+    | HttpTooManyRequestsResponse of status: HttpStatusCode * headers: HttpResponseHeaders
+    | HttpErrorRequestResponse of status: HttpStatusCode * body: string * headers: HttpResponseHeaders
     | HttpExceptionRequestResponse of ex: Exception
 
     static member status(response: HttpRequestResponse) =
         match response with
-        | HttpOkRequestResponse(status, _, _) -> status
-        | HttpTooManyRequestsResponse(status) -> status
-        | HttpErrorRequestResponse(status, _) -> status
+        | HttpOkRequestResponse(status, _, _, _) -> status
+        | HttpTooManyRequestsResponse(status, _) -> status
+        | HttpErrorRequestResponse(status, _, _) -> status
         | HttpExceptionRequestResponse _ -> HttpStatusCode.InternalServerError
 
     static member loggable(response: HttpRequestResponse) =
         let status = HttpRequestResponse.status response
         $"{response.GetType().Name} {status}"
+
+    static member headers(response: HttpRequestResponse) =
+        match response with
+        | HttpOkRequestResponse(_, _, _, headers) -> headers
+        | HttpTooManyRequestsResponse(_, headers) -> headers
+        | HttpErrorRequestResponse(_, _, headers) -> headers
+        | _ -> []
+
+    static member headerValues name (response: HttpRequestResponse) =        
+        response |> HttpRequestResponse.headers |> Seq.filter (fun t -> StringComparer.InvariantCultureIgnoreCase.Equals(fst t, name) ) |> Seq.map snd
 
 [<ExcludeFromCodeCoverage>]
 module Http =
@@ -40,7 +53,12 @@ module Http =
             return body
         }
 
+    let headers (resp: HttpResponseMessage) =
+        resp.Headers |> Seq.collect (fun x -> x.Value |> Seq.map (fun v -> (Strings.toLower x.Key, v))) |> List.ofSeq
+
     let parse (resp: HttpResponseMessage) =
+        let respHeaders = headers resp
+
         match resp.IsSuccessStatusCode, resp.StatusCode with
         | true, _ ->
             task {
@@ -51,14 +69,14 @@ module Http =
                     |> Option.ofNull<Headers.MediaTypeHeaderValue>
                     |> Option.map _.MediaType
 
-                return HttpOkRequestResponse(resp.StatusCode, body, mediaType)
+                return HttpOkRequestResponse(resp.StatusCode, body, mediaType, respHeaders)
             }
         | false, HttpStatusCode.TooManyRequests ->
-            HttpTooManyRequestsResponse(resp.StatusCode) |> eveproxy.Threading.toTaskResult
+            HttpTooManyRequestsResponse(resp.StatusCode, respHeaders) |> eveproxy.Threading.toTaskResult
         | false, _ ->
             task {
                 let! body = body resp
-                return HttpErrorRequestResponse(resp.StatusCode, body)
+                return HttpErrorRequestResponse(resp.StatusCode, body, respHeaders)
             }
 
     let send (client: HttpClient) (msg: HttpRequestMessage) =

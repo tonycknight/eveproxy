@@ -22,6 +22,15 @@ type EsiApiPassthroughActor(hc: IExternalHttpClient, logFactory: ILoggerFactory,
     let errorLimitReached = "x-esi-error-limited"
     
     let log = logFactory.CreateLogger<EsiApiPassthroughActor>()
+
+    let intHeaderValue defaultValue name =
+        HttpRequestResponse.headerValues name
+            >> Seq.tryHead
+            >> Option.map (Strings.toInt defaultValue)
+            >> Option.defaultValue defaultValue
+
+    let errorsRemaining = intHeaderValue 0 errorLimitRemainHeader 
+    let errorsResetWait = intHeaderValue 60 errorLimitResetHeader >> TimeSpan.FromSeconds
         
     let rec getEsiApiIterate count url =
         task {
@@ -32,21 +41,24 @@ type EsiApiPassthroughActor(hc: IExternalHttpClient, logFactory: ILoggerFactory,
                 $"GET {HttpRequestResponse.loggable resp} received from [{url}]."
                 |> log.LogTrace
 
-                // TODO: get response headers
+                let errorsRemaining = errorsRemaining resp
+                let errorReset = errorsResetWait resp
+                            
                 return!
                     match resp with
                     | HttpTooManyRequestsResponse _ when count <= 0 -> resp |> Threading.toTaskResult
                     | HttpOkRequestResponse _
                     | HttpErrorRequestResponse _
                     | HttpExceptionRequestResponse _ -> resp |> Threading.toTaskResult
-                    | HttpTooManyRequestsResponse _ -> getEsiApiIterate (count - 1) url
+                    | HttpTooManyRequestsResponse _ -> getEsiApiIterate (count - 1) url // TODO: error limit?
             with ex ->
                 log.LogError(ex.Message, ex)
-                return HttpErrorRequestResponse(Net.HttpStatusCode.InternalServerError, "")
+                return HttpErrorRequestResponse(Net.HttpStatusCode.InternalServerError, "", [])
         }
 
-    let getEsiApi route =
+    let getEsiApi (state: EsiApiPassthroughActorState) route =
         let url = $"{config.esiApiUrl}{route}"
+        let x = state.errorLimitRemaining
         getEsiApiIterate 10 url
 
     let actor =
@@ -59,7 +71,7 @@ type EsiApiPassthroughActor(hc: IExternalHttpClient, logFactory: ILoggerFactory,
                         match msg with
                         | ActorMessage.PullReply(route, rc) ->
                             task {
-                                let! resp = getEsiApi route
+                                let! resp = getEsiApi state route
                                 (resp :> obj) |> rc.Reply
 
                                 return state // TODO: 
