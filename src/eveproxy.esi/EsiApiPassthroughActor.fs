@@ -7,7 +7,6 @@ open Microsoft.Extensions.Logging
 
 type private EsiApiPassthroughActorState =
     { errorLimitRemaining: int
-      errorLimitResetWait: TimeSpan
       errorLimitReset: DateTime }
 
 type EsiApiPassthroughActor(hc: IExternalHttpClient, logFactory: ILoggerFactory, config: AppConfiguration) =
@@ -46,14 +45,11 @@ type EsiApiPassthroughActor(hc: IExternalHttpClient, logFactory: ILoggerFactory,
                 let! resp = hc.GetAsync url
                 $"GET {HttpRequestResponse.loggable resp} received from [{url}]."
                 |> log.LogTrace
-
-                let errorsResetWait = errorsResetWait resp
-
+                                
                 let state =
                     { state with
                         errorLimitRemaining = errorsRemaining resp
-                        errorLimitResetWait = errorsResetWait
-                        errorLimitReset = now.Add(errorsResetWait) }
+                        errorLimitReset = now.Add(errorsResetWait resp) }
 
                 return!
                     match resp with
@@ -102,7 +98,6 @@ type EsiApiPassthroughActor(hc: IExternalHttpClient, logFactory: ILoggerFactory,
                 }
 
             { EsiApiPassthroughActorState.errorLimitRemaining = 100
-              errorLimitResetWait = TimeSpan.Zero
               errorLimitReset = DateTime.MinValue }
             |> loop)
 
