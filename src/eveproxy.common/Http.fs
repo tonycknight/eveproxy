@@ -15,14 +15,14 @@ type HttpRequestResponse =
         body: string *
         contentType: string option *
         headers: HttpResponseHeaders
-    | HttpTooManyRequestsResponse of status: HttpStatusCode * headers: HttpResponseHeaders
+    | HttpTooManyRequestsResponse of headers: HttpResponseHeaders
     | HttpErrorRequestResponse of status: HttpStatusCode * body: string * headers: HttpResponseHeaders
     | HttpExceptionRequestResponse of ex: Exception
 
     static member status(response: HttpRequestResponse) =
         match response with
         | HttpOkRequestResponse(status, _, _, _) -> status
-        | HttpTooManyRequestsResponse(status, _) -> status
+        | HttpTooManyRequestsResponse(_) -> System.Net.HttpStatusCode.TooManyRequests
         | HttpErrorRequestResponse(status, _, _) -> status
         | HttpExceptionRequestResponse _ -> HttpStatusCode.InternalServerError
 
@@ -33,7 +33,7 @@ type HttpRequestResponse =
     static member headers(response: HttpRequestResponse) =
         match response with
         | HttpOkRequestResponse(_, _, _, headers) -> headers
-        | HttpTooManyRequestsResponse(_, headers) -> headers
+        | HttpTooManyRequestsResponse(headers) -> headers
         | HttpErrorRequestResponse(_, _, headers) -> headers
         | _ -> []
 
@@ -81,8 +81,7 @@ module Http =
                 return HttpOkRequestResponse(resp.StatusCode, body, mediaType, respHeaders)
             }
         | false, HttpStatusCode.TooManyRequests ->
-            HttpTooManyRequestsResponse(resp.StatusCode, respHeaders)
-            |> eveproxy.Threading.toTaskResult
+            HttpTooManyRequestsResponse(respHeaders) |> eveproxy.Threading.toTaskResult
         | false, _ ->
             task {
                 let! body = body resp

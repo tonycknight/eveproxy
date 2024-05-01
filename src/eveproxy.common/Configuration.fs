@@ -44,11 +44,10 @@ type AppConfiguration =
         let reqs = this.evewhoThrottlingRequests |> Strings.toInt 10
         (secs, reqs)
 
-    member this.EsiMinimumErrorLimit()=
+    member this.EsiMinimumErrorLimit() =
         this.esiMinimumErrorLimit |> Strings.toInt 10
 
-    member this.EsiRetryCount()=
-        this.esiRetryCount |> Strings.toInt 10
+    member this.EsiRetryCount() = this.esiRetryCount |> Strings.toInt 10
 
     member this.ClientRedisqTtw() =
         this.zkbRedisqTtwClient |> Strings.toInt 10
@@ -217,7 +216,7 @@ module Configuration =
             |> mustBe
                 (isEmptyString ||>> isMinimumValueInteger 0)
                 $"{nameof Unchecked.defaultof<AppConfiguration>.esiMinimumErrorLimit} must be greater than or equal to 0."
-                            
+
             config.esiRetryCount
             |> mustBe
                 (isEmptyString ||>> isMinimumValueInteger 0)

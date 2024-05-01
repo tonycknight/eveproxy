@@ -43,9 +43,10 @@ type EsiApiPassthroughActor(hc: IExternalHttpClient, logFactory: ILoggerFactory,
 
                 $"GET [{url}] iteration #{count}..." |> log.LogTrace
                 let! resp = hc.GetAsync url
+
                 $"GET {HttpRequestResponse.loggable resp} received from [{url}]."
                 |> log.LogTrace
-                                
+
                 let state =
                     { state with
                         errorLimitRemaining = errorsRemaining resp
@@ -57,8 +58,7 @@ type EsiApiPassthroughActor(hc: IExternalHttpClient, logFactory: ILoggerFactory,
                         getEsiApiIterate state (count - 1) url
                     | _ when state.errorLimitRemaining <= errorLimit ->
                         $"{state.errorLimitRemaining} received... breaking circuit" |> log.LogWarning
-                        (state, HttpTooManyRequestsResponse(HttpStatusCode.TooManyRequests, []))
-                        |> Threading.toTaskResult
+                        (state, HttpTooManyRequestsResponse([])) |> Threading.toTaskResult
                     | _ -> (state, resp) |> Threading.toTaskResult
             with ex ->
                 log.LogError(ex.Message, ex)
@@ -71,8 +71,7 @@ type EsiApiPassthroughActor(hc: IExternalHttpClient, logFactory: ILoggerFactory,
             && DateTime.UtcNow < state.errorLimitReset
         then
             $"{state.errorLimitRemaining} received... breaking circuit" |> log.LogWarning
-            (state, HttpTooManyRequestsResponse(HttpStatusCode.TooManyRequests, []))
-            |> Threading.toTaskResult
+            (state, HttpTooManyRequestsResponse([])) |> Threading.toTaskResult
         else
             $"{config.esiApiUrl}{route}" |> getEsiApiIterate state retryCount
 
