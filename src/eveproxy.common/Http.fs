@@ -16,6 +16,7 @@ type HttpRequestResponse =
         contentType: string option *
         headers: HttpResponseHeaders
     | HttpTooManyRequestsResponse of headers: HttpResponseHeaders
+    | HttpBadGatewayResponse of headers: HttpResponseHeaders
     | HttpErrorRequestResponse of status: HttpStatusCode * body: string * headers: HttpResponseHeaders
     | HttpExceptionRequestResponse of ex: Exception
 
@@ -25,6 +26,7 @@ type HttpRequestResponse =
         | HttpTooManyRequestsResponse(_) -> System.Net.HttpStatusCode.TooManyRequests
         | HttpErrorRequestResponse(status, _, _) -> status
         | HttpExceptionRequestResponse _ -> HttpStatusCode.InternalServerError
+        | HttpBadGatewayResponse _ -> HttpStatusCode.BadGateway
 
     static member loggable(response: HttpRequestResponse) =
         let status = HttpRequestResponse.status response
@@ -82,6 +84,8 @@ module Http =
             }
         | false, HttpStatusCode.TooManyRequests ->
             HttpTooManyRequestsResponse(respHeaders) |> eveproxy.Threading.toTaskResult
+        | false, HttpStatusCode.BadGateway ->
+            HttpBadGatewayResponse(respHeaders) |> eveproxy.Threading.toTaskResult
         | false, _ ->
             task {
                 let! body = body resp
