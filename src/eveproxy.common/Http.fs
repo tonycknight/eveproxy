@@ -7,14 +7,19 @@ open System.Net
 open System.Net.Http
 
 type HttpResponseHeaders = (string * string) list
-     
+
 
 type HttpRequestResponse =
-    | HttpOkRequestResponse of status: HttpStatusCode * body: string * contentType: string option * headers: HttpResponseHeaders
+    | HttpOkRequestResponse of
+        status: HttpStatusCode *
+        body: string *
+        contentType: string option *
+        headers: HttpResponseHeaders
     | HttpTooManyRequestsResponse of status: HttpStatusCode * headers: HttpResponseHeaders
     | HttpErrorRequestResponse of status: HttpStatusCode * body: string * headers: HttpResponseHeaders
     | HttpExceptionRequestResponse of ex: Exception
-
+    // TODO: | HttpBadGatewayResponse of status: HttpStatusCode
+    
     static member status(response: HttpRequestResponse) =
         match response with
         | HttpOkRequestResponse(status, _, _, _) -> status
@@ -33,8 +38,11 @@ type HttpRequestResponse =
         | HttpErrorRequestResponse(_, _, headers) -> headers
         | _ -> []
 
-    static member headerValues name (response: HttpRequestResponse) =        
-        response |> HttpRequestResponse.headers |> Seq.filter (fun t -> StringComparer.InvariantCultureIgnoreCase.Equals(fst t, name) ) |> Seq.map snd
+    static member headerValues name (response: HttpRequestResponse) =
+        response
+        |> HttpRequestResponse.headers
+        |> Seq.filter (fun t -> StringComparer.InvariantCultureIgnoreCase.Equals(fst t, name))
+        |> Seq.map snd
 
 [<ExcludeFromCodeCoverage>]
 module Http =
@@ -54,7 +62,9 @@ module Http =
         }
 
     let headers (resp: HttpResponseMessage) =
-        resp.Headers |> Seq.collect (fun x -> x.Value |> Seq.map (fun v -> (Strings.toLower x.Key, v))) |> List.ofSeq
+        resp.Headers
+        |> Seq.collect (fun x -> x.Value |> Seq.map (fun v -> (Strings.toLower x.Key, v)))
+        |> List.ofSeq
 
     let parse (resp: HttpResponseMessage) =
         let respHeaders = headers resp
@@ -72,7 +82,8 @@ module Http =
                 return HttpOkRequestResponse(resp.StatusCode, body, mediaType, respHeaders)
             }
         | false, HttpStatusCode.TooManyRequests ->
-            HttpTooManyRequestsResponse(resp.StatusCode, respHeaders) |> eveproxy.Threading.toTaskResult
+            HttpTooManyRequestsResponse(resp.StatusCode, respHeaders)
+            |> eveproxy.Threading.toTaskResult
         | false, _ ->
             task {
                 let! body = body resp

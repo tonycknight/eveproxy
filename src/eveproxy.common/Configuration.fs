@@ -41,7 +41,7 @@ type AppConfiguration =
         let secs = this.evewhoThrottlingSeconds |> Strings.toInt 30
         let reqs = this.evewhoThrottlingRequests |> Strings.toInt 10
         (secs, reqs)
-            
+
     member this.ClientRedisqTtw() =
         this.zkbRedisqTtwClient |> Strings.toInt 10
 
