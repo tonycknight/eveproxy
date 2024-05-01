@@ -21,7 +21,7 @@ type EsiApiPassthroughActor(hc: IExternalHttpClient, logFactory: ILoggerFactory,
     [<Literal>]
     let errorLimitReached = "x-esi-error-limited"
 
-    let errorLimit = 90 // TODO: config?
+    let errorLimit = 10 // TODO: config?
 
     let log = logFactory.CreateLogger<EsiApiPassthroughActor>()
 
