@@ -97,7 +97,7 @@ type EsiApiPassthroughActor(hc: IExternalHttpClient, logFactory: ILoggerFactory,
                     return! loop state
                 }
 
-            { EsiApiPassthroughActorState.errorLimitRemaining = 100
+            { EsiApiPassthroughActorState.errorLimitRemaining = errorLimit
               errorLimitReset = DateTime.MinValue }
             |> loop)
 
