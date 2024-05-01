@@ -18,7 +18,6 @@ type HttpRequestResponse =
     | HttpTooManyRequestsResponse of status: HttpStatusCode * headers: HttpResponseHeaders
     | HttpErrorRequestResponse of status: HttpStatusCode * body: string * headers: HttpResponseHeaders
     | HttpExceptionRequestResponse of ex: Exception
-    // TODO: | HttpBadGatewayResponse of status: HttpStatusCode
     
     static member status(response: HttpRequestResponse) =
         match response with

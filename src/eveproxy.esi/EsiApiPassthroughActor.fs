@@ -1,12 +1,13 @@
 ﻿namespace eveproxy.esi
 
 open System
+open System.Net
 open eveproxy
 open Microsoft.Extensions.Logging
 
 type private EsiApiPassthroughActorState =
     { errorLimitRemaining: int
-      errorLimitResetWait: TimeSpan 
+      errorLimitResetWait: TimeSpan
       errorLimitReset: DateTime }
 
 type EsiApiPassthroughActor(hc: IExternalHttpClient, logFactory: ILoggerFactory, config: AppConfiguration) =
@@ -19,6 +20,8 @@ type EsiApiPassthroughActor(hc: IExternalHttpClient, logFactory: ILoggerFactory,
 
     [<Literal>]
     let errorLimitReached = "x-esi-error-limited"
+
+    let errorLimit = 10
 
     let log = logFactory.CreateLogger<EsiApiPassthroughActor>()
 
@@ -51,23 +54,22 @@ type EsiApiPassthroughActor(hc: IExternalHttpClient, logFactory: ILoggerFactory,
                         errorLimitRemaining = errorsRemaining resp
                         errorLimitResetWait = errorsResetWait
                         errorLimitReset = now.Add(errorsResetWait) }
-                // TODO: if state.errorLimitRemaining <= ???
 
                 return!
                     match resp with
-                    | HttpOkRequestResponse _ -> (state, resp) |> Threading.toTaskResult
-                    | HttpErrorRequestResponse _
-                    | HttpExceptionRequestResponse _ -> (state, resp) |> Threading.toTaskResult
-                    | HttpTooManyRequestsResponse _ when count <= 0 -> (state, resp) |> Threading.toTaskResult
-                    | HttpTooManyRequestsResponse _ -> getEsiApiIterate state (count - 1) url // TODO: error limit?
+                    | HttpErrorRequestResponse(status, _, _) when status = HttpStatusCode.BadGateway ->
+                        getEsiApiIterate state (count - 1) url
+                    | _ when state.errorLimitRemaining <= errorLimit ->
+                        (state, HttpTooManyRequestsResponse(HttpStatusCode.TooManyRequests, []))
+                        |> Threading.toTaskResult
+                    | _ -> (state, resp) |> Threading.toTaskResult
             with ex ->
                 log.LogError(ex.Message, ex)
                 return (state, HttpErrorRequestResponse(Net.HttpStatusCode.InternalServerError, "", []))
         }
 
     let getEsiApi (state: EsiApiPassthroughActorState) route =
-        let url = $"{config.esiApiUrl}{route}"
-        getEsiApiIterate state 10 url
+        $"{config.esiApiUrl}{route}" |> getEsiApiIterate state 10
 
     let actor =
         MailboxProcessor<ActorMessage>.Start(fun inbox ->
@@ -81,7 +83,7 @@ type EsiApiPassthroughActor(hc: IExternalHttpClient, logFactory: ILoggerFactory,
                             task {
                                 let! (state, resp) = getEsiApi state route
                                 (resp :> obj) |> rc.Reply
-                                
+
                                 return state
                             }
                             |> Async.AwaitTask
