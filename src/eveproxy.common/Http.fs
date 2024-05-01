@@ -18,7 +18,7 @@ type HttpRequestResponse =
     | HttpTooManyRequestsResponse of status: HttpStatusCode * headers: HttpResponseHeaders
     | HttpErrorRequestResponse of status: HttpStatusCode * body: string * headers: HttpResponseHeaders
     | HttpExceptionRequestResponse of ex: Exception
-    
+
     static member status(response: HttpRequestResponse) =
         match response with
         | HttpOkRequestResponse(status, _, _, _) -> status

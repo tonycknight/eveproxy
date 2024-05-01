@@ -21,7 +21,7 @@ type EsiApiPassthroughActor(hc: IExternalHttpClient, logFactory: ILoggerFactory,
     [<Literal>]
     let errorLimitReached = "x-esi-error-limited"
 
-    let errorLimit = 10
+    let errorLimit = 90 // TODO: config?
 
     let log = logFactory.CreateLogger<EsiApiPassthroughActor>()
 
@@ -38,9 +38,9 @@ type EsiApiPassthroughActor(hc: IExternalHttpClient, logFactory: ILoggerFactory,
 
     let rec getEsiApiIterate (state: EsiApiPassthroughActorState) count url =
         task {
-            let now = DateTime.UtcNow
-
             try
+                let now = DateTime.UtcNow
+
                 $"GET [{url}] iteration #{count}..." |> log.LogTrace
                 let! resp = hc.GetAsync url
 
@@ -60,6 +60,7 @@ type EsiApiPassthroughActor(hc: IExternalHttpClient, logFactory: ILoggerFactory,
                     | HttpErrorRequestResponse(status, _, _) when status = HttpStatusCode.BadGateway ->
                         getEsiApiIterate state (count - 1) url
                     | _ when state.errorLimitRemaining <= errorLimit ->
+                        $"{state.errorLimitRemaining} received... breaking circuit" |> log.LogWarning
                         (state, HttpTooManyRequestsResponse(HttpStatusCode.TooManyRequests, []))
                         |> Threading.toTaskResult
                     | _ -> (state, resp) |> Threading.toTaskResult
@@ -69,7 +70,15 @@ type EsiApiPassthroughActor(hc: IExternalHttpClient, logFactory: ILoggerFactory,
         }
 
     let getEsiApi (state: EsiApiPassthroughActorState) route =
-        $"{config.esiApiUrl}{route}" |> getEsiApiIterate state 10
+        if
+            state.errorLimitRemaining <= errorLimit
+            && DateTime.UtcNow < state.errorLimitReset
+        then
+            $"{state.errorLimitRemaining} received... breaking circuit" |> log.LogWarning
+            (state, HttpTooManyRequestsResponse(HttpStatusCode.TooManyRequests, []))
+            |> Threading.toTaskResult
+        else
+            $"{config.esiApiUrl}{route}" |> getEsiApiIterate state 10
 
     let actor =
         MailboxProcessor<ActorMessage>.Start(fun inbox ->
@@ -92,7 +101,7 @@ type EsiApiPassthroughActor(hc: IExternalHttpClient, logFactory: ILoggerFactory,
                     return! loop state
                 }
 
-            { EsiApiPassthroughActorState.errorLimitRemaining = 1
+            { EsiApiPassthroughActorState.errorLimitRemaining = 100
               errorLimitResetWait = TimeSpan.Zero
               errorLimitReset = DateTime.MinValue }
             |> loop)
