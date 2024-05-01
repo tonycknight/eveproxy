@@ -43,6 +43,7 @@ module ConfigurationTests =
               evewhoThrottlingSeconds = apply config.evewhoThrottlingSeconds defaultConfig.evewhoThrottlingSeconds
               redisqSessionMaxAge = apply config.redisqSessionMaxAge defaultConfig.redisqSessionMaxAge
               killmailMemoryCacheAge = apply config.killmailMemoryCacheAge defaultConfig.killmailMemoryCacheAge
+              esiApiUrl = apply config.esiApiUrl defaultConfig.esiApiUrl
               mongoDbName = apply config.mongoDbName defaultConfig.mongoDbName
               mongoConnection = apply config.mongoConnection defaultConfig.mongoConnection }
 

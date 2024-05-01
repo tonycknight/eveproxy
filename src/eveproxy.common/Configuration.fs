@@ -28,6 +28,7 @@ type AppConfiguration =
       evewhoThrottlingSeconds: string
       redisqSessionMaxAge: string
       killmailMemoryCacheAge: string
+      esiApiUrl: string
       mongoDbName: string
       mongoConnection: string }
 
@@ -40,7 +41,7 @@ type AppConfiguration =
         let secs = this.evewhoThrottlingSeconds |> Strings.toInt 30
         let reqs = this.evewhoThrottlingRequests |> Strings.toInt 10
         (secs, reqs)
-
+            
     member this.ClientRedisqTtw() =
         this.zkbRedisqTtwClient |> Strings.toInt 10
 
@@ -71,6 +72,7 @@ type AppConfiguration =
           zkbRedisqTtwClient = ""
           redisqSessionMaxAge = ""
           killmailMemoryCacheAge = ""
+          esiApiUrl = ""
           mongoDbName = ""
           mongoConnection = "" }
 
@@ -89,6 +91,7 @@ type AppConfiguration =
           evewhoThrottlingSeconds = ""
           redisqSessionMaxAge = ""
           killmailMemoryCacheAge = ""
+          esiApiUrl = "https://esi.evetech.net/"
           mongoDbName = "eveproxy"
           mongoConnection = "" }
 
@@ -192,6 +195,11 @@ module Configuration =
             |> mustBe
                 (isEmptyString ||>> isTimeSpan)
                 $"{nameof Unchecked.defaultof<AppConfiguration>.killmailMemoryCacheAge} must be a valid timespan (HH:mm:ss)."
+
+            config.esiApiUrl
+            |> mustBe
+                (isNonEmptyString &&>> isUrl)
+                $"{nameof Unchecked.defaultof<AppConfiguration>.esiApiUrl} must be a valid URL."
 
             config.mongoDbName
             |> mustBe

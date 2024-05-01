@@ -73,4 +73,5 @@ module WebApp =
                                       route "/stats/" >=> stats
                                       eveproxy.zkb.Api.redisqWebRoutes ()
                                       eveproxy.zkb.Api.zkbWebRoutes ()
-                                      eveproxy.evewho.Api.evewhoWebRoutes () ] ]) ]
+                                      eveproxy.evewho.Api.evewhoWebRoutes () 
+                                      eveproxy.esi.Api.esiWebRoutes () ] ]) ]
