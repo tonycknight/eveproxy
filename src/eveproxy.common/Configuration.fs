@@ -29,6 +29,8 @@ type AppConfiguration =
       redisqSessionMaxAge: string
       killmailMemoryCacheAge: string
       esiApiUrl: string
+      esiMinimumErrorLimit: string
+      esiRetryCount: string
       mongoDbName: string
       mongoConnection: string }
 
@@ -41,6 +43,12 @@ type AppConfiguration =
         let secs = this.evewhoThrottlingSeconds |> Strings.toInt 30
         let reqs = this.evewhoThrottlingRequests |> Strings.toInt 10
         (secs, reqs)
+
+    member this.EsiMinimumErrorLimit()=
+        this.esiMinimumErrorLimit |> Strings.toInt 10
+
+    member this.EsiRetryCount()=
+        this.esiRetryCount |> Strings.toInt 10
 
     member this.ClientRedisqTtw() =
         this.zkbRedisqTtwClient |> Strings.toInt 10
@@ -73,6 +81,8 @@ type AppConfiguration =
           redisqSessionMaxAge = ""
           killmailMemoryCacheAge = ""
           esiApiUrl = ""
+          esiMinimumErrorLimit = ""
+          esiRetryCount = ""
           mongoDbName = ""
           mongoConnection = "" }
 
@@ -92,6 +102,8 @@ type AppConfiguration =
           redisqSessionMaxAge = ""
           killmailMemoryCacheAge = ""
           esiApiUrl = "https://esi.evetech.net/"
+          esiMinimumErrorLimit = ""
+          esiRetryCount = ""
           mongoDbName = "eveproxy"
           mongoConnection = "" }
 
@@ -200,6 +212,16 @@ module Configuration =
             |> mustBe
                 (isNonEmptyString &&>> isUrl)
                 $"{nameof Unchecked.defaultof<AppConfiguration>.esiApiUrl} must be a valid URL."
+
+            config.esiMinimumErrorLimit
+            |> mustBe
+                (isEmptyString ||>> isMinimumValueInteger 0)
+                $"{nameof Unchecked.defaultof<AppConfiguration>.esiMinimumErrorLimit} must be greater than or equal to 0."
+                            
+            config.esiRetryCount
+            |> mustBe
+                (isEmptyString ||>> isMinimumValueInteger 0)
+                $"{nameof Unchecked.defaultof<AppConfiguration>.esiRetryCount} must be greater than or equal to 0."
 
             config.mongoDbName
             |> mustBe

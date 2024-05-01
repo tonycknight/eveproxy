@@ -21,7 +21,8 @@ type EsiApiPassthroughActor(hc: IExternalHttpClient, logFactory: ILoggerFactory,
     [<Literal>]
     let errorLimitReached = "x-esi-error-limited"
 
-    let errorLimit = 10 // TODO: config?
+    let errorLimit = config.EsiMinimumErrorLimit()
+    let retryCount = config.EsiRetryCount()
 
     let log = logFactory.CreateLogger<EsiApiPassthroughActor>()
 
@@ -43,7 +44,6 @@ type EsiApiPassthroughActor(hc: IExternalHttpClient, logFactory: ILoggerFactory,
 
                 $"GET [{url}] iteration #{count}..." |> log.LogTrace
                 let! resp = hc.GetAsync url
-
                 $"GET {HttpRequestResponse.loggable resp} received from [{url}]."
                 |> log.LogTrace
 
@@ -78,7 +78,7 @@ type EsiApiPassthroughActor(hc: IExternalHttpClient, logFactory: ILoggerFactory,
             (state, HttpTooManyRequestsResponse(HttpStatusCode.TooManyRequests, []))
             |> Threading.toTaskResult
         else
-            $"{config.esiApiUrl}{route}" |> getEsiApiIterate state 10
+            $"{config.esiApiUrl}{route}" |> getEsiApiIterate state retryCount
 
     let actor =
         MailboxProcessor<ActorMessage>.Start(fun inbox ->

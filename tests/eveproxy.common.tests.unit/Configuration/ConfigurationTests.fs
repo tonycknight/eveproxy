@@ -44,6 +44,8 @@ module ConfigurationTests =
               redisqSessionMaxAge = apply config.redisqSessionMaxAge defaultConfig.redisqSessionMaxAge
               killmailMemoryCacheAge = apply config.killmailMemoryCacheAge defaultConfig.killmailMemoryCacheAge
               esiApiUrl = apply config.esiApiUrl defaultConfig.esiApiUrl
+              esiMinimumErrorLimit = apply config.esiMinimumErrorLimit defaultConfig.esiMinimumErrorLimit
+              esiRetryCount = apply config.esiRetryCount defaultConfig.esiRetryCount
               mongoDbName = apply config.mongoDbName defaultConfig.mongoDbName
               mongoConnection = apply config.mongoConnection defaultConfig.mongoConnection }
 
