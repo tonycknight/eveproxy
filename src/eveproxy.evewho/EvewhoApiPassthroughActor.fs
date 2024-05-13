@@ -41,6 +41,7 @@ type EvewhoApiPassthroughActor(hc: IExternalHttpClient, logFactory: ILoggerFacto
                     | HttpTooManyRequestsResponse _ when count <= 0 -> (newThrottling, resp) |> Threading.toTaskResult
                     | HttpOkRequestResponse _
                     | HttpErrorRequestResponse _
+                    | HttpBadGatewayResponse _
                     | HttpExceptionRequestResponse _ -> (newThrottling, resp) |> Threading.toTaskResult
                     | HttpTooManyRequestsResponse _ -> getEvewhoApiIterate newThrottling (count - 1) url
             with ex ->
