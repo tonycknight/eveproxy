@@ -5,12 +5,19 @@ open eveproxy
 open Microsoft.Extensions.Caching.Memory
 
 type EsiApiProxy(config: eveproxy.AppConfiguration, cache: IMemoryCache, actor: IEsiApiPassthroughActor) =
+    
+    let expiresHeaderValue defaultValue =
+        HttpRequestResponse.headerValues "expires"
+        >> Seq.tryHead
+        >> Option.map DateTime.Parse
+        >> Option.defaultValue defaultValue
 
-    let cacheOptions () =
-        let now = DateTime.UtcNow
+    let defaultExpiry () =
+        DateTime.UtcNow + TimeSpan.FromMinutes 1.
+
+    let cacheOptions (expiry: DateTime) =
         let options = new MemoryCacheEntryOptions()
-        let expr = now + TimeSpan.FromMinutes 10 // TODO: 
-        options.AbsoluteExpiration <- expr
+        options.AbsoluteExpiration <- expiry
         options
 
     let cacheKey =
@@ -22,9 +29,9 @@ type EsiApiProxy(config: eveproxy.AppConfiguration, cache: IMemoryCache, actor: 
         | true, x -> x :?> HttpRequestResponse |> Some
         | _ -> None
 
-    let setCacheAsync (id: string, resp: HttpRequestResponse) =
+    let setCacheAsync (id: string, expiry, resp: HttpRequestResponse) =
         let key = cacheKey id
-        let opts = cacheOptions ()
+        let opts = cacheOptions expiry
         cache.Set(key, resp, opts)
 
     let get route =         
@@ -33,7 +40,8 @@ type EsiApiProxy(config: eveproxy.AppConfiguration, cache: IMemoryCache, actor: 
         | None ->
             task {
                 let! r = actor.Get route
-                return setCacheAsync (route, r)
+                let expiry = r |> expiresHeaderValue (defaultExpiry ())
+                return setCacheAsync (route, expiry, r)
             }
         
     member this.Get route = get route
