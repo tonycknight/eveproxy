@@ -17,10 +17,8 @@ type EsiApiProxy(config: eveproxy.AppConfiguration, cache: IMemoryCache, actor: 
         let prefix = typeof<EsiApiProxy>.Name
         fun (route: string) -> $"{prefix}:{route}"
 
-    let getCache id =
-        let key = cacheKey id
-
-        match cache.TryGetValue(key) with
+    let getCache id =        
+        match cacheKey id |> cache.TryGetValue with
         | true, x -> x :?> HttpRequestResponse |> Some
         | _ -> None
 
