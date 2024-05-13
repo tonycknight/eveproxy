@@ -15,6 +15,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\eveproxy.common\eveproxy.common.fsproj" />
+    <ProjectReference Include="..\eveproxy.esi\eveproxy.esi.fsproj" />
     <ProjectReference Include="..\eveproxy.evewho\eveproxy.evewho.fsproj" />
     <ProjectReference Include="..\eveproxy.zkb\eveproxy.zkb.fsproj" />
   </ItemGroup>

@@ -40,6 +40,8 @@ Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "eveproxy.zkb.tests.unit", "
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "eveproxy.evewho", "src\eveproxy.evewho\eveproxy.evewho.fsproj", "{E4836872-9CAE-403E-A58D-2F31AE8E4F4F}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "eveproxy.esi", "src\eveproxy.esi\eveproxy.esi.fsproj", "{8C68D896-F004-47B2-981E-9075EA5269E8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -70,6 +72,10 @@ Global
 		{E4836872-9CAE-403E-A58D-2F31AE8E4F4F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E4836872-9CAE-403E-A58D-2F31AE8E4F4F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E4836872-9CAE-403E-A58D-2F31AE8E4F4F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8C68D896-F004-47B2-981E-9075EA5269E8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8C68D896-F004-47B2-981E-9075EA5269E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8C68D896-F004-47B2-981E-9075EA5269E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8C68D896-F004-47B2-981E-9075EA5269E8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -82,6 +88,7 @@ Global
 		{E13EB0AA-49DE-458C-AF5B-CA544CA05269} = {914C0FED-DC15-41E7-9FB1-9464C4E3DF06}
 		{212393D9-BF83-4CA2-BB40-2DF78E8E9BB5} = {914C0FED-DC15-41E7-9FB1-9464C4E3DF06}
 		{E4836872-9CAE-403E-A58D-2F31AE8E4F4F} = {04E8EE4C-49F3-45F0-BFE9-1C75EAF979A0}
+		{8C68D896-F004-47B2-981E-9075EA5269E8} = {04E8EE4C-49F3-45F0-BFE9-1C75EAF979A0}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {AD141F96-925E-4F89-8755-5B16DA0E3FEF}

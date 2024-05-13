@@ -15,6 +15,7 @@ type Startup() =
         |> ApiStartup.addApi
         |> zkb.ApiStartup.addServices
         |> evewho.ApiStartup.addServices
+        |> esi.ApiStartup.addServices
         |> ignore
 
     member _.Configure (app: IApplicationBuilder) (env: IHostEnvironment) (loggerFactory: ILoggerFactory) =

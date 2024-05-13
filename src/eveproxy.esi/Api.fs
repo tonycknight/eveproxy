@@ -1,4 +1,4 @@
-﻿namespace eveproxy.evewho
+﻿namespace eveproxy.esi
 
 open System
 open eveproxy
@@ -7,7 +7,7 @@ open Microsoft.AspNetCore.Http
 
 module Api =
 
-    let private getEvewhoApiRoute (routePrefix: string) (request: HttpRequest) =
+    let private getEsiApiRoute (routePrefix: string) (request: HttpRequest) =
         let path = request.Path
 
         let path =
@@ -18,10 +18,10 @@ module Api =
         path
         |> Option.map (fun p -> $"{p.Substring(routePrefix.Length)}{request.QueryString}" |> Strings.trim)
 
-    let private getEvewhoApi (routePrefix: string) =
+    let private getEsiApi (routePrefix: string) =
         fun (next: HttpFunc) (ctx: HttpContext) ->
             task {
-                let route = ctx.Request |> getEvewhoApiRoute routePrefix
+                let route = ctx.Request |> getEsiApiRoute routePrefix
                 let notFound = RequestErrors.notFound (text "")
                 let badRequest = RequestErrors.badRequest (text "")
 
@@ -31,7 +31,7 @@ module Api =
                     | Some route when route = "" -> task { return notFound }
                     | Some route ->
                         task {
-                            let! resp = ctx.GetService<IEvewhoApiPassthroughActor>().Get route
+                            let! resp = ctx.GetService<IEsiApiPassthroughActor>().Get route
 
                             return
                                 match resp with
@@ -55,10 +55,10 @@ module Api =
                 return! result next ctx
             }
 
-    let evewhoWebRoutes () =
+    let esiWebRoutes () =
         subRouteCi
-            "/evewho"
+            "/esi"
             (GET
              >=> ResponseCaching.noResponseCaching
              >=> (setContentType "application/json")
-             >=> choose [ subRouteCi "/v1" (choose [ routeStartsWithCi "/" >=> (getEvewhoApi "/api/evewho/v1/") ]) ])
+             >=> choose [ subRouteCi "/v1" (choose [ routeStartsWithCi "/" >=> (getEsiApi "/api/esi/v1/") ]) ])

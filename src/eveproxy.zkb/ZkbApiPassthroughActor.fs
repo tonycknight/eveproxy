@@ -45,7 +45,7 @@ type ZkbApiPassthroughActor
                     | HttpTooManyRequestsResponse _ -> getZkbApiIterate throttling (count - 1) url
             with ex ->
                 log.LogError(ex.Message, ex)
-                return (throttling, HttpErrorRequestResponse(Net.HttpStatusCode.InternalServerError, ""))
+                return (throttling, HttpErrorRequestResponse(Net.HttpStatusCode.InternalServerError, "", []))
         }
 
     let getZkbApi throttling route =
