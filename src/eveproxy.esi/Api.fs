@@ -31,7 +31,8 @@ module Api =
                     | Some route when route = "" -> task { return notFound }
                     | Some route ->
                         task {
-                            let! resp = ctx.GetService<IEsiApiPassthroughActor>().Get route
+                            let passthruActor = ctx.GetService<EsiApiProxy>()
+                            let! resp = passthruActor.Get route
 
                             return
                                 match resp with
