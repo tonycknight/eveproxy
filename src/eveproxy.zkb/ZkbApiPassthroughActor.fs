@@ -41,6 +41,7 @@ type ZkbApiPassthroughActor
                     | HttpTooManyRequestsResponse _ when count <= 0 -> (newThrottling, resp) |> Threading.toTaskResult
                     | HttpOkRequestResponse _
                     | HttpErrorRequestResponse _
+                    | HttpBadGatewayResponse _
                     | HttpExceptionRequestResponse _ -> (newThrottling, resp) |> Threading.toTaskResult
                     | HttpTooManyRequestsResponse _ -> getZkbApiIterate throttling (count - 1) url
             with ex ->

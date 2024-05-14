@@ -6,3 +6,4 @@ module ApiStartup =
 
     let addServices (sc: IServiceCollection) =
         sc.AddSingleton<IEsiApiPassthroughActor, EsiApiPassthroughActor>()
+          .AddSingleton<EsiApiProxy>()

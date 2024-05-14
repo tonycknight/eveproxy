@@ -61,12 +61,20 @@ module Http =
 
             return body
         }
-
-    let headers (resp: HttpResponseMessage) =
+    let contentHeaders (resp: HttpResponseMessage) =        
+        resp.Content.Headers 
+        |> Seq.collect (fun x -> x.Value |> Seq.map (fun v -> Strings.toLower x.Key, v))
+        
+    let respHeaders (resp: HttpResponseMessage) =
         resp.Headers
         |> Seq.collect (fun x -> x.Value |> Seq.map (fun v -> (Strings.toLower x.Key, v)))
+        
+    let headers (resp: HttpResponseMessage) =        
+        respHeaders resp 
+        |> Seq.append (contentHeaders resp)
+        |> Seq.sortBy fst
         |> List.ofSeq
-
+        
     let parse (resp: HttpResponseMessage) =
         let respHeaders = headers resp
 
