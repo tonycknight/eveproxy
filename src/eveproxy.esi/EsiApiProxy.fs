@@ -40,8 +40,13 @@ type EsiApiProxy(cache: IMemoryCache, actor: IEsiApiPassthroughActor) =
         | None ->
             task {
                 let! r = actor.Get route
-                let expiry = r |> expiresHeaderValue (defaultExpiry ())
-                return setCacheAsync (route, expiry, r)
+                return
+                    match r with
+                    | HttpBadGatewayResponse _ 
+                    | HttpExceptionRequestResponse _ -> r
+                    | _ ->
+                        let expiry = r |> expiresHeaderValue (defaultExpiry ())
+                        setCacheAsync (route, expiry, r)
             }
         
     member this.Get route = get route
