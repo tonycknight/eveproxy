@@ -4,7 +4,7 @@ open System
 open eveproxy
 open Microsoft.Extensions.Caching.Memory
 
-type EsiApiProxy(config: eveproxy.AppConfiguration, cache: IMemoryCache, actor: IEsiApiPassthroughActor) =
+type EsiApiProxy(cache: IMemoryCache, actor: IEsiApiPassthroughActor) =
     
     let expiresHeaderValue defaultValue =
         HttpRequestResponse.headerValues "expires"
