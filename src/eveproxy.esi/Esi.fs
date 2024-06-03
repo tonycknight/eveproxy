@@ -49,6 +49,7 @@ module Esi=
                 return!
                     match resp with
                     | HttpBadGatewayResponse(_) -> getEsiApiIterate config hc log state (count - 1) url
+                    // TODO: 400s can mean "timeout connecting to Tranqulity" (check body) 
                     | _ when state.errorLimitRemaining <= errorLimit ->
                         $"{state.errorLimitRemaining} received... breaking circuit" |> log.LogWarning
                         (state, HttpTooManyRequestsResponse([])) |> Threading.toTaskResult

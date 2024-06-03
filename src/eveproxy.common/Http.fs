@@ -103,7 +103,8 @@ module Http =
     let send (client: HttpClient) (msg: HttpRequestMessage) =
         task {
             try
-                let! resp = client.SendAsync msg
+                // TODO: check !
+                use! resp = client.SendAsync msg
                 return! parse resp
             with ex ->
                 return HttpExceptionRequestResponse(ex)
