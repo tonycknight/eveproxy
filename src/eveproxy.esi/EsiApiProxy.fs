@@ -40,23 +40,6 @@ type EsiApiProxy(cache: IMemoryCache, actor: IEsiApiPassthroughActor, config: Ap
 
     let getFromEsi = Esi.getEsiApi config hc log
 
-    // TODO: clean up!
-    let get2 route =
-        match getCache route with
-        | Some r -> task { return r }
-        | None ->
-            task {
-                let! r = actor.Get route
-
-                return
-                    match r with
-                    | HttpBadGatewayResponse _
-                    | HttpExceptionRequestResponse _ -> r
-                    | _ ->
-                        let expiry = r |> expiresHeaderValue (defaultExpiry ())
-                        setCacheAsync (route, expiry, r)
-            }
-
     let get route =
         match getCache route with
         | Some r -> task { return r }
