@@ -3,8 +3,12 @@
 open System
 open eveproxy
 open Microsoft.Extensions.Caching.Memory
+open Microsoft.Extensions.Logging
 
-type EsiApiProxy(cache: IMemoryCache, actor: IEsiApiPassthroughActor) =
+type EsiApiProxy(cache: IMemoryCache, actor: IEsiApiPassthroughActor, config: AppConfiguration, hc: IExternalHttpClient, logFactory: ILoggerFactory) =
+
+    let log = logFactory.CreateLogger<EsiApiProxy>()
+    let mutable throttling = { EsiErrorThrottling.errorLimitReset = DateTime.UtcNow; errorLimitRemaining = 100 }
 
     let expiresHeaderValue defaultValue =
         HttpRequestResponse.headerValues "expires"
@@ -34,12 +38,34 @@ type EsiApiProxy(cache: IMemoryCache, actor: IEsiApiPassthroughActor) =
         let opts = cacheOptions expiry
         cache.Set(key, resp, opts)
 
-    let get route =
+    let getFromEsi = Esi.getEsiApi config hc log
+
+    // TODO: clean up!
+    let get2 route =
         match getCache route with
         | Some r -> task { return r }
         | None ->
             task {
                 let! r = actor.Get route
+
+                return
+                    match r with
+                    | HttpBadGatewayResponse _
+                    | HttpExceptionRequestResponse _ -> r
+                    | _ ->
+                        let expiry = r |> expiresHeaderValue (defaultExpiry ())
+                        setCacheAsync (route, expiry, r)
+            }
+
+    let get route =
+        match getCache route with
+        | Some r -> task { return r }
+        | None ->
+            task {                
+                
+                let! (t, r) = getFromEsi throttling route
+
+                throttling <- t // On the basis that reference assignments are atomic operations, and we can afford a little skew.
 
                 return
                     match r with
