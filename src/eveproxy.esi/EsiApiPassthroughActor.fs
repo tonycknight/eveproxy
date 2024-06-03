@@ -54,8 +54,7 @@ type EsiApiPassthroughActor(hc: IExternalHttpClient, logFactory: ILoggerFactory,
 
                 return!
                     match resp with
-                    | HttpBadGatewayResponse(_) ->
-                        getEsiApiIterate state (count - 1) url
+                    | HttpBadGatewayResponse(_) -> getEsiApiIterate state (count - 1) url
                     | _ when state.errorLimitRemaining <= errorLimit ->
                         $"{state.errorLimitRemaining} received... breaking circuit" |> log.LogWarning
                         (state, HttpTooManyRequestsResponse([])) |> Threading.toTaskResult

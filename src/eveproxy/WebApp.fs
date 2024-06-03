@@ -63,18 +63,17 @@ module WebApp =
             }
 
     let webApp (sp: IServiceProvider) =
-        Api.isAuthorised sp
-        >=> choose
-                [ favicon
-                  GET
-                  >=> Api.countRouteInvoke
-                  >=> subRouteCi
-                          "/api"
-                          (choose
-                              [ choose
-                                    [ heartbeat
-                                      route "/stats/" >=> stats
-                                      eveproxy.zkb.Api.redisqWebRoutes ()
-                                      eveproxy.zkb.Api.zkbWebRoutes ()
-                                      eveproxy.evewho.Api.evewhoWebRoutes ()
-                                      eveproxy.esi.Api.esiWebRoutes () ] ]) ]
+        choose
+            [ favicon
+              GET
+              >=> Api.countRouteInvoke
+              >=> subRouteCi
+                      "/api"
+                      (choose
+                          [ choose
+                                [ heartbeat
+                                  route "/stats/" >=> stats
+                                  eveproxy.zkb.Api.redisqWebRoutes ()
+                                  eveproxy.zkb.Api.zkbWebRoutes ()
+                                  eveproxy.evewho.Api.evewhoWebRoutes ()
+                                  eveproxy.esi.Api.esiWebRoutes () ] ]) ]
