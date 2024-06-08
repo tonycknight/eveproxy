@@ -4,11 +4,11 @@ open System
 open eveproxy
 open Microsoft.Extensions.Logging
 
-type EsiErrorThrottling = 
+type EsiErrorThrottling =
     { errorLimitRemaining: int
       errorLimitReset: DateTime }
 
-module Esi=
+module Esi =
     [<Literal>]
     let errorLimitResetHeader = "x-esi-error-limit-reset"
 
@@ -29,9 +29,16 @@ module Esi=
     let errorsResetWait =
         intHeaderValue 60 errorLimitResetHeader >> TimeSpan.FromSeconds
 
-    let rec getEsiApiIterate (config: AppConfiguration) (hc: IExternalHttpClient) (log: ILogger<_>) (state: EsiErrorThrottling) count url =
+    let rec getEsiApiIterate
+        (config: AppConfiguration)
+        (hc: IExternalHttpClient)
+        (log: ILogger<_>)
+        (state: EsiErrorThrottling)
+        count
+        url
+        =
         let errorLimit = config.EsiMinimumErrorLimit()
-        
+
         task {
             try
                 let now = DateTime.UtcNow
@@ -39,7 +46,8 @@ module Esi=
                 $"GET [{url}] iteration #{count}..." |> log.LogTrace
                 let! resp = hc.GetAsync url
 
-                $"GET {HttpRequestResponse.loggable resp} received from [{url}]." |> log.LogTrace
+                $"GET {HttpRequestResponse.loggable resp} received from [{url}]."
+                |> log.LogTrace
 
                 let state =
                     { state with
@@ -49,7 +57,7 @@ module Esi=
                 return!
                     match resp with
                     | HttpBadGatewayResponse(_) -> getEsiApiIterate config hc log state (count - 1) url
-                    // TODO: 400s can mean "timeout connecting to Tranqulity" (check body) 
+                    // TODO: 400s can mean "timeout connecting to Tranqulity" (check body)
                     | _ when state.errorLimitRemaining <= errorLimit ->
                         $"{state.errorLimitRemaining} received... breaking circuit" |> log.LogWarning
                         (state, HttpTooManyRequestsResponse([])) |> Threading.toTaskResult
@@ -59,7 +67,13 @@ module Esi=
                 return (state, HttpErrorRequestResponse(Net.HttpStatusCode.InternalServerError, "", []))
         }
 
-    let getEsiApi (config: AppConfiguration) (hc: IExternalHttpClient) (log: ILogger<_>) (state: EsiErrorThrottling) (route: string) =
+    let getEsiApi
+        (config: AppConfiguration)
+        (hc: IExternalHttpClient)
+        (log: ILogger<_>)
+        (state: EsiErrorThrottling)
+        (route: string)
+        =
         let errorLimit = config.EsiMinimumErrorLimit()
         let retryCount = config.EsiRetryCount()
 

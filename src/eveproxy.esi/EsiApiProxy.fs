@@ -5,10 +5,20 @@ open eveproxy
 open Microsoft.Extensions.Caching.Memory
 open Microsoft.Extensions.Logging
 
-type EsiApiProxy(cache: IMemoryCache, actor: IEsiApiPassthroughActor, config: AppConfiguration, hc: IExternalHttpClient, logFactory: ILoggerFactory) =
+type EsiApiProxy
+    (
+        cache: IMemoryCache,
+        actor: IEsiApiPassthroughActor,
+        config: AppConfiguration,
+        hc: IExternalHttpClient,
+        logFactory: ILoggerFactory
+    ) =
 
     let log = logFactory.CreateLogger<EsiApiProxy>()
-    let mutable throttling = { EsiErrorThrottling.errorLimitReset = DateTime.UtcNow; errorLimitRemaining = 100 }
+
+    let mutable throttling =
+        { EsiErrorThrottling.errorLimitReset = DateTime.UtcNow
+          errorLimitRemaining = 100 }
 
     let expiresHeaderValue defaultValue =
         HttpRequestResponse.headerValues "expires"
@@ -44,8 +54,8 @@ type EsiApiProxy(cache: IMemoryCache, actor: IEsiApiPassthroughActor, config: Ap
         match getCache route with
         | Some r -> task { return r }
         | None ->
-            task {                
-                
+            task {
+
                 let! (t, r) = getFromEsi throttling route
 
                 throttling <- t // On the basis that reference assignments are atomic operations, and we can afford a little skew.
