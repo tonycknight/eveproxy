@@ -103,7 +103,6 @@ module Http =
     let send (client: HttpClient) (msg: HttpRequestMessage) =
         task {
             try
-                // TODO: check !
                 use! resp = client.SendAsync msg
                 return! parse resp
             with ex ->
