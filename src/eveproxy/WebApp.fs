@@ -57,7 +57,7 @@ module WebApp =
                            storage =
                             {| kills = kmCount
                                sessions = sessionStorageStats |} |}
-                       routes = apiStats.routes |> Map.values |> Seq.sortByDescending (fun rs -> rs.count) |}
+                       routes = apiStats.routes |> Map.values |> Seq.sortByDescending (fun rs -> rs.count) |> Seq.truncate 10 |}
 
                 return! Successful.OK result next ctx
             }
