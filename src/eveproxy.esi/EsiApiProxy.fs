@@ -66,7 +66,7 @@ type EsiApiProxy
                     | HttpExceptionRequestResponse _ -> r
                     | _ ->
                         //let expiry = r |> expiresHeaderValue (defaultExpiry ())
-                        let expiry = DateTime.UtcNow.AddMinutes(15.)
+                        let expiry = DateTime.UtcNow.AddMinutes(5.)
                         setCacheAsync (route, expiry, r)
             }
 
