@@ -65,7 +65,8 @@ type EsiApiProxy
                     | HttpBadGatewayResponse _
                     | HttpExceptionRequestResponse _ -> r
                     | _ ->
-                        let expiry = r |> expiresHeaderValue (defaultExpiry ())
+                        //let expiry = r |> expiresHeaderValue (defaultExpiry ())
+                        let expiry = DateTime.UtcNow.AddMinutes(15.)
                         setCacheAsync (route, expiry, r)
             }
 
