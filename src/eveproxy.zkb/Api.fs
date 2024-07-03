@@ -133,8 +133,8 @@ module Api =
                                 match resp with
                                 | HttpOkRequestResponse(_, body, mediaType, _) ->
                                     match mediaType with
-                                    | Some mt -> body |> eveproxy.Api.contentString mt
-                                    | _ -> body |> eveproxy.Api.jsonString
+                                    | Some mt -> body |> eveproxy.Api.contentString mt []
+                                    | _ -> body |> eveproxy.Api.jsonString []
                                 | HttpTooManyRequestsResponse _ -> RequestErrors.tooManyRequests (text "")
                                 | HttpExceptionRequestResponse _ -> ServerErrors.internalError (text "")
                                 | HttpErrorRequestResponse(rc, _, _) when rc = System.Net.HttpStatusCode.NotFound ->

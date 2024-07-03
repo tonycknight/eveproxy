@@ -7,6 +7,15 @@ open Microsoft.AspNetCore.Http
 
 module Api =
 
+    let private transferredHeaders =
+        let allowedHeaders =
+            [| "x-esi-error-limit-remain"
+               "x-esi-error-limit-reset"
+               "last-modified"
+               "expires"
+               "etag" |]
+        eveproxy.Api.pickHeaders allowedHeaders
+
     let private getEsiApiRoute (routePrefix: string) (request: HttpRequest) =
         let path = request.Path
 
@@ -35,10 +44,10 @@ module Api =
 
                             return
                                 match resp with
-                                | HttpOkRequestResponse(_, body, mediaType, _) ->
+                                | HttpOkRequestResponse(_, body, mediaType, headers) ->
                                     match mediaType with
-                                    | Some mt -> body |> eveproxy.Api.contentString mt
-                                    | _ -> body |> eveproxy.Api.jsonString
+                                    | Some mt -> body |> eveproxy.Api.contentString mt (transferredHeaders headers)
+                                    | _ -> body |> eveproxy.Api.jsonString (transferredHeaders headers)
                                 | HttpTooManyRequestsResponse _ -> RequestErrors.tooManyRequests (text "")
                                 | HttpExceptionRequestResponse _ -> ServerErrors.internalError (text "")
                                 | HttpErrorRequestResponse(rc, _, _) when rc = System.Net.HttpStatusCode.NotFound ->
