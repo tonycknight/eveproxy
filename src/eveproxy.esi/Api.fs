@@ -14,6 +14,7 @@ module Api =
                "last-modified"
                "expires"
                "etag" |]
+
         eveproxy.Api.pickHeaders allowedHeaders
 
     let private getEsiApiRoute (routePrefix: string) (request: HttpRequest) =
