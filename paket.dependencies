@@ -10,6 +10,11 @@ group Main
     nuget MongoDB.Driver
     nuget Newtonsoft.Json
     nuget Microsoft.Extensions.Caching.Memory
+    nuget OpenTelemetry.Extensions.Hosting
+    nuget OpenTelemetry.Exporter.OpenTelemetryProtocol
+    nuget OpenTelemetry.Instrumentation.AspNetCore
+    nuget OpenTelemetry.Instrumentation.Runtime
+    nuget OpenTelemetry.Exporter.Console
 
 // [ FAKE GROUP ]
 group Tests
