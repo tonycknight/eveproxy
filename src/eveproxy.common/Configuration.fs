@@ -16,6 +16,8 @@ type IKeyValueProvider =
 type AppConfiguration =
     { hostUrls: string
       allowExternalTraffic: string
+      otelCollectorUrl: string
+      otelServiceName: string
       zkbRedisqBaseUrl: string
       zkbRedisqQueueId: string
       zkbRedisqTtwExternal: string
@@ -67,6 +69,8 @@ type AppConfiguration =
     static member emptyConfig =
         { AppConfiguration.hostUrls = ""
           allowExternalTraffic = true.ToString()
+          otelCollectorUrl = ""
+          otelServiceName = ""
           zkbApiUrl = ""
           zkbThrottlingRequests = ""
           zkbThrottlingSeconds = ""
@@ -88,6 +92,8 @@ type AppConfiguration =
     static member defaultConfig =
         { AppConfiguration.hostUrls = "http://+:8080"
           allowExternalTraffic = true.ToString()
+          otelCollectorUrl = "http://localhost:4317/"
+          otelServiceName = "eveproxy"
           zkbRedisqBaseUrl = "https://redisq.zkillboard.com/listen.php"
           zkbRedisqQueueId = (System.Guid.NewGuid() |> sprintf "eveProxy%A")
           zkbRedisqTtwExternal = ""
@@ -151,6 +157,16 @@ module Configuration =
             |> mustBe
                 isNonEmptyString
                 $"{nameof Unchecked.defaultof<AppConfiguration>.hostUrls} must be a non-empty string."
+
+            config.otelServiceName
+            |> mustBe
+                isNonEmptyString
+                $"{nameof Unchecked.defaultof<AppConfiguration>.otelServiceName} must be a non-empty string."
+
+            config.otelCollectorUrl
+            |> mustBe
+                (isNonEmptyString &&>> isUrl)
+                $"{nameof Unchecked.defaultof<AppConfiguration>.otelCollectorUrl} must be a valid URL."
 
             config.zkbRedisqBaseUrl
             |> mustBe
