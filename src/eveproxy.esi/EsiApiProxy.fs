@@ -11,7 +11,8 @@ type EsiApiProxy
         actor: IEsiApiPassthroughActor,
         config: AppConfiguration,
         hc: IExternalHttpClient,
-        logFactory: ILoggerFactory
+        logFactory: ILoggerFactory,
+        metrics: IMetricsTelemetry
     ) =
 
     let log = logFactory.CreateLogger<EsiApiProxy>()
@@ -48,7 +49,7 @@ type EsiApiProxy
         let opts = cacheOptions expiry
         cache.Set(key, resp, opts)
 
-    let getFromEsi = Esi.getEsiApi config hc log
+    let getFromEsi = Esi.getEsiApi config hc log metrics
 
     let get route =
         match getCache route with

@@ -44,6 +44,7 @@ module ApiStartup =
             .WithMetrics(fun opts -> 
                             opts.SetResourceBuilder(resourceBuilder)
                                 .AddMeter("eveproxy_killmails")
+                                .AddMeter("eveproxy_request_esi")
                                 .AddOtlpExporter(otlpOptions)                                
                                 |> ignore) |> ignore
         services.AddSingleton<IMetricsTelemetry, MetricsTelemetry>()

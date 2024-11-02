@@ -29,10 +29,19 @@ module Esi =
     let errorsResetWait =
         intHeaderValue 60 errorLimitResetHeader >> TimeSpan.FromSeconds
 
+    let instrumentResponse (log: ILogger<_>) (metrics: IMetricsTelemetry) url resp =
+        $"GET {HttpRequestResponse.loggable resp} received from [{url}]." |> log.LogTrace
+
+        match resp with
+        | HttpOkRequestResponse _ -> metrics.SuccessfulEsiRequest 1
+        | HttpTooManyRequestsResponse _ -> metrics.ThrottledEsiRequest 1
+        | _  -> metrics.FailedEsiRequest 1
+        
     let rec getEsiApiIterate
         (config: AppConfiguration)
         (hc: IExternalHttpClient)
         (log: ILogger<_>)
+        (metrics: IMetricsTelemetry)
         (state: EsiErrorThrottling)
         count
         url
@@ -46,9 +55,8 @@ module Esi =
                 $"GET [{url}] iteration #{count}..." |> log.LogTrace
                 let! resp = hc.GetAsync url
 
-                $"GET {HttpRequestResponse.loggable resp} received from [{url}]."
-                |> log.LogTrace
-
+                instrumentResponse log metrics url resp
+                
                 let state =
                     { state with
                         errorLimitRemaining = errorsRemaining resp
@@ -56,7 +64,7 @@ module Esi =
 
                 return!
                     match resp with
-                    | HttpBadGatewayResponse(_) -> getEsiApiIterate config hc log state (count - 1) url
+                    | HttpBadGatewayResponse(_) -> getEsiApiIterate config hc log metrics state (count - 1) url
                     // TODO: 400s can mean "timeout connecting to Tranqulity" (check body)
                     | _ when state.errorLimitRemaining <= errorLimit ->
                         $"{state.errorLimitRemaining} received... breaking circuit" |> log.LogWarning
@@ -71,6 +79,7 @@ module Esi =
         (config: AppConfiguration)
         (hc: IExternalHttpClient)
         (log: ILogger<_>)
+        (metrics: IMetricsTelemetry)
         (state: EsiErrorThrottling)
         (route: string)
         =
@@ -84,4 +93,4 @@ module Esi =
             $"{state.errorLimitRemaining} received... breaking circuit" |> log.LogWarning
             (state, HttpTooManyRequestsResponse([])) |> Threading.toTaskResult
         else
-            $"{config.esiApiUrl}{route}" |> getEsiApiIterate config hc log state retryCount
+            $"{config.esiApiUrl}{route}" |> getEsiApiIterate config hc log metrics state retryCount
