@@ -12,6 +12,7 @@ type RedisqIngestionActor
         hc: IExternalHttpClient,
         stats: IZkbStatsActor,
         logFactory: ILoggerFactory,
+        metrics: IMetricsTelemetry,
         writer: IKillmailWriter,
         sessions: ISessionsActor
     ) =
@@ -30,9 +31,10 @@ type RedisqIngestionActor
 
     let logKmNoop =
         logKmIdAction "--> No write of kill [%s] - no further action." log.LogTrace
-
-    let logKmCompletion =
-        logKmIdAction "--> Finished processing kill [%s]." log.LogTrace
+    
+    let logKmCompletion km =
+        metrics.ReceivedKillmails 1
+        km |> logKmIdAction "--> Finished processing kill [%s]." log.LogTrace
 
     let logKmDeduplication =
         logKmIdAction "--> Ignoring kill [%s] as duplicate." log.LogTrace
