@@ -5,6 +5,9 @@ open Giraffe
 open Microsoft.Extensions.Configuration
 open Microsoft.Extensions.DependencyInjection
 open Microsoft.Extensions.Logging
+open OpenTelemetry.Exporter
+open OpenTelemetry.Metrics
+open OpenTelemetry.Resources
 
 module ApiStartup =
     open Microsoft.AspNetCore.HttpLogging
@@ -26,6 +29,24 @@ module ApiStartup =
                     ||| HttpLoggingFields.ResponseStatusCode
 
                 lo.CombineLogs <- true)
+
+    let addOpenTelemetry (services: IServiceCollection) =
+        let config = services.BuildServiceProvider().GetRequiredService<AppConfiguration>()
+        let resourceBuilder = ResourceBuilder.CreateDefault().AddService(config.otelServiceName)
+
+        let otlpOptions (otlp: OtlpExporterOptions) (metrics: MetricReaderOptions) = 
+            otlp.Endpoint <- config.otelCollectorUrl |> Strings.appendIfMissing "/" |> Uri
+            metrics.PeriodicExportingMetricReaderOptions.ExportIntervalMilliseconds <- 15000
+            metrics.TemporalityPreference <- MetricReaderTemporalityPreference.Cumulative
+            metrics |> ignore
+        
+        services.AddOpenTelemetry()
+            .WithMetrics(fun opts -> 
+                            opts.SetResourceBuilder(resourceBuilder)
+                                .AddMeter("eveproxy_killmails")
+                                .AddOtlpExporter(otlpOptions)                                
+                                |> ignore) |> ignore
+        services.AddSingleton<IMetricsTelemetry, MetricsTelemetry>()
 
     let addStats (services: IServiceCollection) =
         services.AddSingleton<IStatsActor, StatsActor>()
@@ -55,6 +76,7 @@ module ApiStartup =
         addCommonInfrastructure
         >> addApiLogging
         >> addApiConfig
+        >> addOpenTelemetry
         >> addStats
         >> addApiHttp
         >> addWebFramework
