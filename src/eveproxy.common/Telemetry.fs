@@ -21,8 +21,12 @@ type IMetricsTelemetry =
     abstract member ThrottledZkbRequest: int -> unit
     abstract member FailedZkbRequest: int -> unit
 
+    abstract member RedisqProxyRequest: int -> unit
+    abstract member EsiProxyRequest: int -> unit
+    abstract member ZkbProxyRequest: int -> unit
+    abstract member EvewhoProxyRequest: int -> unit
+
 type MetricsTelemetry(meterFactory: IMeterFactory) =
-            
     
     let ingestedKillmailMeter = meterFactory.Create("eveproxy_killmails")
     let createKillmailCounter name = 
@@ -30,6 +34,13 @@ type MetricsTelemetry(meterFactory: IMeterFactory) =
     let killmailBadCounter = createKillmailCounter "bad"
     let killmailReceivedCounter = createKillmailCounter "received"
     let killmailIngestedCounter = createKillmailCounter "ingested"
+
+    let proxyRequestMeter = meterFactory.Create("eveproxy_proxy_request")
+    let createProxyRequestCounter name = proxyRequestMeter.CreateCounter<int>($"eveproxy_proxy_request_{name}", "Request")
+    let redisqProxyRequestCounter = createProxyRequestCounter "redisq"
+    let esiProxyRequestCounter = createProxyRequestCounter "esi"
+    let zkbProxyRequestCounter = createProxyRequestCounter "zkb"
+    let evewhoProxyRequestCounter = createProxyRequestCounter "evewho"
 
     let esiRequestMeter = meterFactory.Create("eveproxy_request_esi")
     let createEsiCounter name = 
@@ -58,6 +69,7 @@ type MetricsTelemetry(meterFactory: IMeterFactory) =
             esiRequestMeter.Dispose()
             evewhoRequestMeter.Dispose()
             zkbRequestMeter.Dispose()
+            proxyRequestMeter.Dispose()
             
         member this.BadKillmails count = killmailBadCounter.Add 1
 
@@ -82,3 +94,11 @@ type MetricsTelemetry(meterFactory: IMeterFactory) =
         member this.FailedZkbRequest count = failedZkbRequestCounter.Add count
 
         member this.ThrottledZkbRequest count = throttledZkbRequestCounter.Add count
+
+        member this.RedisqProxyRequest count = redisqProxyRequestCounter.Add count
+
+        member this.EsiProxyRequest count = esiProxyRequestCounter.Add count
+
+        member this.EvewhoProxyRequest count = evewhoProxyRequestCounter.Add count
+
+        member this.ZkbProxyRequest count = zkbProxyRequestCounter.Add count
