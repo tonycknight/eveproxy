@@ -33,14 +33,7 @@ type KillPackage =
     static member ofKillPackageData(value: KillPackageData) = { KillPackage.package = value.package }
 
 module Api =
-    let private countRouteInvoke =
-        fun (next: HttpFunc) (ctx: HttpContext) ->
-            task {
-                let metrics = ctx.GetService<IMetricsTelemetry>()
-                metrics.RedisqProxyRequest 1
-                return! next ctx
-            }
-
+    
     let private ttw (config: AppConfiguration) (query: IQueryCollection) =
         match query.TryGetValue("ttw") with
         | true, x -> x |> Seq.head |> Strings.toInt (config.ClientRedisqTtw())
@@ -163,7 +156,7 @@ module Api =
         subRouteCi
             "/redisq"
             (GET
-             >=> countRouteInvoke
+             >=> (ApiTelemetry.countRouteInvoke (fun m -> m.RedisqProxyRequest 1))
              >=> ResponseCaching.noResponseCaching
              >=> (setContentType "application/json")
              >=> choose
@@ -179,6 +172,7 @@ module Api =
         subRouteCi
             "/zkb"
             (GET
+             >=> (ApiTelemetry.countRouteInvoke (fun m -> m.ZkbProxyRequest 1))
              >=> ResponseCaching.noResponseCaching
              >=> (setContentType "application/json")
              >=> choose [ subRouteCi "/v1" (choose [ routeStartsWithCi "/" >=> (getZkbApi "/api/zkb/v1/") ]) ])

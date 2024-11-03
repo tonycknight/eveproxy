@@ -69,6 +69,7 @@ module Api =
         subRouteCi
             "/esi"
             (GET
+             >=> (ApiTelemetry.countRouteInvoke (fun m -> m.EsiProxyRequest 1))
              >=> ResponseCaching.noResponseCaching
              >=> (setContentType "application/json")
              >=> choose [ subRouteCi "/v1" (choose [ routeStartsWithCi "/" >=> (getEsiApi "/api/esi/v1/") ]) ])

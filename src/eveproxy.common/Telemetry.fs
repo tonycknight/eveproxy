@@ -102,3 +102,15 @@ type MetricsTelemetry(meterFactory: IMeterFactory) =
         member this.EvewhoProxyRequest count = evewhoProxyRequestCounter.Add count
 
         member this.ZkbProxyRequest count = zkbProxyRequestCounter.Add count
+
+module ApiTelemetry =
+    open Giraffe
+    open Microsoft.AspNetCore.Http
+
+    let countRouteInvoke (count: IMetricsTelemetry -> unit)=
+        fun (next: HttpFunc) (ctx: HttpContext) ->
+            task {
+                let metrics = ctx.GetService<IMetricsTelemetry>()
+                count metrics 
+                return! next ctx
+            }
