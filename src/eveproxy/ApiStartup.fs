@@ -45,6 +45,7 @@ module ApiStartup =
                             opts.SetResourceBuilder(resourceBuilder)
                                 .AddMeter("eveproxy_killmails")
                                 .AddMeter("eveproxy_request_esi")
+                                .AddMeter("eveproxy_cache_esi")
                                 .AddMeter("eveproxy_request_evewho")
                                 .AddMeter("eveproxy_request_zkb")
                                 .AddMeter("eveproxy_proxy_request")

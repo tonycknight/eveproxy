@@ -12,6 +12,8 @@ type IMetricsTelemetry =
     abstract member SuccessfulEsiRequest: int -> unit
     abstract member FailedEsiRequest: int -> unit
     abstract member ThrottledEsiRequest: int -> unit
+    abstract member EsiCacheHit: int -> unit
+    abstract member EsiCacheMiss: int -> unit
 
     abstract member SuccessfulEvewhoRequest: int -> unit
     abstract member ThrottledEvewhoRequest: int -> unit
@@ -63,6 +65,12 @@ type MetricsTelemetry(meterFactory: IMeterFactory) =
     let failedZkbRequestCounter = createZkbCounter "failed"
     let throttledZkbRequestCounter = createZkbCounter "throttled"
 
+    let esiCacheRequestMeter = meterFactory.Create("eveproxy_cache_esi")
+    let createEsiCacheCounter name = 
+        esiCacheRequestMeter.CreateCounter<int>($"eveproxy_cache_esi_{name}", "Request")
+    let esiCacheHitCounter = createEsiCacheCounter "hit"
+    let esiCacheMissCounter = createEsiCacheCounter "miss"
+
     interface IMetricsTelemetry with
         member this.Dispose () = 
             ingestedKillmailMeter.Dispose()
@@ -70,8 +78,13 @@ type MetricsTelemetry(meterFactory: IMeterFactory) =
             evewhoRequestMeter.Dispose()
             zkbRequestMeter.Dispose()
             proxyRequestMeter.Dispose()
+            esiCacheRequestMeter.Dispose()
             
-        member this.BadKillmails count = killmailBadCounter.Add 1
+        member this.EsiCacheHit count = esiCacheHitCounter.Add count
+
+        member this.EsiCacheMiss count = esiCacheMissCounter.Add count
+
+        member this.BadKillmails count = killmailBadCounter.Add count
 
         member this.ReceivedKillmails count = killmailReceivedCounter.Add count
 

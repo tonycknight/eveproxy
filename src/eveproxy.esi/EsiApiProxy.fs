@@ -52,10 +52,12 @@ type EsiApiProxy
     let getFromEsi = Esi.getEsiApi config hc log metrics
 
     let get route =
-        match getCache route with
-        | Some r -> task { return r }
-        | None ->
+        match getCache route with        
+        | Some r ->             
+            task { metrics.EsiCacheHit 1; return r }
+        | None ->            
             task {
+                metrics.EsiCacheMiss 1
 
                 let! (t, r) = getFromEsi throttling route
 
