@@ -8,3 +8,4 @@ Microsoft.NET.Test.Sdk
 NSubstitute
 System.Net.Http
 System.Text.RegularExpressions
+System.Formats.Asn1
