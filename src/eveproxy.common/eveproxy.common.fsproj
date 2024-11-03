@@ -10,12 +10,10 @@
     <Compile Include="Mongo.fs" />
     <Compile Include="Configuration.fs" />
     <Compile Include="Telemetry.fs" />
-    <Compile Include="ApiModels.fs" />
     <Compile Include="Http.fs" />
     <Compile Include="Throttling.fs" />
     <Compile Include="Actors.fs" />
     <Compile Include="Api.fs" />
-    <Compile Include="StatsActor.fs" />
     <None Include="paket.references" />
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />

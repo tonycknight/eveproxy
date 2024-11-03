@@ -50,10 +50,7 @@ module ApiStartup =
                                 .AddOtlpExporter(otlpOptions)                                
                                 |> ignore) |> ignore
         services.AddSingleton<IMetricsTelemetry, MetricsTelemetry>()
-
-    let addStats (services: IServiceCollection) =
-        services.AddSingleton<IStatsActor, StatsActor>()
-
+            
     let addApiConfig (services: IServiceCollection) =
         let sp = services.BuildServiceProvider()
         let lf = sp.GetRequiredService<ILoggerFactory>()
@@ -80,7 +77,6 @@ module ApiStartup =
         >> addApiLogging
         >> addApiConfig
         >> addOpenTelemetry
-        >> addStats
         >> addApiHttp
         >> addWebFramework
         >> addContentNegotiation

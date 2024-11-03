@@ -25,12 +25,9 @@ module WebApp =
 
         fun (next: HttpFunc) (ctx: HttpContext) ->
             task {
-                let statsActor = ctx.GetService<IStatsActor>()
                 let zkbStatsActor = ctx.GetService<IZkbStatsActor>()
                 let sessionsActor = ctx.GetService<ISessionsActor>()
-
-                let! apiStats = statsActor.GetApiStats()
-
+                                
                 let! zkbActorStats = zkbStatsActor.GetStats()
                 let! zkbApiStats = zkbStatsActor.GetApiStats()
 
@@ -57,11 +54,7 @@ module WebApp =
                            storage =
                             {| kills = kmCount
                                sessions = sessionStorageStats |} |}
-                       routes =
-                        apiStats.routes
-                        |> Map.values
-                        |> Seq.sortByDescending (fun rs -> rs.count)
-                        |> Seq.truncate 10 |}
+                       |}
 
                 return! Successful.OK result next ctx
             }
