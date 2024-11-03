@@ -33,6 +33,13 @@ type KillPackage =
     static member ofKillPackageData(value: KillPackageData) = { KillPackage.package = value.package }
 
 module Api =
+    let private countRouteInvoke =
+        fun (next: HttpFunc) (ctx: HttpContext) ->
+            task {
+                let metrics = ctx.GetService<IMetricsTelemetry>()
+                metrics.RedisqProxyRequest 1
+                return! next ctx
+            }
 
     let private ttw (config: AppConfiguration) (query: IQueryCollection) =
         match query.TryGetValue("ttw") with
@@ -156,6 +163,7 @@ module Api =
         subRouteCi
             "/redisq"
             (GET
+             >=> countRouteInvoke
              >=> ResponseCaching.noResponseCaching
              >=> (setContentType "application/json")
              >=> choose
