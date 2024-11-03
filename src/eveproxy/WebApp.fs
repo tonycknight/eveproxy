@@ -70,7 +70,6 @@ module WebApp =
         choose
             [ favicon
               GET
-              >=> Api.countRouteInvoke
               >=> subRouteCi
                       "/api"
                       (choose
