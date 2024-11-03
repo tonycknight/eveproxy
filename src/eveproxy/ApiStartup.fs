@@ -46,6 +46,7 @@ module ApiStartup =
                                 .AddMeter("eveproxy_killmails")
                                 .AddMeter("eveproxy_request_esi")
                                 .AddMeter("eveproxy_request_evewho")
+                                .AddMeter("eveproxy_request_zkb")
                                 .AddOtlpExporter(otlpOptions)                                
                                 |> ignore) |> ignore
         services.AddSingleton<IMetricsTelemetry, MetricsTelemetry>()
