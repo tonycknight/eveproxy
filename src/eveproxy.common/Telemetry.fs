@@ -13,6 +13,10 @@ type IMetricsTelemetry =
     abstract member FailedEsiRequest: int -> unit
     abstract member ThrottledEsiRequest: int -> unit
 
+    abstract member SuccessfulEvewhoRequest: int -> unit
+    abstract member ThrottledEvewhoRequest: int -> unit
+    abstract member FailedEvewhoRequest: int -> unit
+
 type MetricsTelemetry(meterFactory: IMeterFactory) =
             
     
@@ -30,10 +34,18 @@ type MetricsTelemetry(meterFactory: IMeterFactory) =
     let failedEsiRequestCounter = createEsiCounter "failed"
     let throttledEsiRequestCounter = createEsiCounter "throttled"
 
+    let evewhoRequestMeter = meterFactory.Create("eveproxy_request_evewho")
+    let createEvewhoCounter name = 
+        evewhoRequestMeter.CreateCounter<int>($"eveproxy_request_evewho_{name}", "Request")
+    let successfulEvewhoRequestCounter = createEvewhoCounter "ok"
+    let failedEvewhoRequestCounter = createEvewhoCounter "failed"
+    let throttledEvewhoRequestCounter = createEvewhoCounter "throttled"
+
     interface IMetricsTelemetry with
         member this.Dispose () = 
             ingestedKillmailMeter.Dispose()
             esiRequestMeter.Dispose()
+            evewhoRequestMeter.Dispose()
             
         member this.BadKillmails count = killmailBadCounter.Add 1
 
@@ -46,3 +58,9 @@ type MetricsTelemetry(meterFactory: IMeterFactory) =
         member this.FailedEsiRequest count = failedEsiRequestCounter.Add count
 
         member this.ThrottledEsiRequest count = throttledEsiRequestCounter.Add count
+
+        member this.SuccessfulEvewhoRequest count = successfulEvewhoRequestCounter.Add count
+
+        member this.FailedEvewhoRequest count = failedEvewhoRequestCounter.Add count
+
+        member this.ThrottledEvewhoRequest count = throttledEvewhoRequestCounter.Add count

@@ -9,7 +9,7 @@ type private EvewhoApiPassthroughActorState =
 
     static member empty = { EvewhoApiPassthroughActorState.throttling = Map.empty }
 
-type EvewhoApiPassthroughActor(hc: IExternalHttpClient, logFactory: ILoggerFactory, config: AppConfiguration) =
+type EvewhoApiPassthroughActor(hc: IExternalHttpClient, logFactory: ILoggerFactory, metrics: IMetricsTelemetry, config: AppConfiguration) =
     let log = logFactory.CreateLogger<EvewhoApiPassthroughActor>()
     let throttle = config.EveWhoThrottling() |> Throttling.windowThrottling
 
@@ -24,6 +24,13 @@ type EvewhoApiPassthroughActor(hc: IExternalHttpClient, logFactory: ILoggerFacto
             return newCounts
         }
 
+    let instrumentResponse url resp =
+        $"GET {HttpRequestResponse.loggable resp} received from [{url}]." |> log.LogTrace
+
+        match resp with
+        | HttpOkRequestResponse _ -> metrics.SuccessfulEvewhoRequest 1
+        | HttpTooManyRequestsResponse _ -> metrics.ThrottledEvewhoRequest 1
+        | _  -> metrics.FailedEvewhoRequest 1
 
     let rec getEvewhoApiIterate throttling count url =
         task {
@@ -33,8 +40,7 @@ type EvewhoApiPassthroughActor(hc: IExternalHttpClient, logFactory: ILoggerFacto
                 $"GET [{url}] iteration #{count}..." |> log.LogTrace
                 let! resp = hc.GetAsync url
 
-                $"GET {HttpRequestResponse.loggable resp} received from [{url}]."
-                |> log.LogTrace
+                instrumentResponse url resp
 
                 return!
                     match resp with
