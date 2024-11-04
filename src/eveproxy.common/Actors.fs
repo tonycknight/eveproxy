@@ -32,8 +32,3 @@ type ActorMessage =
 type IActor =
     abstract member Post: ActorMessage -> unit
     abstract member GetStats: unit -> Task<ActorStats>
-
-
-type IStatsActor =
-    inherit IActor
-    abstract member GetApiStats: unit -> Task<(ApiRouteStatistics)>

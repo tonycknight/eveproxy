@@ -33,7 +33,7 @@ type KillPackage =
     static member ofKillPackageData(value: KillPackageData) = { KillPackage.package = value.package }
 
 module Api =
-
+    
     let private ttw (config: AppConfiguration) (query: IQueryCollection) =
         match query.TryGetValue("ttw") with
         | true, x -> x |> Seq.head |> Strings.toInt (config.ClientRedisqTtw())
@@ -133,8 +133,8 @@ module Api =
                                 match resp with
                                 | HttpOkRequestResponse(_, body, mediaType, _) ->
                                     match mediaType with
-                                    | Some mt -> body |> eveproxy.Api.contentString mt
-                                    | _ -> body |> eveproxy.Api.jsonString
+                                    | Some mt -> body |> eveproxy.Api.contentString mt []
+                                    | _ -> body |> eveproxy.Api.jsonString []
                                 | HttpTooManyRequestsResponse _ -> RequestErrors.tooManyRequests (text "")
                                 | HttpExceptionRequestResponse _ -> ServerErrors.internalError (text "")
                                 | HttpErrorRequestResponse(rc, _, _) when rc = System.Net.HttpStatusCode.NotFound ->
@@ -156,6 +156,7 @@ module Api =
         subRouteCi
             "/redisq"
             (GET
+             >=> (ApiTelemetry.countRouteInvoke (fun m -> m.RedisqProxyRequest 1))
              >=> ResponseCaching.noResponseCaching
              >=> (setContentType "application/json")
              >=> choose
@@ -171,6 +172,7 @@ module Api =
         subRouteCi
             "/zkb"
             (GET
+             >=> (ApiTelemetry.countRouteInvoke (fun m -> m.ZkbProxyRequest 1))
              >=> ResponseCaching.noResponseCaching
              >=> (setContentType "application/json")
              >=> choose [ subRouteCi "/v1" (choose [ routeStartsWithCi "/" >=> (getZkbApi "/api/zkb/v1/") ]) ])

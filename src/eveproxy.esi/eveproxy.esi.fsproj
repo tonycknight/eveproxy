@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <Compile Include="Actors.fs" />
+    <Compile Include="Esi.fs" />
     <Compile Include="EsiApiPassthroughActor.fs" />
     <Compile Include="EsiApiProxy.fs" />
     <Compile Include="ApiStartup.fs" />

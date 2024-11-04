@@ -2,3 +2,9 @@ group Main
 FSharp.Core
 Giraffe
 MongoDB.Driver
+OpenTelemetry.Extensions.Hosting
+OpenTelemetry.Exporter.OpenTelemetryProtocol
+OpenTelemetry.Instrumentation.AspNetCore
+OpenTelemetry.Instrumentation.Runtime
+OpenTelemetry.Exporter.Console
+System.Text.Json

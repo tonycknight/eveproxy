@@ -9,3 +9,4 @@ Newtonsoft.Json
 NSubstitute
 System.Net.Http
 System.Text.RegularExpressions
+System.Formats.Asn1

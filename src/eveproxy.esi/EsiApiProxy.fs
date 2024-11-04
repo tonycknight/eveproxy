@@ -3,9 +3,24 @@
 open System
 open eveproxy
 open Microsoft.Extensions.Caching.Memory
+open Microsoft.Extensions.Logging
 
-type EsiApiProxy(cache: IMemoryCache, actor: IEsiApiPassthroughActor) =
-    
+type EsiApiProxy
+    (
+        cache: IMemoryCache,
+        actor: IEsiApiPassthroughActor,
+        config: AppConfiguration,
+        hc: IExternalHttpClient,
+        logFactory: ILoggerFactory,
+        metrics: IMetricsTelemetry
+    ) =
+
+    let log = logFactory.CreateLogger<EsiApiProxy>()
+
+    let mutable throttling =
+        { EsiErrorThrottling.errorLimitReset = DateTime.UtcNow
+          errorLimitRemaining = 100 }
+
     let expiresHeaderValue defaultValue =
         HttpRequestResponse.headerValues "expires"
         >> Seq.tryHead
@@ -24,7 +39,7 @@ type EsiApiProxy(cache: IMemoryCache, actor: IEsiApiPassthroughActor) =
         let prefix = typeof<EsiApiProxy>.Name
         fun (route: string) -> $"{prefix}:{route}"
 
-    let getCache id =        
+    let getCache id =
         match cacheKey id |> cache.TryGetValue with
         | true, x -> x :?> HttpRequestResponse |> Some
         | _ -> None
@@ -34,23 +49,27 @@ type EsiApiProxy(cache: IMemoryCache, actor: IEsiApiPassthroughActor) =
         let opts = cacheOptions expiry
         cache.Set(key, resp, opts)
 
-    let get route =         
-        match getCache route with
-        | Some r -> task { return r }
-        | None ->
+    let getFromEsi = Esi.getEsiApi config hc log metrics
+
+    let get route =
+        match getCache route with        
+        | Some r ->             
+            task { metrics.EsiCacheHit 1; return r }
+        | None ->            
             task {
-                let! r = actor.Get route
+                metrics.EsiCacheMiss 1
+
+                let! (t, r) = getFromEsi throttling route
+
+                throttling <- t // On the basis that reference assignments are atomic operations, and we can afford a little skew.
+
                 return
                     match r with
-                    | HttpBadGatewayResponse _ 
+                    | HttpBadGatewayResponse _
                     | HttpExceptionRequestResponse _ -> r
                     | _ ->
-                        //let expiry = r |> expiresHeaderValue (defaultExpiry ())
-                        let expiry = DateTime.UtcNow.AddMinutes(15.)
+                        let expiry = DateTime.UtcNow.AddMinutes(5.)
                         setCacheAsync (route, expiry, r)
             }
-        
-    member this.Get route = get route
-    
 
-    
+    member this.Get route = get route

@@ -10,6 +10,12 @@ group Main
     nuget MongoDB.Driver
     nuget Newtonsoft.Json
     nuget Microsoft.Extensions.Caching.Memory
+    nuget OpenTelemetry.Extensions.Hosting
+    nuget OpenTelemetry.Exporter.OpenTelemetryProtocol
+    nuget OpenTelemetry.Instrumentation.AspNetCore
+    nuget OpenTelemetry.Instrumentation.Runtime
+    nuget OpenTelemetry.Exporter.Console
+    nuget System.Text.Json 8.0.5
 
 // [ FAKE GROUP ]
 group Tests
@@ -27,5 +33,6 @@ group Tests
     nuget System.Text.RegularExpressions
     nuget xunit
     nuget xunit.runner.visualstudio
+    nuget System.Formats.Asn1 8.0.1
 
 

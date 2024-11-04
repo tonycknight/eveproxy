@@ -12,6 +12,7 @@ type RedisqIngestionActor
         hc: IExternalHttpClient,
         stats: IZkbStatsActor,
         logFactory: ILoggerFactory,
+        metrics: IMetricsTelemetry,
         writer: IKillmailWriter,
         sessions: ISessionsActor
     ) =
@@ -26,13 +27,20 @@ type RedisqIngestionActor
 
         kill
 
-    let logKmReceipt = logKmIdAction "--> Received kill [%s]." log.LogInformation
+    let logKmReceipt km = 
+        metrics.ReceivedKillmails 1
+        km |> logKmIdAction "--> Received kill [%s]." log.LogInformation
 
     let logKmNoop =
         logKmIdAction "--> No write of kill [%s] - no further action." log.LogTrace
+    
+    let logBadKm () =
+        metrics.BadKillmails 1
+        log.LogWarning "Killmail received without a killmailID."
 
-    let logKmCompletion =
-        logKmIdAction "--> Finished processing kill [%s]." log.LogTrace
+    let logKmCompletion km =
+        metrics.IngestedKillmails 1
+        km |> logKmIdAction "--> Finished processing kill [%s]." log.LogTrace
 
     let logKmDeduplication =
         logKmIdAction "--> Ignoring kill [%s] as duplicate." log.LogTrace
@@ -82,7 +90,7 @@ type RedisqIngestionActor
     let handleKill (state: RedisqIngestionActorState) (kill: KillPackageData) =
         task {
             if (kill |> KillPackageData.killmailId |> Option.isNone) then
-                log.LogWarning "Killmail received without a killmailID."
+                logBadKm ()                
             else
                 let! writeResult = kill |> logKmReceipt |> constructKill |> countKillReceipt |> writer.WriteAsync
 
