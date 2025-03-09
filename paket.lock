@@ -804,8 +804,8 @@ NUGET
       System.Diagnostics.EventLog (>= 4.7) - restriction: || (&& (< net462) (>= netstandard2.0) (< netstandard2.1)) (&& (< net6.0) (>= netstandard2.1))
       System.Diagnostics.EventLog (>= 6.0) - restriction: >= net6.0
       System.Reflection.Emit (>= 4.7) - restriction: && (< net462) (>= netstandard2.0) (< netstandard2.1)
-    coverlet.collector (6.0)
-    coverlet.msbuild (6.0)
+    coverlet.collector (6.0.4)
+    coverlet.msbuild (6.0.4)
     FsCheck (2.16.6)
       FSharp.Core (>= 4.0.0.1) - restriction: && (< net452) (>= netstandard1.0) (< netstandard1.6)
       FSharp.Core (>= 4.2.3) - restriction: || (>= net452) (>= netstandard1.6)

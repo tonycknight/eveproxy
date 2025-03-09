@@ -33,6 +33,5 @@ group Tests
     nuget System.Text.RegularExpressions
     nuget xunit
     nuget xunit.runner.visualstudio
-    nuget System.Formats.Asn1 8.0.1
-
+    
 
