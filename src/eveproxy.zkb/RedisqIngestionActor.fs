@@ -27,13 +27,13 @@ type RedisqIngestionActor
 
         kill
 
-    let logKmReceipt km = 
+    let logKmReceipt km =
         metrics.ReceivedKillmails 1
         km |> logKmIdAction "--> Received kill [%s]." log.LogInformation
 
     let logKmNoop =
         logKmIdAction "--> No write of kill [%s] - no further action." log.LogTrace
-    
+
     let logBadKm () =
         metrics.BadKillmails 1
         log.LogWarning "Killmail received without a killmailID."
@@ -90,7 +90,7 @@ type RedisqIngestionActor
     let handleKill (state: RedisqIngestionActorState) (kill: KillPackageData) =
         task {
             if (kill |> KillPackageData.killmailId |> Option.isNone) then
-                logBadKm ()                
+                logBadKm ()
             else
                 let! writeResult = kill |> logKmReceipt |> constructKill |> countKillReceipt |> writer.WriteAsync
 

@@ -50,4 +50,4 @@ jobs:
           dotnet restore
   
       - name: Check Style
-        run: dotnet format --verify-no-changes
+        run: dotnet fantomas ./ --check

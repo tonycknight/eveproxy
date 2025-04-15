@@ -5,6 +5,4 @@ open Microsoft.Extensions.DependencyInjection
 module ApiStartup =
 
     let addServices (sc: IServiceCollection) =
-        sc
-            .AddSingleton<IEsiApiPassthroughActor, EsiApiPassthroughActor>()
-            .AddSingleton<EsiApiProxy>()
+        sc.AddSingleton<IEsiApiPassthroughActor, EsiApiPassthroughActor>().AddSingleton<EsiApiProxy>()

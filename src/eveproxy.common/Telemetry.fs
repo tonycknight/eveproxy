@@ -29,57 +29,70 @@ type IMetricsTelemetry =
     abstract member EvewhoProxyRequest: int -> unit
 
 type MetricsTelemetry(meterFactory: IMeterFactory) =
-    
+
     let ingestedKillmailMeter = meterFactory.Create("eveproxy_killmails")
-    let createKillmailCounter name = 
+
+    let createKillmailCounter name =
         ingestedKillmailMeter.CreateCounter<int>($"eveproxy_killmails_{name}", "Killmail")
+
     let killmailBadCounter = createKillmailCounter "bad"
     let killmailReceivedCounter = createKillmailCounter "received"
     let killmailIngestedCounter = createKillmailCounter "ingested"
 
     let proxyRequestMeter = meterFactory.Create("eveproxy_proxy_request")
-    let createProxyRequestCounter name = proxyRequestMeter.CreateCounter<int>($"eveproxy_proxy_request_{name}", "Request")
+
+    let createProxyRequestCounter name =
+        proxyRequestMeter.CreateCounter<int>($"eveproxy_proxy_request_{name}", "Request")
+
     let redisqProxyRequestCounter = createProxyRequestCounter "redisq"
     let esiProxyRequestCounter = createProxyRequestCounter "esi"
     let zkbProxyRequestCounter = createProxyRequestCounter "zkb"
     let evewhoProxyRequestCounter = createProxyRequestCounter "evewho"
 
     let esiRequestMeter = meterFactory.Create("eveproxy_request_esi")
-    let createEsiCounter name = 
+
+    let createEsiCounter name =
         esiRequestMeter.CreateCounter<int>($"eveproxy_request_esi_{name}", "Request")
+
     let successfulEsiRequestCounter = createEsiCounter "ok"
     let failedEsiRequestCounter = createEsiCounter "failed"
     let throttledEsiRequestCounter = createEsiCounter "throttled"
 
     let evewhoRequestMeter = meterFactory.Create("eveproxy_request_evewho")
-    let createEvewhoCounter name = 
+
+    let createEvewhoCounter name =
         evewhoRequestMeter.CreateCounter<int>($"eveproxy_request_evewho_{name}", "Request")
+
     let successfulEvewhoRequestCounter = createEvewhoCounter "ok"
     let failedEvewhoRequestCounter = createEvewhoCounter "failed"
     let throttledEvewhoRequestCounter = createEvewhoCounter "throttled"
 
     let zkbRequestMeter = meterFactory.Create("eveproxy_request_zkb")
-    let createZkbCounter name = 
+
+    let createZkbCounter name =
         zkbRequestMeter.CreateCounter<int>($"eveproxy_request_zkb_{name}", "Request")
+
     let successfulZkbRequestCounter = createZkbCounter "ok"
     let failedZkbRequestCounter = createZkbCounter "failed"
     let throttledZkbRequestCounter = createZkbCounter "throttled"
 
     let esiCacheRequestMeter = meterFactory.Create("eveproxy_cache_esi")
-    let createEsiCacheCounter name = 
+
+    let createEsiCacheCounter name =
         esiCacheRequestMeter.CreateCounter<int>($"eveproxy_cache_esi_{name}", "Request")
+
     let esiCacheHitCounter = createEsiCacheCounter "hit"
     let esiCacheMissCounter = createEsiCacheCounter "miss"
 
     interface IMetricsTelemetry with
-        member this.Dispose () = 
+        member this.Dispose() =
             ingestedKillmailMeter.Dispose()
             esiRequestMeter.Dispose()
             evewhoRequestMeter.Dispose()
             zkbRequestMeter.Dispose()
             proxyRequestMeter.Dispose()
             esiCacheRequestMeter.Dispose()
-            
+
         member this.EsiCacheHit count = esiCacheHitCounter.Add count
 
         member this.EsiCacheMiss count = esiCacheMissCounter.Add count
@@ -96,7 +109,8 @@ type MetricsTelemetry(meterFactory: IMeterFactory) =
 
         member this.ThrottledEsiRequest count = throttledEsiRequestCounter.Add count
 
-        member this.SuccessfulEvewhoRequest count = successfulEvewhoRequestCounter.Add count
+        member this.SuccessfulEvewhoRequest count =
+            successfulEvewhoRequestCounter.Add count
 
         member this.FailedEvewhoRequest count = failedEvewhoRequestCounter.Add count
 
@@ -120,10 +134,10 @@ module ApiTelemetry =
     open Giraffe
     open Microsoft.AspNetCore.Http
 
-    let countRouteInvoke (count: IMetricsTelemetry -> unit)=
+    let countRouteInvoke (count: IMetricsTelemetry -> unit) =
         fun (next: HttpFunc) (ctx: HttpContext) ->
             task {
                 let metrics = ctx.GetService<IMetricsTelemetry>()
-                count metrics 
+                count metrics
                 return! next ctx
             }
