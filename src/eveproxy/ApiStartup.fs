@@ -68,9 +68,7 @@ module ApiStartup =
 
         let config = config |> Configuration.applyKeyValues kvs
 
-        services
-            .AddSingleton<AppConfiguration>(config)
-            .AddSingleton<eveproxy.IKeyValueProvider>(kvs)
+        services.AddSingleton<AppConfiguration>(config).AddSingleton<eveproxy.IKeyValueProvider>(kvs)
 
     let addApiHttp (services: IServiceCollection) =
         services.AddHttpClient().AddSingleton<IExternalHttpClient, ExternalHttpClient>()
@@ -91,10 +89,7 @@ module ApiStartup =
 
     let configSource (args: string[]) (whbc: IConfigurationBuilder) =
         let whbc =
-            whbc
-                .AddJsonFile("appsettings.json", true, false)
-                .AddEnvironmentVariables("eveproxy_")
-                .AddCommandLine(args)
+            whbc.AddJsonFile("appsettings.json", true, false).AddEnvironmentVariables("eveproxy_").AddCommandLine(args)
 
         let configPath =
             args

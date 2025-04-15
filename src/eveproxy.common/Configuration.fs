@@ -260,9 +260,7 @@ module Configuration =
         config
 
     let create (sp: System.IServiceProvider) =
-        sp
-            .GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>()
-            .Get<AppConfiguration>()
+        sp.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>().Get<AppConfiguration>()
         |> mergeDefaults AppConfiguration.defaultConfig
         |> validate
 
