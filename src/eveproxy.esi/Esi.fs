@@ -30,13 +30,14 @@ module Esi =
         intHeaderValue 60 errorLimitResetHeader >> TimeSpan.FromSeconds
 
     let instrumentResponse (log: ILogger<_>) (metrics: IMetricsTelemetry) url resp =
-        $"GET {HttpRequestResponse.loggable resp} received from [{url}]." |> log.LogTrace
+        $"GET {HttpRequestResponse.loggable resp} received from [{url}]."
+        |> log.LogTrace
 
         match resp with
         | HttpOkRequestResponse _ -> metrics.SuccessfulEsiRequest 1
         | HttpTooManyRequestsResponse _ -> metrics.ThrottledEsiRequest 1
-        | _  -> metrics.FailedEsiRequest 1
-        
+        | _ -> metrics.FailedEsiRequest 1
+
     let rec getEsiApiIterate
         (config: AppConfiguration)
         (hc: IExternalHttpClient)
@@ -56,7 +57,7 @@ module Esi =
                 let! resp = hc.GetAsync url
 
                 instrumentResponse log metrics url resp
-                
+
                 let state =
                     { state with
                         errorLimitRemaining = errorsRemaining resp
@@ -93,4 +94,5 @@ module Esi =
             $"{state.errorLimitRemaining} received... breaking circuit" |> log.LogWarning
             (state, HttpTooManyRequestsResponse([])) |> Threading.toTaskResult
         else
-            $"{config.esiApiUrl}{route}" |> getEsiApiIterate config hc log metrics state retryCount
+            $"{config.esiApiUrl}{route}"
+            |> getEsiApiIterate config hc log metrics state retryCount

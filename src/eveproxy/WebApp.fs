@@ -27,7 +27,7 @@ module WebApp =
             task {
                 let zkbStatsActor = ctx.GetService<IZkbStatsActor>()
                 let sessionsActor = ctx.GetService<ISessionsActor>()
-                                
+
                 let! zkbActorStats = zkbStatsActor.GetStats()
                 let! zkbApiStats = zkbStatsActor.GetApiStats()
 
@@ -53,8 +53,7 @@ module WebApp =
                            distribution = zkbApiStats.distribution
                            storage =
                             {| kills = kmCount
-                               sessions = sessionStorageStats |} |}
-                       |}
+                               sessions = sessionStorageStats |} |} |}
 
                 return! Successful.OK result next ctx
             }

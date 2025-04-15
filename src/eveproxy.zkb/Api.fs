@@ -33,7 +33,7 @@ type KillPackage =
     static member ofKillPackageData(value: KillPackageData) = { KillPackage.package = value.package }
 
 module Api =
-    
+
     let private ttw (config: AppConfiguration) (query: IQueryCollection) =
         match query.TryGetValue("ttw") with
         | true, x -> x |> Seq.head |> Strings.toInt (config.ClientRedisqTtw())

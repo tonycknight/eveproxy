@@ -10,7 +10,13 @@ type private ZkbApiPassthroughActorState =
     static member empty = { ZkbApiPassthroughActorState.throttling = Map.empty }
 
 type ZkbApiPassthroughActor
-    (hc: IExternalHttpClient, stats: IZkbStatsActor, logFactory: ILoggerFactory, metrics: IMetricsTelemetry, config: AppConfiguration) =
+    (
+        hc: IExternalHttpClient,
+        stats: IZkbStatsActor,
+        logFactory: ILoggerFactory,
+        metrics: IMetricsTelemetry,
+        config: AppConfiguration
+    ) =
     let log = logFactory.CreateLogger<ZkbApiPassthroughActor>()
     let throttle = config.ZkbThrottling() |> Throttling.windowThrottling
 
@@ -26,12 +32,13 @@ type ZkbApiPassthroughActor
         }
 
     let instrumentResponse url resp =
-        $"GET {HttpRequestResponse.loggable resp} received from [{url}]." |> log.LogTrace
+        $"GET {HttpRequestResponse.loggable resp} received from [{url}]."
+        |> log.LogTrace
 
         match resp with
         | HttpOkRequestResponse _ -> metrics.SuccessfulZkbRequest 1
         | HttpTooManyRequestsResponse _ -> metrics.ThrottledZkbRequest 1
-        | _  -> metrics.FailedZkbRequest 1
+        | _ -> metrics.FailedZkbRequest 1
 
     let rec getZkbApiIterate throttling count url =
         task {

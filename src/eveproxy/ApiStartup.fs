@@ -32,27 +32,33 @@ module ApiStartup =
 
     let addOpenTelemetry (services: IServiceCollection) =
         let config = services.BuildServiceProvider().GetRequiredService<AppConfiguration>()
-        let resourceBuilder = ResourceBuilder.CreateDefault().AddService(config.otelServiceName)
 
-        let otlpOptions (otlp: OtlpExporterOptions) (metrics: MetricReaderOptions) = 
+        let resourceBuilder =
+            ResourceBuilder.CreateDefault().AddService(config.otelServiceName)
+
+        let otlpOptions (otlp: OtlpExporterOptions) (metrics: MetricReaderOptions) =
             otlp.Endpoint <- config.otelCollectorUrl |> Strings.appendIfMissing "/" |> Uri
             metrics.PeriodicExportingMetricReaderOptions.ExportIntervalMilliseconds <- 15000
             metrics.TemporalityPreference <- MetricReaderTemporalityPreference.Cumulative
             metrics |> ignore
-        
-        services.AddOpenTelemetry()
-            .WithMetrics(fun opts -> 
-                            opts.SetResourceBuilder(resourceBuilder)
-                                .AddMeter("eveproxy_killmails")
-                                .AddMeter("eveproxy_request_esi")
-                                .AddMeter("eveproxy_cache_esi")
-                                .AddMeter("eveproxy_request_evewho")
-                                .AddMeter("eveproxy_request_zkb")
-                                .AddMeter("eveproxy_proxy_request")
-                                .AddOtlpExporter(otlpOptions)                                
-                                |> ignore) |> ignore
+
+        services
+            .AddOpenTelemetry()
+            .WithMetrics(fun opts ->
+                opts
+                    .SetResourceBuilder(resourceBuilder)
+                    .AddMeter("eveproxy_killmails")
+                    .AddMeter("eveproxy_request_esi")
+                    .AddMeter("eveproxy_cache_esi")
+                    .AddMeter("eveproxy_request_evewho")
+                    .AddMeter("eveproxy_request_zkb")
+                    .AddMeter("eveproxy_proxy_request")
+                    .AddOtlpExporter(otlpOptions)
+                |> ignore)
+        |> ignore
+
         services.AddSingleton<IMetricsTelemetry, MetricsTelemetry>()
-            
+
     let addApiConfig (services: IServiceCollection) =
         let sp = services.BuildServiceProvider()
         let lf = sp.GetRequiredService<ILoggerFactory>()

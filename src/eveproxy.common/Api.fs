@@ -38,5 +38,3 @@ module Api =
 
     let jsonString headers (value: string) =
         value |> contentString "application/json; charset=utf-8" headers
-
-    
