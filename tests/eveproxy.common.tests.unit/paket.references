@@ -5,6 +5,7 @@ xunit
 xunit.runner.visualstudio
 FsCheck.Xunit
 Microsoft.NET.Test.Sdk
+Newtonsoft.Json
 NSubstitute
 System.Net.Http
 System.Text.RegularExpressions
