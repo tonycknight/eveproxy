@@ -10,14 +10,14 @@
       "rollForward": false
     },
     "dotnet-reportgenerator-globaltool": {
-      "version": "5.4.8",
+      "version": "5.5.1",
       "commands": [
         "reportgenerator"
       ],
       "rollForward": false
     },
     "fantomas": {
-      "version": "7.0.2",
+      "version": "7.0.5",
       "commands": [
         "fantomas"
       ],
