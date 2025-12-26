@@ -110,7 +110,7 @@ type AppConfiguration =
           esiMinimumErrorLimit = ""
           esiRetryCount = ""
           mongoDbName = "eveproxy"
-          mongoConnection = "" }
+          mongoConnection = "mongodb://localhost:27017" }
 
 module Configuration =
     open System.Reflection
