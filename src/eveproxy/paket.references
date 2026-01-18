@@ -1,5 +1,0 @@
-group Main
-FSharp.Core
-Giraffe
-Microsoft.Extensions.Caching.Memory
-System.Text.Json

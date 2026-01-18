@@ -10,8 +10,7 @@
     </Content>
     <Compile Include="ApiStartup.fs" />
     <Compile Include="WebApp.fs" />
-    <Compile Include="Program.fs" />
-    <None Include="paket.references" />
+    <Compile Include="Program.fs" />    
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\eveproxy.common\eveproxy.common.fsproj" />
@@ -19,5 +18,9 @@
     <ProjectReference Include="..\eveproxy.evewho\eveproxy.evewho.fsproj" />
     <ProjectReference Include="..\eveproxy.zkb\eveproxy.zkb.fsproj" />
   </ItemGroup>
-  <Import Project="..\..\.paket\Paket.Restore.targets" />
+  <ItemGroup>
+    <PackageReference Include="FSharp.Core" Version="10.0.102" />
+    <PackageReference Include="Giraffe" Version="6.2.0" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.2" />
+  </ItemGroup>
 </Project>
