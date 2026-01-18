@@ -11,11 +11,11 @@ on:
   push:
     branches: [ "**" ]
     tags: [ "**" ]
-  paths-ignore:
-    - '.github/ISSUE_TEMPLATE/**'
-    - '.github/dependabot.yml'
-    - '.github/CODEOWNERS'
-    - '**/*.md'
+    paths-ignore:
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/dependabot.yml'
+      - '.github/CODEOWNERS'
+      - '**/*.md'
   workflow_dispatch:
   merge_group:
 
