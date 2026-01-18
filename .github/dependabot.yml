@@ -15,6 +15,9 @@ updates:
       - ":robot: bot"
     ignore:
       - dependency-name: "FsUnit.xUnit"
+      - dependency-name: "Giraffe"
+      - dependency-name: "MongoDB.Driver"
+      - dependency-name: "OpenTelemetry.*"
   - package-ecosystem: "github-actions"
     directory: "/.github/workflows"
     schedule:
