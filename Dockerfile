@@ -18,7 +18,6 @@ RUN dotnet restore "src/eveproxy/eveproxy.fsproj"
 COPY . .
 WORKDIR "/src/src/eveproxy"
 RUN dotnet tool restore
-RUN dotnet paket restore
 RUN dotnet build "eveproxy.fsproj" -c Release -o /app/build /p:AssemblyInformationalVersion=${BuildVersion} /p:AssemblyFileVersion=${BuildVersion}
 
 FROM build AS publish
