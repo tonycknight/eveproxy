@@ -16,9 +16,7 @@ on:
         type: string
     secrets:
       token:
-        required: false
-  schedule:
-    - cron: '1 0 * * *'
+        required: false  
 
 jobs:
   sca:
