@@ -1,5 +1,13 @@
 name: Pull Request checks
 
+permissions:
+  actions: read
+  pull-requests: write
+  security-events: write
+  contents: write
+  checks: write
+  issues: write
+
 on:
   pull_request:
     

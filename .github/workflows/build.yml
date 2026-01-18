@@ -1,9 +1,23 @@
 name: Build & Release
 
+permissions:
+  actions: read
+  pull-requests: write
+  security-events: write
+  contents: write
+  checks: write
 
 on:
   push:
+    branches: [ "**" ]
+    tags: [ "**" ]
+  paths-ignore:
+    - '.github/ISSUE_TEMPLATE/**'
+    - '.github/dependabot.yml'
+    - '.github/CODEOWNERS'
+    - '**/*.md'
   workflow_dispatch:
+  merge_group:
 
 env:
   build-version-number: 0.1.${{ github.run_number }}  
