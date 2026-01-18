@@ -100,10 +100,10 @@ jobs:
       - name: Set BuildVersion
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
         run: |
-          run: echo "package-version-number=$(git describe --tags --dirty)" >> $GITHUB_ENV
+          run: echo "build-version-number=$(git describe --tags --dirty)" >> $GITHUB_ENV
 
       - name: Report version
-        run: echo "Building package ${{ env.package-version-number }}" >> $GITHUB_STEP_SUMMARY
+        run: echo "Building package ${{ env.build-version-number }}" >> $GITHUB_STEP_SUMMARY
 
       - name: Set Docker image name
         run: |
