@@ -13,8 +13,17 @@
     <Compile Include="Http.fs" />
     <Compile Include="Throttling.fs" />
     <Compile Include="Actors.fs" />
-    <Compile Include="Api.fs" />
-    <None Include="paket.references" />
+    <Compile Include="Api.fs" />    
   </ItemGroup>
-  <Import Project="..\..\.paket\Paket.Restore.targets" />
+  <ItemGroup>
+    <PackageReference Include="FSharp.Core" Version="10.0.102" />
+    <PackageReference Include="Giraffe" Version="6.2.0" />
+    <PackageReference Include="MongoDB.Driver" Version="2.23.1" />
+    <PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.9.0" />
+    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.9.0" />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.9.0" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.9.0" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" Version="1.9.0" />
+    <PackageReference Include="System.Text.Json" Version="10.0.2" />
+  </ItemGroup>
 </Project>
