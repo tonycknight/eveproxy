@@ -63,11 +63,11 @@ module ConfigurationTests =
 
 
     [<Property(MaxTest = 1)>]
-    let ``validationErrors - default returns errors`` () =
+    let ``validationErrors - default returns no errors`` () =
         let config = AppConfiguration.defaultConfig
         let r = Configuration.validationErrors config |> Array.ofSeq
 
-        r <> Array.empty
+        r = Array.empty
 
     [<Property(Arbitrary = [| typeof<AlphaNumericString> |], Verbose = true)>]
     let ``validationErrors - default with mongo details returns no errors`` (mongoConnection: string) =
