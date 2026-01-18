@@ -3,6 +3,7 @@
 open System
 open eveproxy
 open FsCheck
+open FsCheck.FSharp
 open FsCheck.Xunit
 
 module WindowThrottlingTests =
