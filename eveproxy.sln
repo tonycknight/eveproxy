@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.3.32922.545
+# Visual Studio Version 18
+VisualStudioVersion = 18.2.11408.102 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "eveproxy", "src\eveproxy\eveproxy.fsproj", "{29DE3351-3AB6-411D-A780-3878C6946F0C}"
 EndProject
@@ -10,8 +10,9 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{89384C28-A0BD-4DBB-BB39-E39A88091828}"
 	ProjectSection(SolutionItems) = preProject
 		.github\workflows\build.yml = .github\workflows\build.yml
+		.github\dependabot.yml = .github\dependabot.yml
 		Dockerfile = Dockerfile
-		paket.dependencies = paket.dependencies
+		.github\labeler.yml = .github\labeler.yml
 		.github\workflows\pr-checks.yml = .github\workflows\pr-checks.yml
 		.github\workflows\sca.yml = .github\workflows\sca.yml
 	EndProjectSection

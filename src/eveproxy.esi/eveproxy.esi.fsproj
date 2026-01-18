@@ -12,13 +12,14 @@
     <Compile Include="EsiApiProxy.fs" />
     <Compile Include="ApiStartup.fs" />
     <Compile Include="Api.fs" />
-    <None Include="paket.references" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\eveproxy.common\eveproxy.common.fsproj" />
   </ItemGroup>
 
-  <Import Project="..\..\.paket\Paket.Restore.targets" />
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.2" />
+  </ItemGroup>
 
 </Project>

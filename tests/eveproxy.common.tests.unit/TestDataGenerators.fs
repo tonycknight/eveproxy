@@ -3,6 +3,7 @@
 open System
 open eveproxy
 open FsCheck
+open FsCheck.FSharp
 
 [<AutoOpen>]
 module TestDataGenerators =
@@ -15,17 +16,22 @@ module TestDataGenerators =
 
 type NullEmptyWhitespaceString =
     static member Generate() =
-        Arb.Default.String() |> Arb.filter String.IsNullOrWhiteSpace
+        ArbMap.defaults
+        |> ArbMap.arbitrary<string>
+        |> Arb.filter String.IsNullOrWhiteSpace
 
 type AlphaNumericString =
 
     static member Generate() =
-        Arb.Default.String() |> Arb.filter (isNotNullOrEmpty &&>> isAlphaNumeric)
+        ArbMap.defaults
+        |> ArbMap.arbitrary<string>
+        |> Arb.filter (isNotNullOrEmpty &&>> isAlphaNumeric)
 
 type AlphaNumericStringSingletonArray =
 
     static member Generate() =
-        Arb.generate<string>
+        ArbMap.defaults
+        |> ArbMap.generate<string>
         |> Gen.filter (isNotNullOrEmpty &&>> isAlphaNumeric)
         |> Gen.map (fun s -> [| s |])
         |> Arb.fromGen
@@ -33,6 +39,7 @@ type AlphaNumericStringSingletonArray =
 type UrlString =
 
     static member Generate() =
-        Arb.Default.String()
+        ArbMap.defaults
+        |> ArbMap.arbitrary<string>
         |> Arb.filter (isNotNullOrEmpty &&>> isAlphaNumeric)
         |> Arb.mapFilter (fun s -> $"https://{s}") (fun _ -> true)

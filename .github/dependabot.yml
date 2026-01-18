@@ -1,0 +1,34 @@
+version: 2
+updates:
+  - package-ecosystem: "nuget"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      time: "06:00"
+      timezone: "Europe/London"
+    groups:
+      packages:
+        patterns:
+          - "*"
+    labels:
+      - ":game_die: dependencies"
+      - ":robot: bot"
+    ignore:
+      - dependency-name: "FsUnit.xUnit"
+      - dependency-name: "Giraffe"
+      - dependency-name: "MongoDB.Driver"
+      - dependency-name: "OpenTelemetry.*"
+  - package-ecosystem: "github-actions"
+    directory: "/.github/workflows"
+    schedule:
+      interval: "daily"
+      time: "06:00"
+      timezone: "Europe/London"
+    groups:
+      packages:
+        patterns:
+          - "*"
+    labels:
+      - ":game_die: dependencies"
+      - ":robot: bot"
+    

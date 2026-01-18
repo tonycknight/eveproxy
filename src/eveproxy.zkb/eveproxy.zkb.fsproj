@@ -13,11 +13,12 @@
     <Compile Include="RedisqIngestionActor.fs" />
     <Compile Include="ZkbApiPassthroughActor.fs" />
     <Compile Include="ZkbStatsActor.fs" />
-    <Compile Include="Api.fs" />
-    <None Include="paket.references" />
+    <Compile Include="Api.fs" />    
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\eveproxy.common\eveproxy.common.fsproj" />
   </ItemGroup>
-  <Import Project="..\..\.paket\Paket.Restore.targets" />
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.2" />
+  </ItemGroup>
 </Project>
