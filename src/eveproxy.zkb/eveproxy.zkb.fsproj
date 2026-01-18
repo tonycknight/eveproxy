@@ -19,7 +19,6 @@
     <ProjectReference Include="..\eveproxy.common\eveproxy.common.fsproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="FSharp.Core" Version="10.0.102" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.2" />
   </ItemGroup>
 </Project>

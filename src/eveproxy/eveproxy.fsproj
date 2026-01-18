@@ -19,7 +19,6 @@
     <ProjectReference Include="..\eveproxy.zkb\eveproxy.zkb.fsproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="FSharp.Core" Version="10.0.102" />
     <PackageReference Include="Giraffe" Version="6.2.0" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.2" />
   </ItemGroup>
