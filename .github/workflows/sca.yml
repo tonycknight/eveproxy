@@ -1,5 +1,12 @@
 name: "SCA"
 
+permissions:
+  actions: read
+  pull-requests: write
+  security-events: write
+  contents: write
+  checks: write
+
 on:
   workflow_dispatch:
   workflow_call:
@@ -9,9 +16,7 @@ on:
         type: string
     secrets:
       token:
-        required: false
-  schedule:
-    - cron: '1 0 * * *'
+        required: false  
 
 jobs:
   sca:
@@ -22,4 +27,8 @@ jobs:
       
       - name: Vulnereble package scan
         uses: tonycknight/pkgchk-action@v1
-    
+        with:
+          scan-issues: true
+          scan-upgrades: true
+          vulnerable: true
+          deprecated: true

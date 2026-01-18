@@ -27,7 +27,6 @@ group Tests
     nuget FsCheck.Xunit
     nuget FSharp.Core
     nuget Microsoft.NET.Test.Sdk
-    nuget Newtonsoft.Json
     nuget NSubstitute
     nuget System.Net.Http
     nuget System.Text.RegularExpressions
