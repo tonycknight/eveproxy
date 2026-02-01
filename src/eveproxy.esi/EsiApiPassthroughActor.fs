@@ -34,7 +34,7 @@ type EsiApiPassthroughActor(hc: IExternalHttpClient, logFactory: ILoggerFactory,
     let errorsRemaining = intHeaderValue 0 errorLimitRemainHeader
 
     let errorsResetWait =
-        intHeaderValue 60 errorLimitResetHeader >> TimeSpan.FromSeconds
+        intHeaderValue 60 errorLimitResetHeader >> int64 >> TimeSpan.FromSeconds
 
     let rec getEsiApiIterate (state: EsiApiPassthroughActorState) count url =
         task {

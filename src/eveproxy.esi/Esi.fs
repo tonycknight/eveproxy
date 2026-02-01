@@ -27,7 +27,7 @@ module Esi =
     let errorsRemaining = intHeaderValue 0 errorLimitRemainHeader
 
     let errorsResetWait =
-        intHeaderValue 60 errorLimitResetHeader >> TimeSpan.FromSeconds
+        intHeaderValue 60 errorLimitResetHeader >> int64 >> TimeSpan.FromSeconds
 
     let instrumentResponse (log: ILogger<_>) (metrics: IMetricsTelemetry) url resp =
         $"GET {HttpRequestResponse.loggable resp} received from [{url}]."

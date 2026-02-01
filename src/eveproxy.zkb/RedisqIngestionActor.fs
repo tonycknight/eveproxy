@@ -69,7 +69,7 @@ type RedisqIngestionActor
                     match parse body with
                     | Some package -> Choice1Of3 package
                     | _ -> Choice3Of3 None
-                | HttpTooManyRequestsResponse _ -> 1 |> TimeSpan.FromMinutes |> Choice2Of3
+                | HttpTooManyRequestsResponse _ -> 1L |> TimeSpan.FromMinutes |> Choice2Of3
                 | _ -> Choice3Of3 None
         }
 

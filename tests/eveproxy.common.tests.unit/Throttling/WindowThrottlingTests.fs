@@ -61,7 +61,7 @@ module WindowThrottlingTests =
 
     [<Property(Verbose = true)>]
     let ``windowThrottling on max counts returns wait`` () =
-        let window = 30
+        let window = 30L
         let maxCounts = Gen.elements [ 1..10 ] |> Arb.fromGen
 
         Prop.forAll maxCounts (fun maxCount ->
@@ -89,7 +89,7 @@ module WindowThrottlingTests =
 
             let (c, wait) = throttle counts currentTime
 
-            let delta = window - sec
+            let delta = window - sec |> int64
             wait = TimeSpan.FromSeconds delta)
 
     [<Property(Verbose = true)>]
@@ -108,5 +108,5 @@ module WindowThrottlingTests =
 
             let (c, wait) = throttle counts currentTime
 
-            let delta = (window * deltaMultiplier) - sec
+            let delta = (window * deltaMultiplier) - sec |> int64
             wait = TimeSpan.FromSeconds delta)
