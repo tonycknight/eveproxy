@@ -9,4 +9,4 @@ param (
     [string]$HostUrls = "http://+:5000"
 )
 
-docker run -it --rm -p 8081:5000 eveproxy --mongoConnection=$ConnectionString --mongoDbName=$DbName --hostUrls=$HostUrls
+docker run -it --rm -p 8080:5000 eveproxy --mongoConnection=$ConnectionString --mongoDbName=$DbName --hostUrls=$HostUrls

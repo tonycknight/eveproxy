@@ -1,0 +1,23 @@
+services:
+  api:
+    image: "eveproxy:latest"
+    depends_on: [microbroker]
+    networks:
+      - eveproxynetwork
+    ports:
+      - "8080:5000"
+    command: '--mongoConnection=mongodb://host.docker.internal:27017 --brokerBaseUrl=http://microbroker:8081 --hostUrls=http://+:5000'
+    
+  microbroker:
+    image: "ghcr.io/tonycknight/microbroker:v0.2.1"
+    networks:
+      - eveproxynetwork
+    ports:
+      - "8081:8080"
+    command: '--mongoConnection=mongodb://host.docker.internal:27017 --hostUrls=http://+:8080'
+    
+networks:
+  eveproxynetwork:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.host_binding_ipv4: "127.0.0.1"
