@@ -18,6 +18,7 @@ type AppConfiguration =
       allowExternalTraffic: string
       otelCollectorUrl: string
       otelServiceName: string
+      brokerBaseUrl: string
       zkbRedisqBaseUrl: string
       zkbRedisqQueueId: string
       zkbRedisqTtwExternal: string
@@ -71,6 +72,7 @@ type AppConfiguration =
           allowExternalTraffic = true.ToString()
           otelCollectorUrl = ""
           otelServiceName = ""
+          brokerBaseUrl = ""
           zkbApiUrl = ""
           zkbThrottlingRequests = ""
           zkbThrottlingSeconds = ""
@@ -94,6 +96,7 @@ type AppConfiguration =
           allowExternalTraffic = true.ToString()
           otelCollectorUrl = "http://localhost:4317/"
           otelServiceName = "eveproxy"
+          brokerBaseUrl = "http://localhost:8080/"
           zkbRedisqBaseUrl = "https://zkillredisq.stream/listen.php"
           zkbRedisqQueueId = (System.Guid.NewGuid() |> sprintf "eveProxy%A")
           zkbRedisqTtwExternal = ""
