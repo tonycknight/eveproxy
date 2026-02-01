@@ -6,7 +6,7 @@ param (
     [string]$DbName = "eveproxy-tests",
 
     [PArameter(Mandatory=$false)]
-    [string]$HostUrls = "http://+:8080"
+    [string]$HostUrls = "http://+:5000"
 )
 
-docker run -it --rm -p 8080:8080 eveproxy --mongoConnection=$ConnectionString --mongoDbName=$DbName --hostUrls=$HostUrls
+docker run -it --rm -p 8081:5000 eveproxy --mongoConnection=$ConnectionString --mongoDbName=$DbName --hostUrls=$HostUrls
