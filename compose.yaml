@@ -1,12 +1,12 @@
 services:
   eveproxy:
     image: "eveproxy:latest"
-    depends_on: [microbroker]
+    depends_on: [microbroker, otel]
     networks:
       - eveproxynetwork
     ports:
       - "8080:5000"
-    command: '--mongoConnection=mongodb://host.docker.internal:27017 --brokerBaseUrl=http://microbroker:8081 --hostUrls=http://+:5000'
+    command: '--mongoConnection=mongodb://host.docker.internal:27017 --brokerBaseUrl=http://microbroker:8081 --hostUrls=http://+:5000 --otelCollectorUrl=http://otel:4317/'
     
   microbroker:
     image: "ghcr.io/tonycknight/microbroker:v0.2.1"
@@ -15,6 +15,15 @@ services:
     ports:
       - "8081:8080"
     command: '--mongoConnection=mongodb://host.docker.internal:27017 --hostUrls=http://+:8080'
+
+  otel:
+    image: "otel/opentelemetry-collector:0.144.0"
+    networks:
+      - eveproxynetwork
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+      - "55679:55679"
     
 networks:
   eveproxynetwork:
