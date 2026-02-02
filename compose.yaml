@@ -1,5 +1,5 @@
 services:
-  api:
+  eveproxy:
     image: "eveproxy:latest"
     depends_on: [microbroker]
     networks:
