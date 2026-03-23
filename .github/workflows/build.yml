@@ -62,7 +62,7 @@ jobs:
           path: ./publish/codecoverage/*.*
                     
       - name: Unit test results
-        uses: dorny/test-reporter@v2
+        uses: dorny/test-reporter@v3
         if: always()
         with:
           name: Unit test results
