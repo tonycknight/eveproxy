@@ -301,9 +301,9 @@ type MongoKeyValueProvider(logger: ILoggerFactory, config: AppConfiguration) =
     [<Literal>]
     let collectionName = "keyvalues"
 
-    let logger = logger.CreateLogger<MongoKeyValueProvider>()
+    let logger = logger.CreateLogger<MongoKeyValueProvider>() // TODO: cleanup?
 
-    let mongoCol =
+    let mongoCol = // TODO: disposable?
         eveproxy.Mongo.initCollection "" config.mongoDbName collectionName config.mongoConnection
 
 

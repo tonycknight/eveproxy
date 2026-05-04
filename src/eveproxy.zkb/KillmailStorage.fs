@@ -51,7 +51,7 @@ type MongoKillmailRepository(config: eveproxy.AppConfiguration, cache: IMemoryCa
     [<Literal>]
     let collectionName = "killmails"
 
-    let mongoCol =
+    let mongoCol = // TODO: disposable?
         eveproxy.Mongo.initCollection "" config.mongoDbName collectionName config.mongoConnection
 
     let cacheOptions =
@@ -226,7 +226,7 @@ type MongoKillmailReferenceQueue(config: eveproxy.AppConfiguration, logFactory: 
     let collectionName = $"{KillmailReferenceQueues.queueNamePrefix}{name}"
     let logger = logFactory.CreateLogger<MongoKillmailReferenceQueue>()
 
-    let mongoCol =
+    let mongoCol = // TODO: disposable?
         eveproxy.Mongo.initCollection "" config.mongoDbName collectionName config.mongoConnection
 
     interface IKillmailReferenceQueue with
