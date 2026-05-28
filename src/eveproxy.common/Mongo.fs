@@ -51,7 +51,7 @@ module Mongo =
 
     let initDb dbName (connection: string) =
         let client = new MongoClient(connection) // TODO: disposable
-        
+
         let db = client.GetDatabase(dbName)
 
         try
