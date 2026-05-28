@@ -301,11 +301,8 @@ type MongoKeyValueProvider(logger: ILoggerFactory, config: AppConfiguration) =
     [<Literal>]
     let collectionName = "keyvalues"
 
-    let logger = logger.CreateLogger<MongoKeyValueProvider>() // TODO: cleanup?
-
-    let mongoCol = // TODO: disposable?
+    let mongoCol =
         eveproxy.Mongo.initCollection "" config.mongoDbName collectionName config.mongoConnection
-
 
     let getValue name =
         task {
