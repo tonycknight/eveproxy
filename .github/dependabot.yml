@@ -13,6 +13,8 @@ updates:
     labels:
       - ":game_die: dependencies"
       - ":robot: bot"
+    ignore:
+      - dependency-name: "FSharp.Core"
   - package-ecosystem: "github-actions"
     directory: "/.github/workflows"
     schedule:
