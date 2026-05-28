@@ -19,7 +19,7 @@ module WebApp =
         GET
         >=> route "/heartbeat/"
         >=> ResponseCaching.noResponseCaching
-        >=> json [ "OK" ]
+        >=> json [ "Eveproxy OK" ]
 
     let private stats =
 

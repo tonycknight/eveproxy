@@ -86,6 +86,7 @@ module ApiStartup =
         >> addApiHttp
         >> addWebFramework
         >> addContentNegotiation
+        >> ApiStartup.addMicrobroker
 
     let configSource (args: string[]) (whbc: IConfigurationBuilder) =
         let whbc =

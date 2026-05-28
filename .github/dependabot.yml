@@ -14,10 +14,7 @@ updates:
       - ":game_die: dependencies"
       - ":robot: bot"
     ignore:
-      - dependency-name: "FsUnit.xUnit"
-      - dependency-name: "Giraffe"
-      - dependency-name: "MongoDB.Driver"
-      - dependency-name: "OpenTelemetry.*"
+      - dependency-name: "FSharp.Core"
   - package-ecosystem: "github-actions"
     directory: "/.github/workflows"
     schedule:

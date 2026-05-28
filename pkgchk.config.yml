@@ -1,0 +1,6 @@
+excludePackages:
+- FSharp.Core
+scanVulnerabilities: true
+scanDeprecations: true
+scanTransitives: true
+

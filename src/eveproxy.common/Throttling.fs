@@ -31,5 +31,5 @@ module Throttling =
             let map = counts |> Map.add key (x + 1)
             (map, TimeSpan.Zero)
         | Some x ->
-            let wait = (bucket + window) - secs |> TimeSpan.FromSeconds
+            let wait = (bucket + window) - secs |> int64 |> TimeSpan.FromSeconds
             (counts, wait)

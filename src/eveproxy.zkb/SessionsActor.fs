@@ -20,7 +20,7 @@ type SessionsActor
     let defaultSessionName = KillmailReferenceQueues.defaultQueueName
     let log = logFactory.CreateLogger<SessionsActor>()
     let maxSessionAge = config.RedisqSessionMaxAge()
-    let scheduledMaint = new System.Timers.Timer(TimeSpan.FromMinutes(1))
+    let scheduledMaint = new System.Timers.Timer(TimeSpan.FromMinutes(1L))
 
     let getStateActor (name: string) (state: SessionsActorState) =
         let actor =

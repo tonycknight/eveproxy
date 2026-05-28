@@ -33,6 +33,7 @@ module ConfigurationTests =
               allowExternalTraffic = apply config.allowExternalTraffic defaultConfig.allowExternalTraffic
               otelCollectorUrl = apply config.otelCollectorUrl defaultConfig.otelCollectorUrl
               otelServiceName = apply config.otelServiceName defaultConfig.otelServiceName
+              brokerBaseUrl = apply config.brokerBaseUrl defaultConfig.brokerBaseUrl
               zkbRedisqBaseUrl = apply config.zkbRedisqBaseUrl defaultConfig.zkbRedisqBaseUrl
               zkbRedisqQueueId = apply config.zkbRedisqQueueId defaultConfig.zkbRedisqQueueId
               zkbRedisqTtwExternal = apply config.zkbRedisqTtwExternal defaultConfig.zkbRedisqTtwExternal
