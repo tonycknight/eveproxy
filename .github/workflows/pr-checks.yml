@@ -47,7 +47,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Check Style rules
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v5                
