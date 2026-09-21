@@ -14,28 +14,30 @@ type IKeyValueProvider =
 
 [<CLIMutable>]
 type AppConfiguration =
-    { hostUrls: string
-      allowExternalTraffic: string
-      otelCollectorUrl: string
-      otelServiceName: string
-      brokerBaseUrl: string
-      zkbRedisqBaseUrl: string
-      zkbRedisqQueueId: string
-      zkbRedisqTtwExternal: string
-      zkbRedisqTtwClient: string
-      zkbApiUrl: string
-      zkbThrottlingRequests: string
-      zkbThrottlingSeconds: string
-      evewhoApiUrl: string
-      evewhoThrottlingRequests: string
-      evewhoThrottlingSeconds: string
-      redisqSessionMaxAge: string
-      killmailMemoryCacheAge: string
-      esiApiUrl: string
-      esiMinimumErrorLimit: string
-      esiRetryCount: string
-      mongoDbName: string
-      mongoConnection: string }
+    {
+        hostUrls: string
+        allowExternalTraffic: string
+        otelCollectorUrl: string
+        otelServiceName: string
+        brokerBaseUrl: string
+        zkbRedisqBaseUrl: string
+        zkbRedisqQueueId: string
+        zkbRedisqTtwExternal: string
+        zkbRedisqTtwClient: string
+        zkbApiUrl: string
+        zkbThrottlingRequests: string
+        zkbThrottlingSeconds: string
+        evewhoApiUrl: string
+        evewhoThrottlingRequests: string
+        evewhoThrottlingSeconds: string
+        redisqSessionMaxAge: string
+        killmailMemoryCacheAge: string
+        esiApiUrl: string
+        esiMinimumErrorLimit: string
+        esiRetryCount: string
+        mongoDbName: string
+        mongoConnection: string
+    }
 
     member this.ZkbThrottling() =
         let secs = this.zkbThrottlingSeconds |> Strings.toInt 1
@@ -68,52 +70,56 @@ type AppConfiguration =
         $"{this.zkbRedisqBaseUrl}?queueID={this.zkbRedisqQueueId}&ttw={this.ExternalRedisqTtw()}"
 
     static member emptyConfig =
-        { AppConfiguration.hostUrls = ""
-          allowExternalTraffic = true.ToString()
-          otelCollectorUrl = ""
-          otelServiceName = ""
-          brokerBaseUrl = ""
-          zkbApiUrl = ""
-          zkbThrottlingRequests = ""
-          zkbThrottlingSeconds = ""
-          evewhoApiUrl = ""
-          evewhoThrottlingRequests = ""
-          evewhoThrottlingSeconds = ""
-          zkbRedisqBaseUrl = ""
-          zkbRedisqQueueId = ""
-          zkbRedisqTtwExternal = ""
-          zkbRedisqTtwClient = ""
-          redisqSessionMaxAge = ""
-          killmailMemoryCacheAge = ""
-          esiApiUrl = ""
-          esiMinimumErrorLimit = ""
-          esiRetryCount = ""
-          mongoDbName = ""
-          mongoConnection = "" }
+        {
+            AppConfiguration.hostUrls = ""
+            allowExternalTraffic = true.ToString()
+            otelCollectorUrl = ""
+            otelServiceName = ""
+            brokerBaseUrl = ""
+            zkbApiUrl = ""
+            zkbThrottlingRequests = ""
+            zkbThrottlingSeconds = ""
+            evewhoApiUrl = ""
+            evewhoThrottlingRequests = ""
+            evewhoThrottlingSeconds = ""
+            zkbRedisqBaseUrl = ""
+            zkbRedisqQueueId = ""
+            zkbRedisqTtwExternal = ""
+            zkbRedisqTtwClient = ""
+            redisqSessionMaxAge = ""
+            killmailMemoryCacheAge = ""
+            esiApiUrl = ""
+            esiMinimumErrorLimit = ""
+            esiRetryCount = ""
+            mongoDbName = ""
+            mongoConnection = ""
+        }
 
     static member defaultConfig =
-        { AppConfiguration.hostUrls = "http://+:8080"
-          allowExternalTraffic = true.ToString()
-          otelCollectorUrl = "http://localhost:4317/"
-          otelServiceName = "eveproxy"
-          brokerBaseUrl = "http://localhost:8080/"
-          zkbRedisqBaseUrl = "https://zkillredisq.stream/listen.php"
-          zkbRedisqQueueId = (System.Guid.NewGuid() |> sprintf "eveProxy%A")
-          zkbRedisqTtwExternal = ""
-          zkbRedisqTtwClient = ""
-          zkbApiUrl = "https://zkillboard.com/api/"
-          zkbThrottlingRequests = ""
-          zkbThrottlingSeconds = ""
-          evewhoApiUrl = "https://evewho.com/api/"
-          evewhoThrottlingRequests = ""
-          evewhoThrottlingSeconds = ""
-          redisqSessionMaxAge = ""
-          killmailMemoryCacheAge = ""
-          esiApiUrl = "https://esi.evetech.net/"
-          esiMinimumErrorLimit = ""
-          esiRetryCount = ""
-          mongoDbName = "eveproxy"
-          mongoConnection = "mongodb://localhost:27017" }
+        {
+            AppConfiguration.hostUrls = "http://+:8080"
+            allowExternalTraffic = true.ToString()
+            otelCollectorUrl = "http://localhost:4317/"
+            otelServiceName = "eveproxy"
+            brokerBaseUrl = "http://localhost:8080/"
+            zkbRedisqBaseUrl = "https://zkillredisq.stream/listen.php"
+            zkbRedisqQueueId = (System.Guid.NewGuid() |> sprintf "eveProxy%A")
+            zkbRedisqTtwExternal = ""
+            zkbRedisqTtwClient = ""
+            zkbApiUrl = "https://zkillboard.com/api/"
+            zkbThrottlingRequests = ""
+            zkbThrottlingSeconds = ""
+            evewhoApiUrl = "https://evewho.com/api/"
+            evewhoThrottlingRequests = ""
+            evewhoThrottlingSeconds = ""
+            redisqSessionMaxAge = ""
+            killmailMemoryCacheAge = ""
+            esiApiUrl = "https://esi.evetech.net/"
+            esiMinimumErrorLimit = ""
+            esiRetryCount = ""
+            mongoDbName = "eveproxy"
+            mongoConnection = "mongodb://localhost:27017"
+        }
 
 module Configuration =
     open System.Reflection
@@ -306,7 +312,8 @@ type MongoKeyValueProvider(logger: ILoggerFactory, config: AppConfiguration) =
 
     let getValue name =
         task {
-            let! x = sprintf "{'_id': '%s' }" name |> eveproxy.Mongo.getSingle<BsonDocument> mongoCol
+            let! x =
+                sprintf "{'_id': '%s' }" name |> eveproxy.Mongo.getSingle<BsonDocument> mongoCol
 
             return
                 match x with

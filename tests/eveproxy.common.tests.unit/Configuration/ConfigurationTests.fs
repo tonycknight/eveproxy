@@ -9,7 +9,8 @@ module ConfigurationTests =
 
     let minimumValidConfig =
         { AppConfiguration.defaultConfig with
-            mongoConnection = "aaa" }
+            mongoConnection = "aaa"
+        }
 
     [<Property>]
     let ``mergeDefaults merges empty to default values`` () =
@@ -29,28 +30,30 @@ module ConfigurationTests =
             if String.IsNullOrWhiteSpace left then right else left
 
         let expected =
-            { AppConfiguration.hostUrls = apply config.hostUrls defaultConfig.hostUrls
-              allowExternalTraffic = apply config.allowExternalTraffic defaultConfig.allowExternalTraffic
-              otelCollectorUrl = apply config.otelCollectorUrl defaultConfig.otelCollectorUrl
-              otelServiceName = apply config.otelServiceName defaultConfig.otelServiceName
-              brokerBaseUrl = apply config.brokerBaseUrl defaultConfig.brokerBaseUrl
-              zkbRedisqBaseUrl = apply config.zkbRedisqBaseUrl defaultConfig.zkbRedisqBaseUrl
-              zkbRedisqQueueId = apply config.zkbRedisqQueueId defaultConfig.zkbRedisqQueueId
-              zkbRedisqTtwExternal = apply config.zkbRedisqTtwExternal defaultConfig.zkbRedisqTtwExternal
-              zkbRedisqTtwClient = apply config.zkbRedisqTtwClient defaultConfig.zkbRedisqTtwClient
-              zkbApiUrl = apply config.zkbApiUrl defaultConfig.zkbApiUrl
-              zkbThrottlingRequests = apply config.zkbThrottlingRequests defaultConfig.zkbThrottlingRequests
-              zkbThrottlingSeconds = apply config.zkbThrottlingSeconds defaultConfig.zkbThrottlingSeconds
-              evewhoApiUrl = apply config.evewhoApiUrl defaultConfig.evewhoApiUrl
-              evewhoThrottlingRequests = apply config.evewhoThrottlingRequests defaultConfig.evewhoThrottlingRequests
-              evewhoThrottlingSeconds = apply config.evewhoThrottlingSeconds defaultConfig.evewhoThrottlingSeconds
-              redisqSessionMaxAge = apply config.redisqSessionMaxAge defaultConfig.redisqSessionMaxAge
-              killmailMemoryCacheAge = apply config.killmailMemoryCacheAge defaultConfig.killmailMemoryCacheAge
-              esiApiUrl = apply config.esiApiUrl defaultConfig.esiApiUrl
-              esiMinimumErrorLimit = apply config.esiMinimumErrorLimit defaultConfig.esiMinimumErrorLimit
-              esiRetryCount = apply config.esiRetryCount defaultConfig.esiRetryCount
-              mongoDbName = apply config.mongoDbName defaultConfig.mongoDbName
-              mongoConnection = apply config.mongoConnection defaultConfig.mongoConnection }
+            {
+                AppConfiguration.hostUrls = apply config.hostUrls defaultConfig.hostUrls
+                allowExternalTraffic = apply config.allowExternalTraffic defaultConfig.allowExternalTraffic
+                otelCollectorUrl = apply config.otelCollectorUrl defaultConfig.otelCollectorUrl
+                otelServiceName = apply config.otelServiceName defaultConfig.otelServiceName
+                brokerBaseUrl = apply config.brokerBaseUrl defaultConfig.brokerBaseUrl
+                zkbRedisqBaseUrl = apply config.zkbRedisqBaseUrl defaultConfig.zkbRedisqBaseUrl
+                zkbRedisqQueueId = apply config.zkbRedisqQueueId defaultConfig.zkbRedisqQueueId
+                zkbRedisqTtwExternal = apply config.zkbRedisqTtwExternal defaultConfig.zkbRedisqTtwExternal
+                zkbRedisqTtwClient = apply config.zkbRedisqTtwClient defaultConfig.zkbRedisqTtwClient
+                zkbApiUrl = apply config.zkbApiUrl defaultConfig.zkbApiUrl
+                zkbThrottlingRequests = apply config.zkbThrottlingRequests defaultConfig.zkbThrottlingRequests
+                zkbThrottlingSeconds = apply config.zkbThrottlingSeconds defaultConfig.zkbThrottlingSeconds
+                evewhoApiUrl = apply config.evewhoApiUrl defaultConfig.evewhoApiUrl
+                evewhoThrottlingRequests = apply config.evewhoThrottlingRequests defaultConfig.evewhoThrottlingRequests
+                evewhoThrottlingSeconds = apply config.evewhoThrottlingSeconds defaultConfig.evewhoThrottlingSeconds
+                redisqSessionMaxAge = apply config.redisqSessionMaxAge defaultConfig.redisqSessionMaxAge
+                killmailMemoryCacheAge = apply config.killmailMemoryCacheAge defaultConfig.killmailMemoryCacheAge
+                esiApiUrl = apply config.esiApiUrl defaultConfig.esiApiUrl
+                esiMinimumErrorLimit = apply config.esiMinimumErrorLimit defaultConfig.esiMinimumErrorLimit
+                esiRetryCount = apply config.esiRetryCount defaultConfig.esiRetryCount
+                mongoDbName = apply config.mongoDbName defaultConfig.mongoDbName
+                mongoConnection = apply config.mongoConnection defaultConfig.mongoConnection
+            }
 
         result = expected
 
@@ -75,7 +78,8 @@ module ConfigurationTests =
 
         let config =
             { AppConfiguration.defaultConfig with
-                mongoConnection = mongoConnection }
+                mongoConnection = mongoConnection
+            }
 
         let r = Configuration.validationErrors config |> Array.ofSeq
 
@@ -85,7 +89,8 @@ module ConfigurationTests =
     let ``validationErrors - invalid hostUrls returns errors`` (hostUrls: string) =
         let config =
             { minimumValidConfig with
-                hostUrls = hostUrls }
+                hostUrls = hostUrls
+            }
 
         let r = Configuration.validationErrors config |> Array.ofSeq
 
@@ -121,7 +126,8 @@ module ConfigurationTests =
 
         let config =
             { AppConfiguration.emptyConfig with
-                zkbRedisqQueueId = value }
+                zkbRedisqQueueId = value
+            }
             |> Configuration.applyKeyValues kvp
 
         let persistedValue = kvp.GetValue "zkbRedisqQueueId"

@@ -5,21 +5,25 @@ open eveproxy
 open Microsoft.Extensions.Logging
 
 type private SessionActorState =
-    { kills: IKillmailReferenceQueue
-      lastPull: DateTime
-      lastPush: DateTime
-      pullCount: uint64
-      pushCount: uint64 }
+    {
+        kills: IKillmailReferenceQueue
+        lastPull: DateTime
+        lastPush: DateTime
+        pullCount: uint64
+        pushCount: uint64
+    }
 
     static member bumpPull(state: SessionActorState) =
         { state with
             lastPull = DateTime.UtcNow
-            pullCount = state.pullCount + 1UL }
+            pullCount = state.pullCount + 1UL
+        }
 
     static member bumpPush(state: SessionActorState) =
         { state with
             lastPush = DateTime.UtcNow
-            pushCount = state.pushCount + 1UL }
+            pushCount = state.pushCount + 1UL
+        }
 
 type SessionActor
     (
@@ -41,9 +45,11 @@ type SessionActor
                 let id = id |> Option.get
 
                 let kpr =
-                    { KillPackageReferenceData.killmailId = id
-                      _id = MongoBson.id ()
-                      created = DateTime.UtcNow }
+                    {
+                        KillPackageReferenceData.killmailId = id
+                        _id = MongoBson.id ()
+                        created = DateTime.UtcNow
+                    }
 
                 try
                     do! kpr |> state.kills.PushAsync |> Async.AwaitTask
@@ -103,8 +109,10 @@ type SessionActor
             let! count = state.kills.GetCountAsync()
 
             return
-                { StorageStats.name = name
-                  count = count }
+                {
+                    StorageStats.name = name
+                    count = count
+                }
         }
 
     let shutdown state =
@@ -151,20 +159,24 @@ type SessionActor
 
             let count = uint64 (queue.GetCountAsync().Result)
 
-            { SessionActorState.kills = queue
-              lastPull = DateTime.MinValue
-              lastPush = DateTime.MinValue
-              pullCount = 0UL
-              pushCount = count }
+            {
+                SessionActorState.kills = queue
+                lastPull = DateTime.MinValue
+                lastPush = DateTime.MinValue
+                pullCount = 0UL
+                pushCount = count
+            }
             |> loop)
 
     interface ISessionActor with
         member this.GetStats() =
             task {
                 return
-                    { ActorStats.name = (ActorStats.statsName this name)
-                      queueCount = actor.CurrentQueueLength
-                      childStats = [] }
+                    {
+                        ActorStats.name = (ActorStats.statsName this name)
+                        queueCount = actor.CurrentQueueLength
+                        childStats = []
+                    }
             }
 
         member this.GetStorageStats() =

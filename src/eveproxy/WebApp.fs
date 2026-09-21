@@ -41,34 +41,48 @@ module WebApp =
                 let! sessionStorageStats = sessionsActor.GetStorageStats()
 
                 let result =
-                    {| actors =
-                        [| zkbActorStats
-                           ingestActorStats
-                           sessionsActorStats
-                           zkbPassthruStats
-                           evewhoPassthruStats
-                           esiPassthruStats |]
-                       killmails =
-                        {| ingestion = zkbApiStats.ingestion
-                           distribution = zkbApiStats.distribution
-                           storage =
-                            {| kills = kmCount
-                               sessions = sessionStorageStats |} |} |}
+                    {|
+                        actors =
+                            [|
+                                zkbActorStats
+                                ingestActorStats
+                                sessionsActorStats
+                                zkbPassthruStats
+                                evewhoPassthruStats
+                                esiPassthruStats
+                            |]
+                        killmails =
+                            {|
+                                ingestion = zkbApiStats.ingestion
+                                distribution = zkbApiStats.distribution
+                                storage =
+                                    {|
+                                        kills = kmCount
+                                        sessions = sessionStorageStats
+                                    |}
+                            |}
+                    |}
 
                 return! Successful.OK result next ctx
             }
 
     let webApp (sp: IServiceProvider) =
         choose
-            [ favicon
-              GET
-              >=> subRouteCi
-                      "/api"
-                      (choose
-                          [ choose
-                                [ heartbeat
-                                  route "/stats/" >=> stats
-                                  eveproxy.zkb.Api.redisqWebRoutes ()
-                                  eveproxy.zkb.Api.zkbWebRoutes ()
-                                  eveproxy.evewho.Api.evewhoWebRoutes ()
-                                  eveproxy.esi.Api.esiWebRoutes () ] ]) ]
+            [
+                favicon
+                GET
+                >=> subRouteCi
+                        "/api"
+                        (choose
+                            [
+                                choose
+                                    [
+                                        heartbeat
+                                        route "/stats/" >=> stats
+                                        eveproxy.zkb.Api.redisqWebRoutes ()
+                                        eveproxy.zkb.Api.zkbWebRoutes ()
+                                        eveproxy.evewho.Api.evewhoWebRoutes ()
+                                        eveproxy.esi.Api.esiWebRoutes ()
+                                    ]
+                            ])
+            ]

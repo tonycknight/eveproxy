@@ -6,20 +6,26 @@ open Newtonsoft.Json.Linq
 
 [<CLIMutable>]
 type KillPackageReferenceData =
-    { _id: obj
-      killmailId: string
-      created: DateTime }
+    {
+        _id: obj
+        killmailId: string
+        created: DateTime
+    }
 
 [<CLIMutable>]
 type KillPackageData =
-    { mutable _id: obj
-      package: obj
-      created: DateTime }
+    {
+        mutable _id: obj
+        package: obj
+        created: DateTime
+    }
 
     static member empty =
-        { KillPackageData.package = null
-          _id = null
-          created = DateTime.MinValue }
+        {
+            KillPackageData.package = null
+            _id = null
+            created = DateTime.MinValue
+        }
 
     static member killmail(value: KillPackageData) =
         match value.package |> Option.nullToOption with
@@ -42,13 +48,19 @@ type WrittenKills = { count: int64 }
 type DistributedKills = { session: string; count: int64 }
 
 type IngestionStats =
-    { receivedKills: int64
-      writtenKills: int64 }
+    {
+        receivedKills: int64
+        writtenKills: int64
+    }
 
 type DistributionStats =
-    { totalDistributedKills: int64
-      sessionDistributedKills: Map<string, int64> }
+    {
+        totalDistributedKills: int64
+        sessionDistributedKills: Map<string, int64>
+    }
 
 type ZkbStats =
-    { ingestion: IngestionStats
-      distribution: DistributionStats }
+    {
+        ingestion: IngestionStats
+        distribution: DistributionStats
+    }

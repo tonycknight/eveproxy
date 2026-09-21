@@ -28,7 +28,9 @@ module ApiStartup =
 
 [<CLIMutable>]
 type KillPackage =
-    { package: obj }
+    {
+        package: obj
+    }
 
     static member ofKillPackageData(value: KillPackageData) = { KillPackage.package = value.package }
 
@@ -42,8 +44,10 @@ module Api =
     let private countSessionKillFetch (ctx: HttpContext) sessionId =
         let stats = ctx.GetService<IZkbStatsActor>()
 
-        { DistributedKills.count = 1
-          session = sessionId }
+        {
+            DistributedKills.count = 1
+            session = sessionId
+        }
         :> obj
         |> ActorMessage.Entity
         |> stats.Post
@@ -160,13 +164,17 @@ module Api =
              >=> ResponseCaching.noResponseCaching
              >=> (setContentType "application/json")
              >=> choose
-                     [ subRouteCi
-                           "/v1"
-                           (choose
-                               [ routeCif "/kills/session/%s/" (fun session -> getNextKill session)
-                                 routeCif "/kills/id/%s/" (fun killId -> getKillById killId)
-                                 route "/kills/null/" >=> getNullKill
-                                 route "/kills/" >=> (getNextKill KillmailReferenceQueues.defaultQueueName) ]) ])
+                     [
+                         subRouteCi
+                             "/v1"
+                             (choose
+                                 [
+                                     routeCif "/kills/session/%s/" (fun session -> getNextKill session)
+                                     routeCif "/kills/id/%s/" (fun killId -> getKillById killId)
+                                     route "/kills/null/" >=> getNullKill
+                                     route "/kills/" >=> (getNextKill KillmailReferenceQueues.defaultQueueName)
+                                 ])
+                     ])
 
     let zkbWebRoutes () =
         subRouteCi
@@ -175,4 +183,7 @@ module Api =
              >=> (ApiTelemetry.countRouteInvoke (fun m -> m.ZkbProxyRequest 1))
              >=> ResponseCaching.noResponseCaching
              >=> (setContentType "application/json")
-             >=> choose [ subRouteCi "/v1" (choose [ routeStartsWithCi "/" >=> (getZkbApi "/api/zkb/v1/") ]) ])
+             >=> choose
+                     [
+                         subRouteCi "/v1" (choose [ routeStartsWithCi "/" >=> (getZkbApi "/api/zkb/v1/") ])
+                     ])

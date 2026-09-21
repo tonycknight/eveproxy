@@ -18,8 +18,10 @@ type EsiApiProxy
     let log = logFactory.CreateLogger<EsiApiProxy>()
 
     let mutable throttling =
-        { EsiErrorThrottling.errorLimitReset = DateTime.UtcNow
-          errorLimitRemaining = 100 }
+        {
+            EsiErrorThrottling.errorLimitReset = DateTime.UtcNow
+            errorLimitRemaining = 100
+        }
 
     let expiresHeaderValue defaultValue =
         HttpRequestResponse.headerValues "expires"

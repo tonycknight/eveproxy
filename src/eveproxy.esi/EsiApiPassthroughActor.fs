@@ -6,8 +6,10 @@ open eveproxy
 open Microsoft.Extensions.Logging
 
 type private EsiApiPassthroughActorState =
-    { errorLimitRemaining: int
-      errorLimitReset: DateTime }
+    {
+        errorLimitRemaining: int
+        errorLimitReset: DateTime
+    }
 
 type EsiApiPassthroughActor(hc: IExternalHttpClient, logFactory: ILoggerFactory, config: AppConfiguration) =
 
@@ -50,7 +52,8 @@ type EsiApiPassthroughActor(hc: IExternalHttpClient, logFactory: ILoggerFactory,
                 let state =
                     { state with
                         errorLimitRemaining = errorsRemaining resp
-                        errorLimitReset = now.Add(errorsResetWait resp) }
+                        errorLimitReset = now.Add(errorsResetWait resp)
+                    }
 
                 return!
                     match resp with
@@ -95,17 +98,21 @@ type EsiApiPassthroughActor(hc: IExternalHttpClient, logFactory: ILoggerFactory,
                     return! loop state
                 }
 
-            { EsiApiPassthroughActorState.errorLimitRemaining = errorLimit
-              errorLimitReset = DateTime.MinValue }
+            {
+                EsiApiPassthroughActorState.errorLimitRemaining = errorLimit
+                errorLimitReset = DateTime.MinValue
+            }
             |> loop)
 
     interface IEsiApiPassthroughActor with
         member this.GetStats() =
             task {
                 return
-                    { ActorStats.name = (typedefof<EsiApiPassthroughActor>).FullName
-                      queueCount = actor.CurrentQueueLength
-                      childStats = [] }
+                    {
+                        ActorStats.name = (typedefof<EsiApiPassthroughActor>).FullName
+                        queueCount = actor.CurrentQueueLength
+                        childStats = []
+                    }
             }
 
         member this.Post(msg: ActorMessage) = actor.Post msg

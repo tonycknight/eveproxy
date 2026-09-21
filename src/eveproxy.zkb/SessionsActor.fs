@@ -31,7 +31,12 @@ type SessionsActor
                 new SessionActor(name, logFactory, stats, killReader, queueFactory)
 
         let sessions = state.sessions |> Map.add name actor
-        let state = { SessionsActorState.sessions = sessions }
+
+        let state =
+            {
+                SessionsActorState.sessions = sessions
+            }
+
         (state, actor)
 
     let onPush state package =
@@ -111,7 +116,9 @@ type SessionsActor
                 $"Initiating shutdown of session [{k}]" |> log.LogTrace
                 ActorMessage.Destroy k |> a.Post)
 
-            { SessionsActorState.sessions = cleanSessions }
+            {
+                SessionsActorState.sessions = cleanSessions
+            }
 
     let initActorState () =
         let actors =
@@ -123,7 +130,11 @@ type SessionsActor
         let actors = (getStateActor defaultSessionName) :: actors
 
         actors
-        |> List.fold (fun s f -> f s |> fst) { SessionsActorState.sessions = Map.empty }
+        |> List.fold
+            (fun s f -> f s |> fst)
+            {
+                SessionsActorState.sessions = Map.empty
+            }
 
 
     let actor =
@@ -169,16 +180,19 @@ type SessionsActor
         member this.GetStats() =
             task {
                 let main =
-                    { ActorStats.name = (typedefof<SessionsActor>).FullName
-                      queueCount = actor.CurrentQueueLength
-                      childStats = [] }
+                    {
+                        ActorStats.name = (typedefof<SessionsActor>).FullName
+                        queueCount = actor.CurrentQueueLength
+                        childStats = []
+                    }
 
 
                 let! stats = actor.PostAndAsyncReply(fun rc -> ActorMessage.ChildStats rc)
 
                 return
                     { main with
-                        childStats = (stats |> List.ofArray) }
+                        childStats = (stats |> List.ofArray)
+                    }
             }
 
         member this.GetStorageStats() =

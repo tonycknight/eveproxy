@@ -62,4 +62,7 @@ module Api =
              >=> (ApiTelemetry.countRouteInvoke (fun m -> m.EvewhoProxyRequest 1))
              >=> ResponseCaching.noResponseCaching
              >=> (setContentType "application/json")
-             >=> choose [ subRouteCi "/v1" (choose [ routeStartsWithCi "/" >=> (getEvewhoApi "/api/evewho/v1/") ]) ])
+             >=> choose
+                     [
+                         subRouteCi "/v1" (choose [ routeStartsWithCi "/" >=> (getEvewhoApi "/api/evewho/v1/") ])
+                     ])

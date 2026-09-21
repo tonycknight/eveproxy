@@ -5,8 +5,10 @@ open eveproxy
 open Microsoft.Extensions.Logging
 
 type EsiErrorThrottling =
-    { errorLimitRemaining: int
-      errorLimitReset: DateTime }
+    {
+        errorLimitRemaining: int
+        errorLimitReset: DateTime
+    }
 
 module Esi =
     [<Literal>]
@@ -61,7 +63,8 @@ module Esi =
                 let state =
                     { state with
                         errorLimitRemaining = errorsRemaining resp
-                        errorLimitReset = now.Add(errorsResetWait resp) }
+                        errorLimitReset = now.Add(errorsResetWait resp)
+                    }
 
                 return!
                     match resp with
