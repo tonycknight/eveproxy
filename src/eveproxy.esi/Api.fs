@@ -9,11 +9,13 @@ module Api =
 
     let private transferredHeaders =
         let allowedHeaders =
-            [| "x-esi-error-limit-remain"
-               "x-esi-error-limit-reset"
-               "last-modified"
-               "expires"
-               "etag" |]
+            [|
+                "x-esi-error-limit-remain"
+                "x-esi-error-limit-reset"
+                "last-modified"
+                "expires"
+                "etag"
+            |]
 
         eveproxy.Api.pickHeaders allowedHeaders
 
@@ -72,4 +74,7 @@ module Api =
              >=> (ApiTelemetry.countRouteInvoke (fun m -> m.EsiProxyRequest 1))
              >=> ResponseCaching.noResponseCaching
              >=> (setContentType "application/json")
-             >=> choose [ subRouteCi "/v1" (choose [ routeStartsWithCi "/" >=> (getEsiApi "/api/esi/v1/") ]) ])
+             >=> choose
+                     [
+                         subRouteCi "/v1" (choose [ routeStartsWithCi "/" >=> (getEsiApi "/api/esi/v1/") ])
+                     ])

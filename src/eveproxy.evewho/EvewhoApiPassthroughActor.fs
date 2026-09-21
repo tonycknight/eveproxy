@@ -5,9 +5,14 @@ open eveproxy
 open Microsoft.Extensions.Logging
 
 type private EvewhoApiPassthroughActorState =
-    { throttling: Map<DateTime, int> }
+    {
+        throttling: Map<DateTime, int>
+    }
 
-    static member empty = { EvewhoApiPassthroughActorState.throttling = Map.empty }
+    static member empty =
+        {
+            EvewhoApiPassthroughActorState.throttling = Map.empty
+        }
 
 type EvewhoApiPassthroughActor
     (hc: IExternalHttpClient, logFactory: ILoggerFactory, metrics: IMetricsTelemetry, config: AppConfiguration) =
@@ -74,7 +79,10 @@ type EvewhoApiPassthroughActor
                                 let! (throttling, resp) = getEvewhoApi state.throttling route
                                 (resp :> obj) |> rc.Reply
 
-                                return { EvewhoApiPassthroughActorState.throttling = throttling }
+                                return
+                                    {
+                                        EvewhoApiPassthroughActorState.throttling = throttling
+                                    }
                             }
                             |> Async.AwaitTask
                         | _ -> async { return state }
@@ -88,9 +96,11 @@ type EvewhoApiPassthroughActor
         member this.GetStats() =
             task {
                 return
-                    { ActorStats.name = (typedefof<EvewhoApiPassthroughActor>).FullName
-                      queueCount = actor.CurrentQueueLength
-                      childStats = [] }
+                    {
+                        ActorStats.name = (typedefof<EvewhoApiPassthroughActor>).FullName
+                        queueCount = actor.CurrentQueueLength
+                        childStats = []
+                    }
             }
 
         member this.Post(msg: ActorMessage) = actor.Post msg

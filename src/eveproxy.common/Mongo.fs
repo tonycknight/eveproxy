@@ -67,7 +67,7 @@ module Mongo =
 
     let setIndex (path: string) (collection: IMongoCollection<'a>) =
         let json = sprintf "{'%s': 1 }" path
-        let def = IndexKeysDefinition<'a>.op_Implicit (json)
+        let def = IndexKeysDefinition<'a>.op_Implicit(json)
         let model = CreateIndexModel<'a>(def)
         let r = collection.Indexes.CreateOne(model)
 

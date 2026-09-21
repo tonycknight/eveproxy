@@ -17,9 +17,11 @@ module KillmailWriterTests =
         let writer = new KillmailWriter(logger, repo) :> IKillmailWriter
 
         let kill =
-            { KillPackageData.package = None
-              _id = eveproxy.MongoBson.id ()
-              created = DateTime.UtcNow }
+            {
+                KillPackageData.package = None
+                _id = eveproxy.MongoBson.id ()
+                created = DateTime.UtcNow
+            }
 
         let result = writer.WriteAsync(kill).Result
 

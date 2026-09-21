@@ -4,9 +4,11 @@ open System
 open System.Threading.Tasks
 
 type ActorStats =
-    { name: string
-      queueCount: int
-      childStats: ActorStats list }
+    {
+        name: string
+        queueCount: int
+        childStats: ActorStats list
+    }
 
     static member statsName (parent) (name: string) =
         if String.IsNullOrEmpty name then

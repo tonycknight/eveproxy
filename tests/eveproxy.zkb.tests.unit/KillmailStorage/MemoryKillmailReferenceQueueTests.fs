@@ -19,9 +19,11 @@ module MemoryKillmailReferenceQueueTests =
         let values =
             ids
             |> Array.map (fun id ->
-                { KillPackageReferenceData.killmailId = id
-                  _id = eveproxy.MongoBson.id ()
-                  created = System.DateTime.UtcNow })
+                {
+                    KillPackageReferenceData.killmailId = id
+                    _id = eveproxy.MongoBson.id ()
+                    created = System.DateTime.UtcNow
+                })
 
         let queue =
             new MemoryKillmailReferenceQueue(config, logger, "") :> IKillmailReferenceQueue
@@ -53,9 +55,11 @@ module MemoryKillmailReferenceQueueTests =
         let values =
             ids
             |> Array.map (fun id ->
-                { KillPackageReferenceData.killmailId = id
-                  _id = eveproxy.MongoBson.id ()
-                  created = System.DateTime.UtcNow })
+                {
+                    KillPackageReferenceData.killmailId = id
+                    _id = eveproxy.MongoBson.id ()
+                    created = System.DateTime.UtcNow
+                })
 
         // Push
         let pushTasks = values |> Array.map queue.PushAsync
@@ -79,9 +83,11 @@ module MemoryKillmailReferenceQueueTests =
         let values =
             ids
             |> Array.map (fun id ->
-                { KillPackageReferenceData.killmailId = id
-                  _id = eveproxy.MongoBson.id ()
-                  created = System.DateTime.UtcNow })
+                {
+                    KillPackageReferenceData.killmailId = id
+                    _id = eveproxy.MongoBson.id ()
+                    created = System.DateTime.UtcNow
+                })
 
         // Push
         let pushTasks = values |> Array.map queue.PushAsync

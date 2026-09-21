@@ -92,7 +92,8 @@ type RedisqIngestionActor
             if (kill |> KillPackageData.killmailId |> Option.isNone) then
                 logBadKm ()
             else
-                let! writeResult = kill |> logKmReceipt |> constructKill |> countKillReceipt |> writer.WriteAsync
+                let! writeResult =
+                    kill |> logKmReceipt |> constructKill |> countKillReceipt |> writer.WriteAsync
 
                 let kill =
                     match writeResult with
@@ -102,7 +103,10 @@ type RedisqIngestionActor
 
                 kill |> logKmCompletion |> ignore
 
-            return { RedisqIngestionActorState.receivedKills = state.receivedKills + 1UL }
+            return
+                {
+                    RedisqIngestionActorState.receivedKills = state.receivedKills + 1UL
+                }
         }
 
     let wait state (ts: TimeSpan) =
@@ -141,15 +145,20 @@ type RedisqIngestionActor
                     return! loop state
                 }
 
-            { RedisqIngestionActorState.receivedKills = 0UL } |> loop)
+            {
+                RedisqIngestionActorState.receivedKills = 0UL
+            }
+            |> loop)
 
     interface IRedisqIngestionActor with
         member this.GetStats() =
             task {
                 return
-                    { ActorStats.name = (typedefof<RedisqIngestionActor>).FullName
-                      queueCount = actor.CurrentQueueLength
-                      childStats = [] }
+                    {
+                        ActorStats.name = (typedefof<RedisqIngestionActor>).FullName
+                        queueCount = actor.CurrentQueueLength
+                        childStats = []
+                    }
             }
 
         member this.Post(msg: ActorMessage) = actor.Post msg

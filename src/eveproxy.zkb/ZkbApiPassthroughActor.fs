@@ -5,9 +5,14 @@ open eveproxy
 open Microsoft.Extensions.Logging
 
 type private ZkbApiPassthroughActorState =
-    { throttling: Map<DateTime, int> }
+    {
+        throttling: Map<DateTime, int>
+    }
 
-    static member empty = { ZkbApiPassthroughActorState.throttling = Map.empty }
+    static member empty =
+        {
+            ZkbApiPassthroughActorState.throttling = Map.empty
+        }
 
 type ZkbApiPassthroughActor
     (
@@ -80,7 +85,10 @@ type ZkbApiPassthroughActor
                                 let! (throttling, resp) = getZkbApi state.throttling route
                                 (resp :> obj) |> rc.Reply
 
-                                return { ZkbApiPassthroughActorState.throttling = throttling }
+                                return
+                                    {
+                                        ZkbApiPassthroughActorState.throttling = throttling
+                                    }
                             }
                             |> Async.AwaitTask
                         | _ -> async { return state }
@@ -94,9 +102,11 @@ type ZkbApiPassthroughActor
         member this.GetStats() =
             task {
                 return
-                    { ActorStats.name = (typedefof<ZkbApiPassthroughActor>).FullName
-                      queueCount = actor.CurrentQueueLength
-                      childStats = [] }
+                    {
+                        ActorStats.name = (typedefof<ZkbApiPassthroughActor>).FullName
+                        queueCount = actor.CurrentQueueLength
+                        childStats = []
+                    }
             }
 
         member this.Post(msg: ActorMessage) = actor.Post msg

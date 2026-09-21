@@ -9,14 +9,16 @@ type ZkbStatsActor() =
     let bumpReceived state (count: ReceivedKills) =
         let ingestion =
             { state.ingestion with
-                receivedKills = state.ingestion.receivedKills + count.count }
+                receivedKills = state.ingestion.receivedKills + count.count
+            }
 
         { state with ingestion = ingestion }
 
     let bumpWritten state (count: WrittenKills) =
         let ingestion =
             { state.ingestion with
-                writtenKills = state.ingestion.writtenKills + count.count }
+                writtenKills = state.ingestion.writtenKills + count.count
+            }
 
         { state with ingestion = ingestion }
 
@@ -28,9 +30,12 @@ type ZkbStatsActor() =
 
         { state with
             distribution =
-                { DistributionStats.totalDistributedKills = state.distribution.totalDistributedKills + count.count
-                  sessionDistributedKills =
-                    state.distribution.sessionDistributedKills |> Map.add count.session sessionCount } }
+                {
+                    DistributionStats.totalDistributedKills = state.distribution.totalDistributedKills + count.count
+                    sessionDistributedKills =
+                        state.distribution.sessionDistributedKills |> Map.add count.session sessionCount
+                }
+        }
 
     let actor =
         MailboxProcessor<ActorMessage>.Start(fun inbox ->
@@ -54,12 +59,18 @@ type ZkbStatsActor() =
                 }
 
             let state =
-                { ZkbStats.ingestion =
-                    { IngestionStats.receivedKills = 0
-                      writtenKills = 0 }
-                  distribution =
-                    { DistributionStats.totalDistributedKills = 0
-                      sessionDistributedKills = Map.empty } }
+                {
+                    ZkbStats.ingestion =
+                        {
+                            IngestionStats.receivedKills = 0
+                            writtenKills = 0
+                        }
+                    distribution =
+                        {
+                            DistributionStats.totalDistributedKills = 0
+                            sessionDistributedKills = Map.empty
+                        }
+                }
 
             state |> loop)
 
@@ -67,9 +78,11 @@ type ZkbStatsActor() =
         member this.GetStats() =
             task {
                 return
-                    { ActorStats.name = (typedefof<ZkbStatsActor>).FullName
-                      queueCount = actor.CurrentQueueLength
-                      childStats = [] }
+                    {
+                        ActorStats.name = (typedefof<ZkbStatsActor>).FullName
+                        queueCount = actor.CurrentQueueLength
+                        childStats = []
+                    }
             }
 
         member this.Post(msg: ActorMessage) = actor.Post msg
