@@ -19,7 +19,7 @@
     <ProjectReference Include="..\..\src\eveproxy.zkb\eveproxy.zkb.fsproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="FsCheck.Xunit.v3" Version="3.5.0" />
+    <PackageReference Include="FsCheck.Xunit.v3" Version="3.6.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.12.0" />
     <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="2.5.1" />
