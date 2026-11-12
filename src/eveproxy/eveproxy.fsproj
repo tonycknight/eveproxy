@@ -20,6 +20,6 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Giraffe" Version="8.3.0" />
-    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.14" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="11.0.0" />
   </ItemGroup>
 </Project>
