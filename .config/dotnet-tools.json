@@ -3,14 +3,14 @@
   "isRoot": true,
   "tools": {
     "dotnet-reportgenerator-globaltool": {
-      "version": "5.5.12",
+      "version": "5.6.0",
       "commands": [
         "reportgenerator"
       ],
       "rollForward": false
     },
     "fantomas": {
-      "version": "8.1.1",
+      "version": "8.1.2",
       "commands": [
         "fantomas"
       ],
